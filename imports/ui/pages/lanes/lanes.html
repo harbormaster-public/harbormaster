@@ -1,0 +1,9 @@
+<template name="lanes">
+  <h1>Lanes</h1>
+  <button class="success hollow button" id="new-lane">New Lane</button>
+  <ul>
+    {{#each lanes}}
+    <li>{{name}}: {{destinations.length}} Destinations, {{captains}} Captains, {{stops}} Stops, last shipped on {{last_shipped}}, last salvage run on {{last_salvage_run}}, {{total_shipments}} total shipments, {{salvage_plans}} salvage plans.</li>
+    {{/each}}
+  </ul>
+</template>

@@ -1,0 +1,12 @@
+
+<template name="root">
+  <h1>Welcome to your Harbor</h1>
+  <h2>The last time something was shipped was {{latest_shipment}}</h2>
+  <h2>{{shipments_last_24_hours}} shipments have been made in the last 24 hours</h2>
+  <h3>You currently have:</h3>
+  <ul>
+    <li><a href="/lanes">{{total_lanes}} Lanes</a></li>
+    <li><a href="/users">{{total_users}} Users, {{total_captains}} of which are Captains, and {{total_harbormasters}} of which are Harbormasters</a></li>
+    <li>{{total_destinations}} Destinations to which you can ship</li>
+  </ul>
+</template>

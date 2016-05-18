@@ -1,0 +1,18 @@
+<template name="main">
+  {{#if logged_in}}
+    <div class="top-bar">
+        {{> Template.dynamic template=header}}
+    </div>
+    <div class="row">
+      <div class="small-10 small-centered column">
+        {{> Template.dynamic template=main}}
+      </div>
+    </div>
+  {{else}}
+    <div class="row">
+      <div class="small-10 medium-8 large-6 small-centered column">
+        {{> atForm}}
+      </div>
+    </div>
+  {{/if}}
+</template>
