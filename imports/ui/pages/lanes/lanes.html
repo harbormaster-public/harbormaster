@@ -3,7 +3,11 @@
   <button class="success hollow button" id="new-lane">New Lane</button>
   <ul>
     {{#each lanes}}
-    <li>{{name}}: {{destinations.length}} Destinations, {{captains}} Captains, {{stops}} Stops, last shipped on {{last_shipped}}, last salvage run on {{last_salvage_run}}, {{total_shipments}} total shipments, {{salvage_plans}} salvage plans.</li>
+    <li>
+      {{name}}: {{destinations.length}} Destinations, {{captains}} Captains, {{stops}} Stops, last shipped on {{last_shipped}}, last salvage run on {{last_salvage_run}}, {{total_shipments}} total shipments, {{salvage_plans}} salvage plans.
+      <button class="button hollow tiny">Ship to this lane</button>
+      <button class="button hollow tiny secondary">Edit this lane</button>
+    </li>
     {{/each}}
   </ul>
 </template>

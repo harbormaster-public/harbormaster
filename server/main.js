@@ -7,6 +7,7 @@ import { Shipments } from '../imports/api/shipments/shipments.js';
 import { Stops } from '../imports/api/stops/stops.js';
 import { Users } from '../imports/api/users/users.js';
 import '../imports/startup/config/login.js';
+import '../imports/startup/server/accounts.js';
 
 Meteor.startup(() => {
   // code to run on server at startup

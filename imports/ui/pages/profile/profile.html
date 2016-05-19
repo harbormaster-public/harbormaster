@@ -1,0 +1,29 @@
+
+<template name="profile">
+  <form>
+    <label>Name
+      <input>
+    </label>
+    <label>Email
+      <input>
+    </label>
+    <fieldset class="fieldset">
+      <label>Harbormaster
+        <input type=radio>
+      </label>
+      <label>Captain
+        <input type=radio>
+      </label>
+      <label>User
+        <input type=radio>
+      </label>
+    </fieldset>
+    <label>Lanes
+      <ul>
+        {{#each lanes}}
+          <li><input type=checkbox>{{name}}</li>
+        {{/each}}
+      </ul>
+    </label>
+  </form>
+</template>
