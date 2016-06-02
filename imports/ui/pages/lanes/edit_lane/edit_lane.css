@@ -1,0 +1,29 @@
+.destination[data-destination-index="0"] .remove-destination {
+  display: none;
+}
+
+.address-field {
+  position: relative;
+}
+
+.destination-address {
+  padding-right: 15px;
+}
+
+.address-field .close-button {
+  right: 5px;
+  top: 0;
+  line-height: 20px;
+}
+
+.stop .close-button {
+  position: static;
+}
+
+.destination-address[data-address-index="0"] + .remove-address {
+  display: none;
+}
+
+.stop[data-stop-index="0"] .remove-stop {
+  display: none;
+}

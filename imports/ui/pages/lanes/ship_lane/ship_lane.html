@@ -1,0 +1,36 @@
+<template name="ship_lane">
+  {{#if lane}}
+    <h1>Ship to lane: {{lane.name}}</h1>
+    <h2>Let's review.  Ready to ship?</h2>
+    <a href="/lanes/{{lane.name}}/edit" class="button secondary hollow edit-lane">Edit this lane</a>
+  {{else}}
+    <h1>That lane doesn't exist.</h1>
+  {{/if}}
+  <a href="/lanes" class="button hollow show-lanes">Back to Lanes</a>
+  {{#if lane}}
+    <button class="button success start-shipment">Start Shipment</button>
+    <h3>Destinations:</h3>
+    <ol>
+      {{#each lane.destinations}}
+        <li>
+          <h3>{{this.name}}</h3>
+          <h4>Addresses:</h4>
+          <ul>
+            {{#each this.addresses}}
+              <li>{{this}}</li>
+            {{/each}}
+          </ul>
+          <h4>Stops:</h4>
+          <ol>
+            {{#each this.stops}}
+              <li>
+                <h5>{{this.name}}</h5>
+                <pre>{{this.command}}</pre>
+              </li>
+            {{/each}}
+          </ol>
+        </li>
+      {{/each}}
+    </ol>
+  {{/if}}
+</template>

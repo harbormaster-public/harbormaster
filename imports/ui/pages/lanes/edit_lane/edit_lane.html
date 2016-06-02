@@ -1,0 +1,69 @@
+<template name="edit_lane">
+  <h1>Edit {{lane_name}} Lane</h1>
+  <form>
+    <label>Lane Name
+      <input class="lane-name" value={{lane_name lane_name}}>
+    </label>
+    <button disabled={{validate_done}} class="button hollow lane-done">Done</button>
+    <button class="button hollow secondary back-to-lanes">Back to Lanes</button>
+    <a href=/lanes/{{lane_name}}/ship disabled={{validate_shippable}} class="button success ship-lane hollow">Ship to this Lane</a>
+    <fieldset class="fieldset captains">
+      <legend>Captain(s)</legend>
+      <ul>
+        {{#each captain_list}}
+        <li>
+          <label>
+            <input type=checkbox checked={{can_ply}} disabled={{harbormaster}} value={{_id}}>
+            {{_id}}
+          </label>
+        </li>
+        {{/each}}
+      </ul>
+    </fieldset>
+    <h2>Destinations</h2>
+    <fieldset class="fieldset">
+      <legend>Manifest</legend>
+      {{#each destinations}}
+      {{manifest_index @index}}: {{this.name}}
+      {{/each}}
+    </fieldset>
+    {{#each destinations}}
+      <fieldset data-destination-index={{@index}} class="fieldset destination">
+        <legend>{{name}}</legend>
+        <label>Destination Name
+          <input class="destination-name" value="{{destination_name_value}}">
+        </label>
+        <label>Destination Address(es)
+          {{#each addresses}}
+          <span class="address-field">
+            <input data-address-index={{@index}} class="destination-address" value={{this}} disabled={{has_no_name}} placeholder="Single IP or hostname">
+            <button class="remove-address close-button" aria-label="Delete address" type="button">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </span>
+          {{/each}}
+        </label>
+        <button disabled={{has_no_address}} class="button tiny add-address">Add another address</button>
+        {{#each stops}}
+        <label data-stop-index={{@index}} class="stop">Stop {{pretty_index @index}}
+          <input disabled={{has_no_name_or_address ..}} class="stop-name" placeholder=Name value={{name}}>
+          <button class="remove-stop close-button" aria-label="Delete address" type="button">
+            <span aria-hidden="true">&times;</span>
+          </button>
+          <textarea disabled={{has_no_name_or_address ..}} class="stop-command" placeholder="Command to execute">{{command}}</textarea>
+        </label>
+        {{/each}}
+        <button disabled={{has_incomplete_stops}} class="button tiny success add-stop">Add another Stop at this Destination</button>
+        <button class="remove-destination button tiny hollow alert">Remove this destination</button>
+      </fieldset>
+    {{/each}}
+    <button disabled={{validate_prior_destination}} class="button tiny add-destination">Add new Destination</button>
+    <button {{check_salvage_plan}} class="button tiny warning">Add a Salvage Plan</button>
+  </form>
+  <h2>Shipping Log</h2>
+  <ul>
+    <li><a href="" class="button tiny alert">Salvaged on Jun XX 2016 at 12:22:44</a></li>
+    <li><a href="" class="button tiny success">Shipped on Jun XX 2016 at 13:02:33</a></li>
+    <li><a href="" class="button tiny warning">Shipment currently in progress...</a></li>
+  </ul>
+</template>

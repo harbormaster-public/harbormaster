@@ -7,5 +7,6 @@ import { Shipments } from '../imports/api/shipments/shipments.js';
 import { Stops } from '../imports/api/stops/stops.js';
 import { Users } from '../imports/api/users/users.js';
 import '../imports/startup/config/login.js';
+import '../imports/startup/client/global_helpers.js';
 import '../imports/startup/client/routes.js';
 
