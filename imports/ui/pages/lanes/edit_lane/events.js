@@ -30,6 +30,7 @@ Template.edit_lane.events({
     var lane = Session.get('lane');
     lane.name = event.target.value;
     Session.set('lane', lane);
+    if (Lanes.findOne(lane._id)) { Lanes.update(lane._id, lane); }
     FlowRouter.go('/lanes/' + lane.name + '/edit');
   },
 

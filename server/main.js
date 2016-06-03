@@ -1,14 +1,14 @@
 import { Meteor } from 'meteor/meteor';
-import { Captains } from '../imports/api/captains/captains.js';
-import { Harbormasters } from '../imports/api/harbormasters/harbormasters.js';
-import { Lanes } from '../imports/api/lanes/lanes.js';
-import { SalvagePlans } from '../imports/api/lanes/salvage_plans/salvage_plans.js';
-import { Shipments } from '../imports/api/shipments/shipments.js';
-import { Stops } from '../imports/api/stops/stops.js';
-import { Users } from '../imports/api/users/users.js';
-import '../imports/startup/config/login.js';
-import '../imports/startup/server/accounts.js';
+import { Captains } from '../imports/api/captains/captains';
+import { Harbormasters } from '../imports/api/harbormasters/harbormasters';
+import { Lanes } from '../imports/api/lanes/lanes';
+import { SalvagePlans } from '../imports/api/lanes/salvage_plans/salvage_plans';
+import { Shipments } from '../imports/api/shipments/shipments';
+import { Stops } from '../imports/api/stops/stops';
+import { Users } from '../imports/api/users/users';
+import '../imports/startup/config/login';
+import '../imports/startup/server/accounts';
+import '../imports/api/lanes/server/methods';
 
 Meteor.startup(() => {
-  // code to run on server at startup
 });
