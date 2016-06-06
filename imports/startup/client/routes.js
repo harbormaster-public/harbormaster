@@ -47,6 +47,16 @@ FlowRouter.route('/lanes/:name/ship', {
   }
 });
 
+FlowRouter.route('/lanes/:name/ship/:date', {
+  name: 'ship_lane_date',
+  action: function () {
+    BlazeLayout.render('main', {
+      header: 'nav',
+      main: 'ship_lane'
+    });
+  }
+});
+
 FlowRouter.route('/users', {
   name: 'users',
   action: function () {

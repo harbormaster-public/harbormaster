@@ -3,22 +3,24 @@ import SSH from 'simple-ssh';
 import fs from 'fs';
 
 Meteor.methods({
-  'lanes:start_shipment': function (lane_id) {
+  'lanes:start_shipment': function (lane_id, start_date) {
     var lane = Lanes.findOne(lane_id);
     //TODO: Make this configurable
     var private_key = fs.readFileSync('/home/skyler/.ssh/id_rsa');
-
     lane.date_history = lane.date_history || [];
-    //TODO: Might need to make this bindable via a unique ID.
-    //Maybe it should be its own document?
-    lane.date_history.push(Date.now());
-    lane.in_progress = true;
+    lane.date_history.push({
+      start_date: start_date,
+      actual: Date.now()
+    });
 
     Lanes.update(lane_id, lane);
 
     _.each(lane.destinations, function (destination) {
       destination.date_history = destination.date_history || [];
-      destination.date_history.push(Date.now());
+      destination.date_history.push({
+        start_date: start_date,
+        actual: Date.now()
+      });
 
       Lanes.update(lane_id, lane);
 
@@ -31,8 +33,12 @@ Meteor.methods({
         });
 
         _.each(destination.stops, function (stop) {
-          stop.date_started_history = stop.date_started_history || [];
-          stop.date_started_history.push(Date.now());
+          stop.date_history = stop.date_history || [];
+          stop.date_history.push({
+            start_date: start_date,
+            address: address,
+            actual: Date.now()
+          });
 
           Lanes.update(lane_id, lane);
 
@@ -41,7 +47,10 @@ Meteor.methods({
               stop.stdout_history = stop.stdout_history || [];
               stop.stdout_history.push({
                 stdout: stdout,
-                date: Date.now()
+                start_date: start_date,
+                command: stop.command,
+                address: address,
+                actual: Date.now()
               });
               Lanes.update(lane_id, lane);
             }),
@@ -49,7 +58,10 @@ Meteor.methods({
               stop.stderr_history = stop.stderr_history || [];
               stop.stderr_history.push({
                 stderr: stderr,
-                date: Date.now()
+                start_date: start_date,
+                command: stop.command,
+                address: address,
+                actual: Date.now()
               });
               Lanes.update(lane_id, lane);
             }),
@@ -57,7 +69,10 @@ Meteor.methods({
               stop.exit_code_history = stop.exit_code_history || [];
               stop.exit_code_history.push({
                 code: code,
-                date: Date.now()
+                start_date: start_date,
+                address: address,
+                command: stop.command,
+                actual: Date.now()
               });
               Lanes.update(lane_id, lane);
             })
@@ -65,6 +80,13 @@ Meteor.methods({
         });
       });
     });
+
+    lane.shipment_active = false;
+    lane.date_history[lane.date_history.length - 1].finished = Date.now();
+    Lanes.update(lane_id, lane);
+
+    return lane;
+
   }
 });
 

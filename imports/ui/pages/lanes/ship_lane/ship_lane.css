@@ -1,0 +1,8 @@
+.command-executed {
+  display: inline;
+}
+
+.command-results:nth-child(odd) {
+  background: #efefef;
+}
+
