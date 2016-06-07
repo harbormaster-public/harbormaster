@@ -1,7 +1,10 @@
-
 <template name="root">
   <h1>Welcome to your Harbor</h1>
-  <h2>The last time something was shipped was {{latest_shipment}}</h2>
+  <h2>
+    <a href="/lanes/{{latest_shipment.name}}/ship/{{latest_shipment.date}}">
+      The last time something was shipped was {{latest_shipment.locale}}
+    </a>
+  </h2>
   <h2>{{shipments_last_24_hours}} shipments have been made in the last 24 hours</h2>
   <h3>You currently have:</h3>
   <ul>

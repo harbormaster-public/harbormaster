@@ -1,29 +1,25 @@
 
 <template name="profile">
   <form>
-    <label>Name
-      <input>
-    </label>
-    <label>Email
-      <input>
-    </label>
+    <h1><span>User ID:</span> <span>{{user_email}}</span></h1>
     <fieldset class="fieldset">
       <label>Harbormaster
-        <input type=radio>
+        <input class="is-harbormaster" disabled={{not_harbormaster}} type=checkbox checked={{is_harbormaster}}>
       </label>
       <label>Captain
-        <input type=radio>
-      </label>
-      <label>User
-        <input type=radio>
+        <input class="is-captain" disabled type=checkbox checked={{is_captain}}>
       </label>
     </fieldset>
-    <label>Lanes
+    <h2>Lanes</h2>
       <ul>
         {{#each lanes}}
-          <li><input type=checkbox>{{name}}</li>
+          <li>
+            <label>
+              <input data-lane-id={{_id}} class="can-ply-lane" disabled={{can_change_plying}} type=checkbox checked={{can_ply}}>
+              {{name}}
+            </label>
+          </li>
         {{/each}}
       </ul>
-    </label>
   </form>
 </template>

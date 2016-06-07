@@ -57,6 +57,13 @@ FlowRouter.route('/lanes/:name/ship/:date', {
   }
 });
 
+FlowRouter.route('/lanes//ship', {
+  name: 'redirect_to_lanes',
+  action: function () {
+    FlowRouter.go('/lanes');
+  }
+});
+
 FlowRouter.route('/users', {
   name: 'users',
   action: function () {
@@ -73,9 +80,19 @@ FlowRouter.route('/profile', {
     BlazeLayout.render('main', {
       header: 'nav',
       main: 'profile'
-    })
+    });
   }
-})
+});
+
+FlowRouter.route('/profile/:user_id', {
+  name: 'profile',
+  action: function () {
+    BlazeLayout.render('main', {
+      header: 'nav',
+      main: 'profile'
+    });
+  }
+});
 
 AccountsTemplates.configureRoute('changePwd');
 AccountsTemplates.configureRoute('forgotPwd');

@@ -2,7 +2,13 @@
   display: inline;
 }
 
+/*
+TODO: Make multiple addresses multi-colored
+*/
 .command-results:nth-child(odd) {
-  background: #efefef;
+  background: #dedede;
 }
 
+.command-results:nth-child(even) {
+  background: #efefef;
+}

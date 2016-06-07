@@ -19,7 +19,7 @@ Template.edit_lane.helpers({
   },
 
   validate_done () {
-    if (! Session.get('lane').minimum_complete) {
+    if (! Session.get('lane') || ! Session.get('lane').minimum_complete) {
       return true;
     }
 
@@ -78,6 +78,31 @@ Template.edit_lane.helpers({
     }
 
     return false;
+  },
+
+  plying () {
+    var lane = Session.get('lane');
+    var user = Users.findOne(Meteor.user().emails[0].address);
+
+    if (user && user.harbormaster) { return true; }
+
+    if (lane.captains && lane.captains.length) {
+      let captain = _.find(lane.captains, function (captain) {
+        return captain == Meteor.user().emails[0].address;
+      });
+
+      return captain ? true : false;
+    }
+
+    return false;
+  },
+
+  can_set_ply () {
+    var user = Users.findOne(Meteor.user().emails[0].address);
+
+    if (this.harbormaster) { return true; }
+
+    if (user) { return ! user.harbormaster; }
   },
 
   destinations () {

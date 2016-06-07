@@ -1,8 +1,12 @@
 
 <template name="users">
+  <h1>Users</h1>
   <ul>
     {{#each users}}
-    <li>User: {{_id}} | Harbormaster: {{harbormaster}} | Captain: {{captain_lanes}}</li>
+    <li>
+      User: {{_id}}; Harbormaster: {{is_harbormaster}}; Captain of lanes: {{captain_lanes}}
+      <a href="/profile/{{_id}}">&lt;&lt; Edit User</a>
+    </li>
     {{/each}}
   </ul>
 </template>

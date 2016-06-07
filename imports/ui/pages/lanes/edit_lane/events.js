@@ -108,6 +108,7 @@ Template.edit_lane.events({
     lane.destinations = destinations;
 
     Session.set('lane', lane);
+    if (Lanes.findOne(lane._id)){ Lanes.update(lane._id, lane); }
 
   },
 
@@ -126,6 +127,7 @@ Template.edit_lane.events({
     lane.captains = captains;
 
     Session.set('lane', lane);
+    if (Lanes.findOne(lane._id)){ Lanes.update(lane._id, lane); }
   },
 
   'change .destination-address': function (event) {
@@ -241,8 +243,8 @@ Template.edit_lane.events({
   'click .back-to-lanes': function (event) {
     event.preventDefault();
 
-    FlowRouter.go('/lanes');
     Session.set('lane', null);
+    FlowRouter.go('/lanes');
   },
 
   'click .remove-address': function (event) {
