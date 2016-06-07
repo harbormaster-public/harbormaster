@@ -5,8 +5,7 @@ import fs from 'fs';
 Meteor.methods({
   'lanes:start_shipment': function (lane_id, start_date) {
     var lane = Lanes.findOne(lane_id);
-    //TODO: Make this configurable
-    var private_key = fs.readFileSync('/home/skyler/.ssh/id_rsa');
+    var private_key = fs.readFileSync(process.env.PRIVATE_KEY);
     var current_destination_index = 0;
     lane.date_history = lane.date_history || [];
     lane.date_history.push({
@@ -18,8 +17,8 @@ Meteor.methods({
 
     // TODO: Probably worth revisiting this execution chain.  For example,
     // multiple `sleep` statements don't seem to play nicely with one another
-    // when executed on the same boxes.  Need to dig in to find if that's due
-    // to this, or on the box itself; or to find a better way to verify the
+    // when executed on the same box.  Need to dig in to find if that's due
+    // to this code or the box itself; or to find a better way to verify the
     // execution order is happening as expected.
     function visit_destinations () {
 
