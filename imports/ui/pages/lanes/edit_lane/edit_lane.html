@@ -3,7 +3,7 @@
   {{#if plying}}
     <form>
       <label>Lane Name
-        <input class="lane-name" value={{lane_name lane_name}}>
+        <input type=text required class="lane-name" value={{lane_name lane_name}}>
       </label>
       <button disabled={{validate_done}} class="button hollow lane-done">Done</button>
       <button class="button hollow secondary back-to-lanes">Back to Lanes</button>
@@ -32,12 +32,12 @@
         <fieldset data-destination-index={{@index}} class="fieldset destination">
           <legend>{{name}}</legend>
           <label>Destination Name
-            <input class="destination-name" value="{{destination_name_value}}">
+            <input type=text class="destination-name" value="{{destination_name_value}}">
           </label>
           <label>Destination Address(es)
             {{#each addresses}}
             <span class="address-field">
-              <input data-address-index={{@index}} class="destination-address" value={{this}} disabled={{has_no_name}} placeholder="Single IP or hostname">
+              <input type=text data-address-index={{@index}} class="destination-address" value={{this}} disabled={{has_no_name}} placeholder="Single IP or hostname">
               <button class="remove-address close-button" aria-label="Delete address" type="button">
                 <span aria-hidden="true">&times;</span>
               </button>
@@ -47,7 +47,7 @@
           <button disabled={{has_no_address}} class="button tiny add-address">Add another address</button>
           {{#each stops}}
           <label data-stop-index={{@index}} class="stop">Stop {{pretty_index @index}}
-            <input disabled={{has_no_name_or_address ..}} class="stop-name" placeholder=Name value={{name}}>
+            <input type=text disabled={{has_no_name_or_address ..}} class="stop-name" placeholder=Name value={{name}}>
             <button class="remove-stop close-button" aria-label="Delete address" type="button">
               <span aria-hidden="true">&times;</span>
             </button>

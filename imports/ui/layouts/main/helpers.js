@@ -10,6 +10,11 @@ Template.main.helpers({
     var harbormasters = Users.find({ harbormaster: true }).fetch();
 
     return ! harbormasters.length ? true : false;
+  },
+
+  no_users () {
+    if (! Meteor.users.find().fetch().length) { return true; }
+    return false;
   }
 });
 

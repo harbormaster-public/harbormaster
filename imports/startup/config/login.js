@@ -13,4 +13,5 @@ AccountsTemplates.configure({
   positiveValidation: true,
   negativeFeedback: false,
   positiveFeedback: true,
+  forbidClientAccountCreation: true
 });

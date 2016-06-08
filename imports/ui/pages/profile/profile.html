@@ -2,6 +2,7 @@
 <template name="profile">
   <form>
     <h1><span>User ID:</span> <span>{{user_email}}</span></h1>
+    <a href="/reset-password">Reset your password</a>
     <fieldset class="fieldset">
       <label>Harbormaster
         <input class="is-harbormaster" disabled={{not_harbormaster}} type=checkbox checked={{is_harbormaster}}>

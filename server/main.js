@@ -9,6 +9,9 @@ import { Users } from '../imports/api/users/users';
 import '../imports/startup/config/login';
 import '../imports/startup/server/accounts';
 import '../imports/api/lanes/server/methods';
+import '../imports/api/users/server/methods';
 
+console.log('Modules loaded.');
 Meteor.startup(() => {
+  console.log('Server started.');
 });

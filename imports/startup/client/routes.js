@@ -1,11 +1,13 @@
-import '../../ui/layouts/main/main.js';
-import '../../ui/components/nav/nav.js';
-import '../../ui/pages/root/root.js';
-import '../../ui/pages/lanes/lanes.js';
-import '../../ui/pages/users/users.js';
-import '../../ui/pages/profile/profile.js';
-import '../../ui/pages/lanes/edit_lane/edit_lane.js';
-import '../../ui/pages/lanes/ship_lane/ship_lane.js';
+import '../../ui/layouts/main/main';
+import '../../ui/components/nav/nav';
+import '../../ui/pages/root/root';
+import '../../ui/pages/lanes/lanes';
+import '../../ui/pages/users/users';
+import '../../ui/pages/profile/profile';
+import '../../ui/pages/lanes/edit_lane/edit_lane';
+import '../../ui/pages/lanes/ship_lane/ship_lane';
+import '../../ui/pages/users/add_user/add_user';
+import '../../ui/components/reset_password/reset_password.html';
 
 FlowRouter.route('/', {
   name: 'root',
@@ -74,6 +76,16 @@ FlowRouter.route('/users', {
   }
 });
 
+FlowRouter.route('/users/add_user', {
+  name: 'add_user',
+  action: function () {
+    BlazeLayout.render('main', {
+      header: 'nav',
+      main: 'add_user'
+    });
+  }
+});
+
 FlowRouter.route('/profile', {
   name: 'profile',
   action: function () {
@@ -94,11 +106,20 @@ FlowRouter.route('/profile/:user_id', {
   }
 });
 
+FlowRouter.route('/reset-password', {
+  name: 'reset-password',
+  action: function () {
+    BlazeLayout.render('main', {
+      header: 'nav',
+      main: 'reset_password'
+    });
+  }
+});
+
 AccountsTemplates.configureRoute('changePwd');
 AccountsTemplates.configureRoute('forgotPwd');
 AccountsTemplates.configureRoute('resetPwd');
 AccountsTemplates.configureRoute('signIn');
-AccountsTemplates.configureRoute('signUp');
 AccountsTemplates.configureRoute('verifyEmail');
 
 FlowRouter.triggers.enter([AccountsTemplates.ensureSignedIn]);
