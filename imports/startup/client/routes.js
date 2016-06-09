@@ -76,7 +76,7 @@ FlowRouter.route('/users', {
   }
 });
 
-FlowRouter.route('/users/add_user', {
+FlowRouter.route('/users/add-user', {
   name: 'add_user',
   action: function () {
     BlazeLayout.render('main', {
