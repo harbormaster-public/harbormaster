@@ -25,7 +25,11 @@ Meteor.methods({
       var destination = lane.destinations[current_destination_index];
       var addresses_complete = 0;
 
-      if (current_destination_index >= lane.destinations.length) { return; }
+      if (current_destination_index >= lane.destinations.length) {
+        lane.shipment_active = false;
+        Lanes.update(lane_id, lane);
+        return;
+      }
 
       destination.date_history = destination.date_history || [];
       destination.date_history.push({
@@ -57,7 +61,12 @@ Meteor.methods({
 
           Lanes.update(lane_id, lane);
 
+          // TODO: Likely need to add a unique hash for each stop, and append
+          // output for multiple stdouts for that stop.  Either that, or make
+          // sure that we're capturing it all and showing it properly on the
+          // client.
           ssh.exec(stop.command, {
+            pty: true,
             out: Meteor.bindEnvironment(function (stdout) {
               stop.stdout_history.push({
                 stdout: stdout,
@@ -105,7 +114,6 @@ Meteor.methods({
 
     visit_destinations();
 
-    lane.shipment_active = false;
     lane.date_history[lane.date_history.length - 1].finished = Date.now();
     Lanes.update(lane_id, lane);
 

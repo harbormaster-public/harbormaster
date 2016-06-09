@@ -8,12 +8,13 @@ WORKDIR /tmp
 RUN curl https://install.meteor.com/ | sh \
  && meteor build /opt/harbormaster --directory \
  && cd /opt/harbormaster/bundle/programs/server \
- && npm install \
- && rm -rf /tmp/*
+ && npm install
+
+ADD start.sh /opt/harbormaster/start.sh
 
 EXPOSE 80
 
 VOLUME /root/.ssh
 
-ENTRYPOINT ["node opt/harbormaster/bundle/main.js"]
+ENTRYPOINT ["/opt/harbormaster/start.sh"]
 
