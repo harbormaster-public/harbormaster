@@ -203,7 +203,7 @@ Template.edit_lane.events({
         .attr('data-destination-index'),
       10
     );
-    var destintation = lane.destinations[destination_index];
+    var destination = lane.destinations[destination_index];
 
     destination.stops.push({ name: '', command: '' });
     destination.complete = false;

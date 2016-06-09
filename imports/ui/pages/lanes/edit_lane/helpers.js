@@ -146,7 +146,7 @@ Template.edit_lane.helpers({
 
   has_no_name () {
     var lane = Session.get('lane');
-    destination = _.find(lane.destinations, function (destination) {
+    var destination = _.find(lane.destinations, function (destination) {
       return destination.name;
     });
 
