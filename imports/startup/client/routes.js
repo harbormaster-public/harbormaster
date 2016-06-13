@@ -7,7 +7,6 @@ import '../../ui/pages/profile/profile';
 import '../../ui/pages/lanes/edit_lane/edit_lane';
 import '../../ui/pages/lanes/ship_lane/ship_lane';
 import '../../ui/pages/users/add_user/add_user';
-import '../../ui/components/reset_password/reset_password.html';
 
 FlowRouter.route('/', {
   name: 'root',
@@ -106,20 +105,3 @@ FlowRouter.route('/profile/:user_id', {
   }
 });
 
-FlowRouter.route('/reset-password', {
-  name: 'reset-password',
-  action: function () {
-    BlazeLayout.render('main', {
-      header: 'nav',
-      main: 'reset_password'
-    });
-  }
-});
-
-AccountsTemplates.configureRoute('changePwd');
-AccountsTemplates.configureRoute('forgotPwd');
-AccountsTemplates.configureRoute('resetPwd');
-AccountsTemplates.configureRoute('signIn');
-AccountsTemplates.configureRoute('verifyEmail');
-
-FlowRouter.triggers.enter([AccountsTemplates.ensureSignedIn]);

@@ -20,10 +20,9 @@ ecmascript              # Enable ECMAScript2015+ syntax in app code
 kadira:flow-router
 accounts-password
 kadira:blaze-layout
-useraccounts:foundation
 zurb:foundation-sites
-useraccounts:flow-routing
 email
 session
 autopublish
 insecure
+accounts-ui
