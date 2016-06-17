@@ -50,12 +50,34 @@ Template.ship_lane.helpers({
   },
 
   filter_results_by_address (results, address, command) {
-    var matching_command = _.findWhere(results, {
+    var matching_command = _.where(results, {
       address: address,
       command: command
     });
+    var results = '';
 
-    return matching_command ? matching_command.result : '';
+    if (matching_command.length) {
+      _.each(matching_command, function (command) {
+        results += command.result;
+      });
+
+      return results;
+    }
+
+    return '';
+
+  },
+
+  exit_code () {
+    var date = FlowRouter.getParam('date');
+    var exit_code = this.exit_code_history ?
+      _.where(this.exit_code_history, {
+        start_date: date
+      }) :
+      false
+    ;
+
+    return exit_code.length ? exit_code[0].code : '';
   }
 
 });

@@ -1,14 +1,50 @@
+.stop-title {
+  margin: 5px;
+}
+
 .command-executed {
   display: inline;
+  margin: 0 5px;
 }
 
 /*
 TODO: Make multiple addresses multi-colored
 */
+.command-results {
+  padding: 5px;
+}
+
 .command-results:nth-child(odd) {
-  background: #dedede;
+  background: rgba(0, 0, 0, 0.066);
 }
 
 .command-results:nth-child(even) {
-  background: #efefef;
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.results-title {
+  color: #666;
+  font-style: italic;
+}
+
+.exit-code {
+  background: rgba(255, 150, 0, 0.75);
+}
+
+.exit-code.code- {
+  background: none;
+}
+
+.exit-code.code-0 {
+  background: rgba(0, 255, 0, 0.25);
+}
+
+.prompt {
+  color: #666;
+  padding: 0 10px 0 0;
+  display: inline-block;
+}
+
+.results {
+  margin: 0 10px;
 }

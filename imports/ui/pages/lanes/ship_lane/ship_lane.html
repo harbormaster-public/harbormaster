@@ -27,15 +27,15 @@
           <h4>Stops:</h4>
           <ol>
             {{#each this.stops}}
-              <li>
-                <h5>{{this.name}}</h5>
-                <p>Command executed: <pre class="command-executed">{{this.command}}</pre></p>
+              <li class="exit-code code-{{exit_code}}">
+                <h5 class="stop-title">{{this.name}}</h5>
+                <p><pre class="command-executed"><span class="prompt">$</span>{{this.command}}</pre></p>
                   {{#if results}}
                     {{#let result_list=results}}
                       {{#each ../addresses}}
                         <div class="command-results">
-                          <h6>Results for {{this}}:</h6>
-                          <pre>{{filter_results_by_address result_list this ../command}}</pre>
+                          <h6 class="results-title"># Results for {{this}}:</h6>
+                          <pre class="results">{{filter_results_by_address result_list this ../command}}</pre>
                         </div>
                       {{/each}}
                     {{/let}}
