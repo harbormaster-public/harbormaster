@@ -26,9 +26,12 @@ Template.lanes.helpers({
   },
 
   last_shipped () {
+    var last_shipped_parsed;
+    var last_shipped_date;
+
     if (! this.latest_shipment) { return 'never'; }
-    var last_shipped_parsed = this.latest_shipment.split('-');
-    var last_shipped_date = new Date(
+    last_shipped_parsed = this.latest_shipment.split('-');
+    last_shipped_date = new Date(
       last_shipped_parsed[0],
       last_shipped_parsed[1],
       last_shipped_parsed[2],
@@ -64,8 +67,8 @@ Template.lanes.helpers({
     }
 
     if (this.captains && this.captains.length) {
-      let captain = _.find(this.captains, function (captain) {
-        return captain == Meteor.user().emails[0].address;
+      let captain = _.find(this.captains, function (email) {
+        return email == Meteor.user().emails[0].address;
       });
 
       return captain ? true : false;

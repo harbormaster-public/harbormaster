@@ -4,7 +4,7 @@
   <ul>
     {{#each lanes}}
     <li>
-      <p>{{name}}: {{total_captains}} Captains; {{destinations.length}} Destinations; {{total_stops}} Stops; last shipped {{last_shipped}}; last salvage run {{last_salvage_run}}; {{total_shipments}} total shipments; {{salvage_plans}} salvage plans.</p>
+      <p>{{name}}: {{total_captains}} Captains; {{destinations.length}} Destinations; {{total_stops}} Stops; <a href="/lanes/{{this.name}}/ship/{{this.latest_shipment}}">last shipped {{last_shipped}}</a>; last salvage run {{last_salvage_run}}; {{total_shipments}} total shipments; {{salvage_plans}} salvage plans.</p>
       {{#if can_ply}}
         <a href="/lanes/{{name}}/ship" class="button hollow tiny success ship-lane">Ship to this lane</a>
         <a href="/lanes/{{name}}/edit" class="button hollow tiny secondary edit-lane">Edit this lane</a>

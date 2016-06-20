@@ -36,7 +36,15 @@ Template.root.helpers({
 
   shipments_last_24_hours: function () {
     var yesterday = Date.now() - 86400000;
-    var lanes = Lanes.find({ date_history: { $elemMatch: { actual: { $gte: yesterday } } } }).fetch();
+    var lanes = Lanes.find({
+      date_history: {
+        $elemMatch: {
+          actual: {
+            $gte: yesterday
+          }
+        }
+      }
+    }).fetch();
     var shipments_made = 0;
 
     _.each(lanes, function (lane) {
@@ -79,7 +87,8 @@ Template.root.helpers({
 
     _.each(lanes, function (lane) {
       total_destinations += lane.destinations.length;
-    })
+    });
+
     return total_destinations;
   }
 });

@@ -25,7 +25,7 @@
       <fieldset class="fieldset">
         <legend>Manifest</legend>
         {{#each destinations}}
-        {{manifest_index @index}}: {{this.name}}
+          {{manifest_index @index}}: {{this.name}}
         {{/each}}
       </fieldset>
       {{#each destinations}}
@@ -64,8 +64,25 @@
   {{/if}}
   <h2>Shipping Log</h2>
   <ul>
-    <li><a href="" class="button tiny alert">Salvaged on Jun XX 2016 at 12:22:44</a></li>
-    <li><a href="" class="button tiny success">Shipped on Jun XX 2016 at 13:02:33</a></li>
-    <li><a href="" class="button tiny warning">Shipment currently in progress...</a></li>
+    {{#if lane}}
+      {{#if lane.shipment_active}}
+        <li><a href="/lanes/{{lane.name}}/ship/{{lane.latest_shipment}}" class="button tiny warning">Shipment currently in progress...</a></li>
+      {{/if}}
+    {{/if}}
+    {{#each lane "history"}}
+      {{#if this.salvaged}}
+        <li>
+          <a href="/lanes/{{lane.name}}/ship/{{this.start_date}}" class="button tiny alert hollow">
+            Salvaged on {{pretty_date this.finished}}, {{duration}} duration
+          </a>
+        </li>
+      {{else}}
+        <li>
+          <a href="/lanes/{{lane.name}}/ship/{{this.start_date}}" class="button tiny hollow">
+            Shipped on {{pretty_date this.actual}}, finished on {{pretty_date this.finished}}, {{duration}} duration
+          </a>
+        </li>
+      {{/if}}
+    {{/each}}
   </ul>
 </template>

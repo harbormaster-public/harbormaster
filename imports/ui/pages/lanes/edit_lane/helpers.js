@@ -2,6 +2,7 @@ import { Template } from 'meteor/templating';
 import { Lanes } from '../../../../api/lanes/lanes.js';
 import { Session } from 'meteor/session';
 import { Users } from '../../../../api/users/users.js';
+import { moment } from 'meteor/momentjs:moment';
 
 Template.edit_lane.helpers({
   lane_name (current_name) {
@@ -16,6 +17,16 @@ Template.edit_lane.helpers({
     Session.set('lane', lane);
 
     return current_name == 'New' ? '' : lane.name;
+  },
+
+  lane (sort_order) {
+    var name = FlowRouter.getParam('name');
+    var lane = Lanes.findOne({ name: name });
+
+    if (sort_order == 'history') {
+      return lane.date_history.reverse();
+    }
+    return lane;
   },
 
   validate_done () {
@@ -87,8 +98,8 @@ Template.edit_lane.helpers({
     if (user && user.harbormaster) { return true; }
 
     if (lane.captains && lane.captains.length) {
-      let captain = _.find(lane.captains, function (captain) {
-        return captain == Meteor.user().emails[0].address;
+      let captain = _.find(lane.captains, function (email) {
+        return email == Meteor.user().emails[0].address;
       });
 
       return captain ? true : false;
@@ -103,6 +114,8 @@ Template.edit_lane.helpers({
     if (this.harbormaster) { return true; }
 
     if (user) { return ! user.harbormaster; }
+
+    return false;
   },
 
   destinations () {
@@ -146,8 +159,8 @@ Template.edit_lane.helpers({
 
   has_no_name () {
     var lane = Session.get('lane');
-    var destination = _.find(lane.destinations, function (destination) {
-      return destination.name;
+    var destination = _.find(lane.destinations, function (target) {
+      return target.name;
     });
 
     if (! destination) { return true; }
@@ -188,10 +201,10 @@ Template.edit_lane.helpers({
     return index + 1;
   },
 
-  has_no_name_or_address (destination) {
+  has_no_name_or_address (target) {
     var lane = Session.get('lane');
     var destination = _.where(lane.destinations, {
-      name: destination.name
+      name: target.name
     })[0];
 
     if (
@@ -205,6 +218,14 @@ Template.edit_lane.helpers({
     }
 
     return false;
+  },
+
+  pretty_date (date) {
+    return new Date(date).toLocaleString();
+  },
+
+  duration () {
+    return moment.duration(this.finished - this.actual).humanize();
   }
 });
 

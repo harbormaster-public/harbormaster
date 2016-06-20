@@ -8,7 +8,7 @@ Template.registerHelper('manifest_index', (index) => {
     return '2nd';
   } else if (index == 3) {
     return '3rd';
-  } else {
-    return index + 'th';
   }
-})
+
+  return index + 'th';
+});

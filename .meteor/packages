@@ -26,3 +26,4 @@ session
 autopublish
 insecure
 accounts-ui
+momentjs:moment
