@@ -8,6 +8,7 @@ import '../../ui/pages/lanes/edit_lane/edit_lane';
 import '../../ui/pages/lanes/ship_lane/ship_lane';
 import '../../ui/pages/users/add_user/add_user';
 
+// TODO: e2e tests for these
 FlowRouter.route('/', {
   name: 'root',
   action: function () {

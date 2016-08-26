@@ -1,6 +1,4 @@
 
-class ShipmentCollection extends Mongo.Collection {
-
-}
+class ShipmentCollection extends Mongo.Collection { }
 
 export const Shipments = new ShipmentCollection('Shipments');

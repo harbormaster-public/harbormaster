@@ -3,14 +3,17 @@ import SSH from 'simple-ssh';
 import fs from 'fs';
 
 Meteor.methods({
-  'lanes:start_shipment': function (lane_id, start_date) {
+  'Lanes#start_shipment': function (lane_id, start_date) {
     var lane = Lanes.findOne(lane_id);
-    var private_key = fs.readFileSync(process.env.PRIVATE_KEY);
+    var private_key = process.env.PRIVATE_KEY ?
+      fs.readFileSync(process.env.PRIVATE_KEY) :
+      false
+    ;
     var current_destination_index = 0;
     lane.date_history = lane.date_history || [];
     lane.date_history.push({
       start_date: start_date,
-      actual: Date.now()
+      actual: new Date()
     });
 
     Lanes.update(lane_id, lane);
@@ -56,7 +59,7 @@ Meteor.methods({
           stop.date_history.push({
             start_date: start_date,
             address: address,
-            actual: Date.now()
+            actual: new Date()
           });
 
           Lanes.update(lane_id, lane);
@@ -73,7 +76,7 @@ Meteor.methods({
                 start_date: start_date,
                 command: stop.command,
                 address: address,
-                actual: Date.now()
+                actual: new Date()
               });
               Lanes.update(lane_id, lane);
             }),
@@ -83,7 +86,7 @@ Meteor.methods({
                 start_date: start_date,
                 command: stop.command,
                 address: address,
-                actual: Date.now()
+                actual: new Date()
               });
               Lanes.update(lane_id, lane);
             }),
@@ -93,7 +96,7 @@ Meteor.methods({
                 start_date: start_date,
                 address: address,
                 command: stop.command,
-                actual: Date.now()
+                actual: new Date()
               });
               Lanes.update(lane_id, lane);
 

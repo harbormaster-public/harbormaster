@@ -1,14 +1,18 @@
 import { Template } from 'meteor/templating';
 
-Template.registerHelper('manifest_index', (index) => {
-  index++;
-  if (index == 1) {
+export const manifest_index = (index) => {
+  pretty_index = index + 1;
+  if (pretty_index == 1) {
     return '1st';
-  } else if (index == 2) {
+  } else if (pretty_index == 2) {
     return '2nd';
-  } else if (index == 3) {
+  } else if (pretty_index == 3) {
     return '3rd';
   }
 
-  return index + 'th';
-});
+  return pretty_index + 'th';
+};
+
+Template.registerHelper('manifest_index', manifest_index);
+
+

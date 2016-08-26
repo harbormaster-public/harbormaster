@@ -1,6 +1,4 @@
 
-class HarbormasterCollection extends Mongo.Collection {
+class HarbormasterCollection extends Mongo.Collection { }
 
-}
-
-export const Harbormaster = new HarbormasterCollection('Harbormaster');
+export const Harbormasters = new HarbormasterCollection('Harbormaster');

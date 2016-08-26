@@ -2,9 +2,13 @@
   "name": "harbormaster",
   "private": true,
   "scripts": {
+    "test": "NODE_OPTIONS=--debug=5959 meteor test --port=4000 --once --driver-package dispatch:mocha-phantomjs",
+    "test:watch": "NODE_OPTIONS=--debug=5959 TEST_WATCH=1 meteor test --port=4000 --driver-package dispatch:mocha-phantomjs",
     "start": "meteor run"
   },
   "dependencies": {
+    "bcrypt": "^0.8.7",
+    "faker": "^3.1.0",
     "meteor-node-stubs": "^0.2.3",
     "simple-ssh": "^0.9.0"
   }

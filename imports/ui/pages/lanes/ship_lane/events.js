@@ -18,7 +18,7 @@ Template.ship_lane.events({
       lane.latest_shipment = shipment_start_date;
       Lanes.update(lane._id, lane);
       Meteor.call(
-        'lanes:start_shipment',
+        'Lanes#start_shipment',
         lane._id,
         shipment_start_date,
         function (err, res) {

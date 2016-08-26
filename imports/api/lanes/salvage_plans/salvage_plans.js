@@ -1,7 +1,5 @@
 import { LaneCollection } from '../lanes.js';
 
-class SalvageCollection extends LaneCollection {
+class SalvageCollection extends LaneCollection { }
 
-}
-
-export const SalveagePlans = new SalvageCollection('SalvagePlans');
+export const SalvagePlans = new SalvageCollection('SalvagePlans');

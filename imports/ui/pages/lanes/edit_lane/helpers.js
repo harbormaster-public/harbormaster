@@ -23,8 +23,8 @@ Template.edit_lane.helpers({
     var name = FlowRouter.getParam('name');
     var lane = Lanes.findOne({ name: name });
 
-    if (sort_order == 'history') {
-      return lane.date_history.reverse();
+    if (sort_order == 'history' && lane) {
+      return lane.date_history ? lane.date_history.reverse() : [];
     }
     return lane;
   },

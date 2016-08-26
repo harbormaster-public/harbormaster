@@ -1,7 +1,4 @@
 
-
-class StopCollection extends Mongo.Collection {
-
-}
+class StopCollection extends Mongo.Collection { }
 
 export const Stops = new StopCollection('Stops');

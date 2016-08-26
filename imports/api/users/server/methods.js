@@ -1,8 +1,8 @@
 import { Accounts } from 'meteor/accounts-base';
-import { Users } from '../users'
+import { Users } from '../users';
 
 Meteor.methods({
-  'users:invite_user' (email, password, confirm) {
+  'Users:invite_user' (email, password, confirm) {
     var existing_user = Users.findOne(email);
     var user_id;
 
@@ -12,5 +12,7 @@ Meteor.methods({
 
     user_id = Accounts.createUser({ email: email, password: password });
     Users.insert({ _id: email });
+
+    return user_id;
   }
 });
