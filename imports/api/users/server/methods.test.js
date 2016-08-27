@@ -18,7 +18,7 @@ describe('Users#invite_user', function () {
 
   it('should create a new User and Account', function () {
     var id = Meteor.call(
-      'Users:invite_user',
+      'Users#invite_user',
       test_email,
       test_password,
       test_password
@@ -34,7 +34,7 @@ describe('Users#invite_user', function () {
   it('should return false if an account already exists', function () {
     var user = Factory.create('user');
     var id = Meteor.call(
-      'Users:invite_user',
+      'Users#invite_user',
       test_email,
       test_password,
       test_password

@@ -21,7 +21,7 @@ Template.add_user.events({
     }
 
     Meteor.call(
-      'Users:invite_user',
+      'Users#invite_user',
       $email.val(),
       $password.val(),
       $confirm.val(),

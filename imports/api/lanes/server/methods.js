@@ -117,7 +117,7 @@ Meteor.methods({
 
     visit_destinations();
 
-    lane.date_history[lane.date_history.length - 1].finished = Date.now();
+    lane.date_history[lane.date_history.length - 1].finished = new Date();
     Lanes.update(lane_id, lane);
 
     return lane;

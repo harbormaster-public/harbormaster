@@ -1,0 +1,38 @@
+sudo: required
+language: node_js
+node_js:
+  - 4
+
+env:
+  global:
+    - "CXX=g++-4.8"
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - g++-4.8
+services:
+  - mongodb
+cache:
+  directories:
+    - "../travis_phantomjs"
+
+before_install:
+  - "export PATH=$PWD/../travis_phantomjs/phantomjs-2.1.1-linux-x86_64/bin:$PATH"
+  - "if [ $(phantomjs --version) != '2.1.1' ]; then rm -rf $PWD/../travis_phantomjs; mkdir -p $PWD/../travis_phantomjs; fi"
+  - "if [ $(phantomjs --version) != '2.1.1'  ]; then wget https://assets.membergetmember.co/software/phantomjs-2.1.1-linux-x86_64.tar.bz2 -O $PWD/../travis_phantomjs/phantomjs-2.1.1-linux-x86_64.tar.bz2; fi"
+  - "if [ $(phantomjs --version) != '2.1.1'  ]; then tar -xvf $PWD/../travis_phantomjs/phantomjs-2.1.1-linux-x86_64.tar.bz2 -C $PWD/../travis_phantomjs; fi"
+  - "echo `phantomjs --version`"
+
+install:
+  - curl https://install.meteor.com | /bin/sh
+  - npm i -g chimp
+  - npm install
+  - meteor build .build --directory
+  - cd .build/bundle/programs/server && npm install && cd ../../../..
+
+script:
+  - npm run test
+  - MONGO_URL=mongodb://127.0.0.1 ROOT_URL=http://localhost:3000 PORT=3000 node /home/travis/build/trueandco/harbormaster/.build/bundle/main.js &
+  - npm run test:e2e
