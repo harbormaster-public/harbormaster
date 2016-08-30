@@ -1,5 +1,7 @@
 # harbormaster
 
+[![Build Status](https://travis-ci.org/trueandco/harbormaster.svg?branch=master)](https://travis-ci.org/trueandco/harbormaster)
+
 General notes on things to do and how things work.
 
 Features:
