@@ -85,5 +85,21 @@ Template.profile.helpers({
     if (current_harbormaster) { return false; }
 
     if (! user || ! user.harbormaster) { return true; }
+  },
+
+  webhook_allowed () {
+    var user_id = FlowRouter.getParam('user_id');
+
+    if (! this.tokens) { return false; }
+
+    return _.contains(this.tokens, user_id);
+  },
+
+  webhook_token () {
+    var user_id = FlowRouter.getParam('user_id');
+
+    if (! this.tokens) { return '' }
+
+    return _.invert(this.tokens)[user_id];
   }
 });

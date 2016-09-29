@@ -7,6 +7,7 @@ import { Shipments } from '../imports/api/shipments/shipments';
 import { Stops } from '../imports/api/stops/stops';
 import { Users } from '../imports/api/users/users';
 import '../imports/startup/server/accounts';
+import '../imports/startup/server/routes';
 import '../imports/api/lanes/server/methods';
 import '../imports/api/users/server/methods';
 

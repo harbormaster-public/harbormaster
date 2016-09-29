@@ -21,4 +21,5 @@ Features:
 - [x] **Defining a Lane**, which allows input of individual commands as Stops, ordering them, and saving them for later execution
 - [x] **Promoting & Demoting Users**, allowing Harbormasters to change roles
 - [ ] **Dynamic stdin**, letting users input commands which require user input when run
+- [x] **Hooks**, allowing remote calls to trigger shipments
 

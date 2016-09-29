@@ -33,3 +33,4 @@ dispatch:mocha-phantomjs
 xolvio:cleaner
 practicalmeteor:chai
 dburles:factory
+meteorhacks:picker
