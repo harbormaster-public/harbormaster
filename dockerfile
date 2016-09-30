@@ -1,4 +1,4 @@
-FROM node:0.10.45
+FROM node:4.6
 MAINTAINER Skyler Brungardt <skyler@trueandco.com>
 
 ADD . /tmp

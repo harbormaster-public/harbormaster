@@ -23,3 +23,13 @@ Features:
 - [ ] **Dynamic stdin**, letting users input commands which require user input when run
 - [x] **Hooks**, allowing remote calls to trigger shipments
 
+Environment variables you'll want if you run this docker container:
+
+```
+MAIL_URL=[username]:[password]@[smtp.someserver.com]:[port]
+MONGO_URL=mongodb://[mongodb url]:[mongodb port]/[db name, usually "harbormaster"]
+PRIVATE_KEY=[location of private ssh key, where applicable]
+ROOT_URL=http[s]://[wherever the app is running][:port]
+PORT=[usually 80]
+```
+
