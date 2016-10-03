@@ -9,4 +9,4 @@ import { Users } from '../imports/api/users/users.js';
 import '../imports/startup/config/login.js';
 import '../imports/startup/client/global_helpers.js';
 import '../imports/startup/client/routes.js';
-
+import '../imports/startup/client/spinner.js';
