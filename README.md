@@ -22,13 +22,13 @@ Features:
 - [x] **Promoting & Demoting Users**, allowing Harbormasters to change roles
 - [ ] **Dynamic stdin**, letting users input commands which require user input when run
 - [x] **Hooks**, allowing remote calls to trigger shipments
+- [ ] **Abort shipment**, canceling a shipment in the middle of it, optionally triggering a Salvage Plan
 
 Environment variables you'll want if you run this docker container:
 
 ```
 MAIL_URL=[username]:[password]@[smtp.someserver.com]:[port]
-MONGO_URL=mongodb://[mongodb url]:[mongodb port]/[db name, usually "harbormaster"]
-PRIVATE_KEY=[location of private ssh key, where applicable]
+MONGO_URL=mongodb://[user]:[password]@[mongodb url]:[mongodb port]/[db name, usually "harbormaster"]
 ROOT_URL=http[s]://[wherever the app is running][:port]
 PORT=[usually 80]
 ```
