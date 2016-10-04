@@ -226,6 +226,42 @@ Template.edit_lane.helpers({
 
   duration () {
     return moment.duration(this.finished - this.actual).humanize();
+  },
+
+  destination_user_value () {
+    if (this.user) {
+      return this.user;
+    }
+
+    return '';
+  },
+
+  destination_use_private_key () {
+    if (this.use_private_key) { return this.use_private_key; }
+
+    return false;
+  },
+
+  destination_private_key_location () {
+    if (this.private_key_location) { return this.private_key_location; }
+
+    return '';
+  },
+
+  has_private_key_location () {
+    if (this.use_private_key) {
+      return false;
+    }
+
+    return true;
+  },
+
+  destination_password_value () {
+    if (this.password) {
+      return this.password;
+    }
+
+    return '';
   }
 });
 

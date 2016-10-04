@@ -37,6 +37,10 @@ Template.edit_lane.events({
   'change .destination': function validate_destination (event) {
     var $destination = $(event.target).parents('.destination');
     var destination_name = $destination.find('.destination-name').val();
+    var destination_user = $destination.find('.destination-user').val();
+    var use_private_key = $destination.find('.use-private-key').prop('checked');
+    var private_key_location = $destination.find('.private-key-location').val();
+    var password = $destination.find('.destination-password').val();
     var addresses = [];
     var stops = [];
     var lane = Session.get('lane');
@@ -85,6 +89,10 @@ Template.edit_lane.events({
         name: destination_name,
         addresses: addresses,
         stops: stops,
+        user: destination_user,
+        password: password,
+        use_private_key: use_private_key,
+        private_key_location: private_key_location,
         complete: destination_incomplete ? false : true
       }
 
@@ -304,5 +312,16 @@ Template.edit_lane.events({
     Session.set('lane', lane);
 
     if (Lanes.findOne(lane._id)) { Lanes.update(lane._id, lane); }
+  },
+
+  'change .use-private-key': function (event) {
+    var $destination = $(event.target).parents('.destination');
+    var $private_key_location = $destination.find('.private-key-location');
+
+    if ($(event.target).prop('checked')) {
+      $private_key_location.prop('disabled', false);
+    }
+
+    $private_key_location.prop('disabled', true);
   }
 });

@@ -44,6 +44,18 @@
             </span>
             {{/each}}
           </label>
+          <label>Destination User
+            <input type=text class="destination-user" placeholder="ubuntu (default)" value={{destination_user_value}}>
+          </label>
+          <label>Destination User Password
+            <input type=password class="destination-password" value={{destination_password_value}}>
+          </label>
+          <label>Use Private Key
+            <input type=checkbox class="use-private-key" checked={{destination_use_private_key}}>
+          </label>
+          <label>Private Key Location
+            <input type=text class="private-key-location" placeholder="~/.ssh/id_rsa (default)" disabled={{has_private_key_location}} value={{destination_private_key_location}}>
+          </label>
           <button disabled={{has_no_address}} class="button tiny add-address">Add another address</button>
           {{#each stops}}
           <label data-stop-index={{@index}} class="stop">Stop {{pretty_index @index}}

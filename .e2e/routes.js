@@ -19,9 +19,10 @@ describe('Routing', function () {
     }
 
     try {
-      browser.waitForExist('#new-instance');
+      browser.waitForExist('#new-instance', 1000);
       fresh = browser.element('#new-instance');
     } catch (err) {
+      console.log('Existing instance detected.');
       fresh = false;
     }
 
@@ -29,6 +30,7 @@ describe('Routing', function () {
       browser.waitForExist('#login-buttons');
       existing = browser.element('#login-buttons');
     } catch (err) {
+      console.log('New instance detected.');
       existing = false;
     }
 
@@ -53,26 +55,26 @@ describe('Routing', function () {
       throw new Error('No existing or fresh login!');
     }
 
-    browser.waitForExist('#last-time-shipped-header');
+    browser.waitForExist('#last-time-shipped-header', 1000);
 
   });
 
   describe('/', function () {
-    it('@watch should load', function () {
+    it('should load', function () {
       browser.url('http://localhost:3000');
       expect(browser.getUrl()).to.equal('http://localhost:3000/');
     });
   });
 
   describe('/lanes', function () {
-    it('@watch should load', function () {
+    it('should load', function () {
       browser.url('http://localhost:3000/lanes');
       expect(browser.getUrl()).to.equal('http://localhost:3000/lanes');
     });
   });
 
   describe('/lanes/:name/edit', function () {
-    it('@watch should load for "new" and any given name', function () {
+    it('should load for "new" and any given name', function () {
       var new_lane_url = 'http://localhost:3000/lanes/new/edit';
       var random_lane_url = 'http://localhost:3000/lanes/' +
         faker.lorem.word() +
@@ -85,7 +87,7 @@ describe('Routing', function () {
   });
 
   describe('/lanes/:name/ship', function () {
-    it('@watch should load', function () {
+    it('should load', function () {
       var random_lane_url = 'http://localhost:3000/lanes/' +
         faker.lorem.word() +
         '/ship';
@@ -95,7 +97,7 @@ describe('Routing', function () {
   });
 
   describe('/lanes/:name/ship/:date', function () {
-    it('@watch should load', function () {
+    it('should load', function () {
       var date = new Date();
       var random_shipped_lane_url = 'http://localhost:3000/lanes/' +
         faker.lorem.word() +
@@ -112,39 +114,48 @@ describe('Routing', function () {
   });
 
   describe('/lanes//ship', function () {
-    it('@watch should redirect to /lanes', function () {
+    it('should redirect to /lanes', function () {
       browser.url('http://localhost:3000/lanes//ship');
       expect(browser.getUrl()).to.equal('http://localhost:3000/lanes');
     });
   });
 
   describe('/users', function () {
-    it('@watch should load', function () {
+    it('should load', function () {
       browser.url('http://localhost:3000/users');
       expect(browser.getUrl()).to.equal('http://localhost:3000/users');
     });
   });
 
   describe('/users/add-user', function () {
-    it('@watch should load', function () {
+    it('should load', function () {
       browser.url('http://localhost:3000/users/add-user');
       expect(browser.getUrl()).to.equal('http://localhost:3000/users/add-user');
     });
   });
 
   describe('/profile', function () {
-    it('@watch should load', function () {
+    it('should load', function () {
       browser.url('http://localhost:3000/profile');
       expect(browser.getUrl()).to.equal('http://localhost:3000/profile');
     });
   });
 
   describe('/profile/:user_id', function () {
-    it('@watch should load', function () {
+    it('should load', function () {
       var test_user_profile_url = 'http://localhost:3000/profile/' + test_email;
       browser.url(test_user_profile_url);
       expect(browser.getUrl()).to.equal(test_user_profile_url);
     });
   });
 
+  afterEach(function () {
+    if (this.currentTest.state != 'passed') {
+      browser.saveScreenshot(
+        'screenshots/' +
+        this.currentTest.fullTitle().replace(/ /g, '_').replace(/\//g, '-') +
+        '.png'
+      );
+    }
+  });
 });

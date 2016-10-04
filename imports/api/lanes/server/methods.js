@@ -1,14 +1,11 @@
 import { Lanes } from '../lanes';
 import SSH from 'simple-ssh';
 import fs from 'fs';
+import expandTilde from 'expand-tilde';
 
 Meteor.methods({
   'Lanes#start_shipment': function (lane_id, start_date) {
     var lane = Lanes.findOne(lane_id);
-    var private_key = process.env.PRIVATE_KEY ?
-      fs.readFileSync(process.env.PRIVATE_KEY) :
-      false
-    ;
     var current_destination_index = 0;
     lane.date_history = lane.date_history || [];
     lane.date_history.push({
@@ -27,11 +24,26 @@ Meteor.methods({
 
       var destination = lane.destinations[current_destination_index];
       var addresses_complete = 0;
+      var user = destination && destination.user ? destination.user : 'ubuntu';
+      var password = destination && destination.password ?
+        destination.password :
+        ''
+      ;
+      var private_key;
 
       if (current_destination_index >= lane.destinations.length) {
         lane.shipment_active = false;
         Lanes.update(lane_id, lane);
         return;
+      }
+
+      if (destination.use_private_key && destination.private_key_location) {
+        private_key = fs.readFileSync(
+          expandTilde(destination.private_key_location)
+        );
+
+      } else if (destination.use_private_key) {
+        private_key = fs.readFileSync(expandTilde('~/.ssh/id_rsa'));
       }
 
       destination.date_history = destination.date_history || [];
@@ -44,12 +56,35 @@ Meteor.methods({
 
       _.each(destination.addresses, function (address, index) {
         var stops_complete = 0;
-        var ssh = new SSH({
-          host: address,
-          //TODO: make this an option on the form
-          user: 'ubuntu',
-          key: private_key
-        });
+
+        if (private_key && ! password) {
+          var ssh = new SSH({
+            host: address,
+            user: user,
+            key: private_key
+          });
+
+        } else if (password && ! private_key) {
+          var ssh = new SSH({
+            host: address,
+            user: user,
+            password: password
+          });
+
+        } else if (password && private_key) {
+          var ssh = new SSH({
+            host: address,
+            user: user,
+            key: private_key,
+            password: password
+          });
+
+        } else {
+          var ssh = new SSH({
+            host: address,
+            user: user
+          });
+        }
 
         _.each(destination.stops, function (stop, index) {
           stop.date_history = stop.date_history || [];
