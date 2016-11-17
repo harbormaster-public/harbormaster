@@ -2,9 +2,117 @@ import { Template } from 'meteor/templating';
 import { Lanes } from '../../../api/lanes/lanes.js';
 import { Users } from '../../../api/users/users.js';
 
+const sort_by_length = function (doc1, doc2, key, reverse) {
+  let length1 = doc1[key] ? doc1[key].length : 0;
+  let length2 = doc2[key] ? doc2[key].length : 0;
+  let order = 0;
+
+  if (length1 > length2) { order = -1; }
+  else if (length1 < length2) { order = 1; }
+
+  if (reverse == -1) { order = -order; }
+  return order;
+}
+
 Template.lanes.helpers({
   lanes () {
-    return Lanes.find();
+    let lanes;
+    let sort_by = Session.get('lanes_table_sort_by');
+    let reverse = Session.get('lanes_table_sort_reverse') ? -1 : 1;
+
+    switch (sort_by) {
+      case 'name':
+        lanes = Lanes.find({}, { sort: { name: reverse } });
+        break;
+      case 'captains':
+        lanes = Lanes.find({}, { sort: { captains: -reverse } });
+        break;
+      case 'destinations':
+        lanes = Lanes.find({}, {
+          sort: function (lane1, lane2) {
+            return sort_by_length(lane1, lane2, 'destinations', reverse);
+          }
+        })
+        break;
+      case 'stops':
+        lanes = Lanes.find({}, {
+          sort: function (lane1, lane2) {
+            let total_lane1_stops = 0;
+            let total_lane2_stops = 0;
+            let sort_order = 0;
+
+            _.each(lane1.destinations, function (destination) {
+              total_lane1_stops += destination.stops.length;
+            });
+
+            _.each(lane2.destinations, function (destination) {
+              total_lane2_stops += destination.stops.length;
+            });
+
+            if (total_lane1_stops > total_lane2_stops) {
+              sort_order = -1;
+            } else if (total_lane1_stops < total_lane2_stops) {
+              sort_order = 1;
+            }
+
+            if (reverse == -1) { sort_order = -sort_order; }
+
+            return sort_order;
+          }
+        });
+        break;
+      case 'shipped':
+        lanes = Lanes.find({}, {
+          sort: function (lane1, lane2) {
+            let lane1_date = lane1.date_history ? 
+              lane1.date_history[lane1.date_history.length - 1].actual :
+              0
+            ;
+            let lane2_date = lane2.date_history ?
+              lane2.date_history[lane2.date_history.length - 1].actual :
+              0
+            ;
+            let sort_order = 0;
+
+            if (lane1_date > lane2_date) { sort_order = -1; }
+            else if (lane1_date < lane2_date) { sort_order = 1; }
+
+            if (reverse == -1) { sort_order = -sort_order; }
+            return sort_order;
+          }
+        })
+        break;
+      case 'salvaged':
+        break;
+      case 'shipments':
+        lanes = Lanes.find({}, {
+          sort: function (lane1, lane2) {
+            return sort_by_length(lane1, lane2, 'date_history', reverse);
+          }
+        });
+        break;
+      case 'salvage-runs':
+        break;
+      default:
+        lanes = Lanes.find();
+        break;
+    }
+
+    return lanes;
+  },
+
+  active (header) {
+    let active_string = '';
+
+    if (header == Session.get('lanes_table_sort_by')) {
+      active_string += 'active';
+    }
+
+    if (Session.get('lanes_table_sort_reverse')) {
+      active_string += ' reverse';
+    }
+
+    return active_string;
   },
 
   total_captains () {

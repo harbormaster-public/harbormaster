@@ -1,16 +1,41 @@
 <template name="lanes">
   <h1>Lanes</h1>
   <a href="/lanes/new/edit" class="hollow button" id="new-lane">New Lane</a>
-  <ul>
-    {{#each lanes}}
-    <li>
-      <p>{{name}}: {{total_captains}} Captains; {{destinations.length}} Destinations; {{total_stops}} Stops; <a href="/lanes/{{this.name}}/ship/{{this.latest_shipment}}">last shipped {{last_shipped}}</a>; last salvage run {{last_salvage_run}}; {{total_shipments}} total shipments; {{salvage_plans}} salvage plans.</p>
-      {{#if can_ply}}
-        <a href="/lanes/{{name}}/ship" class="button hollow tiny success ship-lane">Ship to this lane</a>
-        <a href="/lanes/{{name}}/edit" class="button hollow tiny secondary edit-lane">Edit this lane</a>
-        <button class="button hollow tiny warning delete-lane">Delete this lane</button>
-      {{/if}}
-    </li>
-    {{/each}}
-  </ul>
+  <table class="lanes-table">
+    <thead>
+      <tr>
+        <th class="name-header {{active 'name'}}" data-value=name>Name</th>
+        <th class="captains-header {{active 'captains'}}" data-value=captains>Captains</th>
+        <th class="destinations-header {{active 'destinations'}}" data-value=destinations>Destinations</th>
+        <th class="stops-header {{active 'stops'}}" data-value=stops>Stops</th>
+        <th class="last-shipped-header {{active 'shipped'}}" data-value=shipped>Last Shipped</th>
+        <th class="last-salvaged-header {{active 'salvaged'}}" data-value=salvaged>Last Salvaged</th>
+        <th class="total-shipments-header {{active 'shipments'}}" data-value=shipments>Total Shipments</th>
+        <th class="total-salvage-runs-header {{active 'salvage-runs'}}" data-value=salvage-runs>Total Salvage Runs</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#each lanes}}
+        <tr>
+          <td>
+            {{#if can_ply}}
+              <div class="admin">
+                <a href="/lanes/{{name}}/ship" class="button hollow tiny success ship-lane">Ship</a>
+                <a href="/lanes/{{name}}/edit" class="button hollow tiny secondary edit-lane">Edit</a>
+                <button class="button hollow tiny warning delete-lane">Delete</button>
+              </div>
+            {{/if}}
+            {{name}}
+          </td>
+          <td>{{total_captains}}</td>
+          <td>{{destinations.length}}</td>
+          <td>{{total_stops}}</td>
+          <td width=125><a href="/lanes/{{this.name}}/ship/{{this.latest_shipment}}">{{last_shipped}}</a></td>
+          <td>{{last_salvage_run}}</td>
+          <td>{{total_shipments}}</td>
+          <td>{{salvage_plans}}</td>
+        </tr>
+      {{/each}}
+    </tbody>
+  </table>
 </template>
