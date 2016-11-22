@@ -1,5 +1,5 @@
 import { Lanes } from '../lanes';
-import SSH from 'simple-ssh';
+import Client from 'ssh2';
 import fs from 'fs';
 import expandTilde from 'expand-tilde';
 
@@ -15,15 +15,9 @@ Meteor.methods({
 
     Lanes.update(lane_id, lane);
 
-    // TODO: Probably worth revisiting this execution chain.  For example,
-    // multiple `sleep` statements don't seem to play nicely with one another
-    // when executed on the same box.  Need to dig in to find if that's due
-    // to this code or the box itself; or to find a better way to verify the
-    // execution order is happening as expected.
     function visit_destinations () {
 
       var destination = lane.destinations[current_destination_index];
-      var addresses_complete = 0;
       var user = destination && destination.user ? destination.user : 'ubuntu';
       var password = destination && destination.password ?
         destination.password :
@@ -39,11 +33,17 @@ Meteor.methods({
 
       if (destination.use_private_key && destination.private_key_location) {
         private_key = fs.readFileSync(
-          expandTilde(destination.private_key_location)
+          expandTilde(destination.private_key_location),
+          'utf8'
         );
 
       } else if (destination.use_private_key) {
-        private_key = fs.readFileSync(expandTilde('~/.ssh/id_rsa'));
+        try {
+          private_key = fs.readFileSync(expandTilde('~/.ssh/id_rsa'), 'utf8');
+        } catch (err) {
+          throw err;
+          //TODO: Bubble this error up to the client
+        }
       }
 
       destination.date_history = destination.date_history || [];
@@ -56,98 +56,104 @@ Meteor.methods({
 
       _.each(destination.addresses, function (address, index) {
         var stops_complete = 0;
+        var addresses_complete = 0;
+        var connection = new Client();
+        var connection_options = {
+          host: address,
+          username: user,
+          tryKeyboard: true
+        };
 
         if (private_key && ! password) {
-          var ssh = new SSH({
-            host: address,
-            user: user,
-            key: private_key
-          });
+          connection_options.privateKey = private_key;
 
         } else if (password && ! private_key) {
-          var ssh = new SSH({
-            host: address,
-            user: user,
-            password: password
-          });
+          connection_options.password = password;
 
         } else if (password && private_key) {
-          var ssh = new SSH({
-            host: address,
-            user: user,
-            key: private_key,
-            password: password
-          });
-
-        } else {
-          var ssh = new SSH({
-            host: address,
-            user: user
-          });
+          connection_options.privateKey = private_key;
+          connection_options.password = password;
         }
 
-        _.each(destination.stops, function (stop, index) {
-          stop.date_history = stop.date_history || [];
-          stop.stdout_history = stop.stdout_history || [];
-          stop.stderr_history = stop.stderr_history || [];
-          stop.exit_code_history = stop.exit_code_history || [];
-          stop.date_history.push({
-            start_date: start_date,
-            address: address,
-            actual: new Date()
-          });
+        connection.on('ready', Meteor.bindEnvironment((err, stream) => {
 
+          function execute_stop (stop) {
+            stop.date_history = stop.date_history || [];
+            stop.stdout_history = stop.stdout_history || [];
+            stop.stderr_history = stop.stderr_history || [];
+            stop.exit_code_history = stop.exit_code_history || [];
+            stop.date_history.push({
+              start_date: start_date,
+              address: address,
+              actual: new Date()
+            });
+            Lanes.update(lane_id, lane);
+
+            connection.exec(
+              stop.command,
+              Meteor.bindEnvironment((err, stream) => {
+
+              if (err) {
+                lane.active_shipment = false;
+                throw err;
+              }
+
+              stream.on('close', Meteor.bindEnvironment((code, signal) => {
+                stop.exit_code_history.push({
+                  code: code,
+                  start_date: start_date,
+                  address: address,
+                  command: stop.command,
+                  actual: new Date()
+                });
+                Lanes.update(lane_id, lane);
+
+                stops_complete++;
+                if (stops_complete >= destination.stops.length) {
+                  addresses_complete++;
+                } else {
+                  execute_stop(destination.stops[stops_complete]);
+                }
+                if (addresses_complete == destination.addresses.length) {
+                  current_destination_index++;
+                  visit_destinations();
+                }
+              }))
+              .on('data', Meteor.bindEnvironment((buffer) => {
+                stop.stdout_history.push({
+                  stdout: buffer.toString('utf8'),
+                  start_date: start_date,
+                  command: stop.command,
+                  address: address,
+                  actual: new Date()
+                });
+                Lanes.update(lane_id, lane);
+              }))
+              .stderr.on('data', Meteor.bindEnvironment((buffer) => {
+                stop.stderr_history.push({
+                  stderr: buffer.toString('utf8'),
+                  start_date: start_date,
+                  command: stop.command,
+                  address: address,
+                  actual: new Date()
+                });
+                Lanes.update(lane_id, lane);
+              }))
+              ;
+
+            }));
+          }
+
+          execute_stop(destination.stops[stops_complete]);
+        }))
+        .on('error', Meteor.bindEnvironment((err) => {
+          lane.shipment_active = false;
           Lanes.update(lane_id, lane);
-
-          // TODO: Likely need to add a unique hash for each stop, and append
-          // output for multiple stdouts for that stop.  Either that, or make
-          // sure that we're capturing it all and showing it properly on the
-          // client.
-          ssh.exec(stop.command, {
-            pty: true,
-            out: Meteor.bindEnvironment(function (stdout) {
-              stop.stdout_history.push({
-                stdout: stdout,
-                start_date: start_date,
-                command: stop.command,
-                address: address,
-                actual: new Date()
-              });
-              Lanes.update(lane_id, lane);
-            }),
-            err: Meteor.bindEnvironment(function (stderr) {
-              stop.stderr_history.push({
-                stderr: stderr,
-                start_date: start_date,
-                command: stop.command,
-                address: address,
-                actual: new Date()
-              });
-              Lanes.update(lane_id, lane);
-            }),
-            exit: Meteor.bindEnvironment(function (code) {
-              stop.exit_code_history.push({
-                code: code,
-                start_date: start_date,
-                address: address,
-                command: stop.command,
-                actual: new Date()
-              });
-              Lanes.update(lane_id, lane);
-
-              stops_complete++;
-              if (stops_complete == destination.stops.length) {
-                addresses_complete++;
-              }
-              if (addresses_complete == destination.addresses.length) {
-                current_destination_index++;
-                visit_destinations();
-              }
-            })
-          });
-        });
-        ssh.start();
+          throw err;
+        }))
+        .connect(connection_options);
       });
+
     }
 
     visit_destinations();
