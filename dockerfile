@@ -1,13 +1,14 @@
 FROM node:4.6
 MAINTAINER Skyler Brungardt <skyler@trueandco.com>
 
-ADD . /tmp
+ADD . /opt/harbormaster
 
-WORKDIR /tmp
+WORKDIR /opt/harbormaster
 
 RUN curl https://install.meteor.com/ | sh \
- && meteor build /opt/harbormaster --directory \
- && cd /opt/harbormaster/bundle/programs/server \
+ && mkdir /harbormaster \
+ && meteor --allow-superuser build /harbormaster --directory \
+ && cd /harbormaster/bundle/programs/server \
  && npm install
 
 ADD start.sh /opt/harbormaster/start.sh

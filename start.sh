@@ -1,3 +1,3 @@
 #!/bin/bash
 
-node /opt/harbormaster/bundle/main.js
+node /harbormaster/bundle/main.js
