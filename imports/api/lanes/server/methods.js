@@ -91,6 +91,7 @@ Meteor.methods({
 
             connection.exec(
               stop.command,
+              { pty: true },
               Meteor.bindEnvironment((err, stream) => {
 
               if (err) {
