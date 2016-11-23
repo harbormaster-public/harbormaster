@@ -66,13 +66,34 @@ Meteor.methods({
 
         if (private_key && ! password) {
           connection_options.privateKey = private_key;
+          console.log(
+            'Logging into',
+            address,
+            'as',
+            username,
+            'with key',
+            destination.private_key_location ?
+              destination.private_key_location :
+              '~/.ssh/id_rsa'
+          );
 
         } else if (password && ! private_key) {
           connection_options.password = password;
+          console.log('Logging into', address, 'as', user, 'with a password');
 
         } else if (password && private_key) {
           connection_options.privateKey = private_key;
           connection_options.password = password;
+          console.log(
+            'Logging into',
+            address,
+            'as',
+            username,
+            'with a password and key',
+            destination.private_key_location ?
+              destination.private_key_location :
+              '~/.ssh/id_rsa'
+          );
         }
 
         connection.on('ready', Meteor.bindEnvironment((err, stream) => {
@@ -89,6 +110,9 @@ Meteor.methods({
             });
             Lanes.update(lane_id, lane);
 
+            console.log(
+              'Executing command "' + stop.command + '" on machine:', address
+            );
             connection.exec(
               stop.command,
               { pty: true },
@@ -100,6 +124,9 @@ Meteor.methods({
               }
 
               stream.on('close', Meteor.bindEnvironment((code, signal) => {
+                console.log(
+                  'Command "' + stop.command + '" exited with code', code
+                );
                 stop.exit_code_history.push({
                   code: code,
                   start_date: start_date,
@@ -121,6 +148,10 @@ Meteor.methods({
                 }
               }))
               .on('data', Meteor.bindEnvironment((buffer) => {
+                console.log(
+                  'Command "' + stop.command + '" logged data:\n',
+                  buffer.toString('utf8')
+                );
                 stop.stdout_history.push({
                   stdout: buffer.toString('utf8'),
                   start_date: start_date,
@@ -131,6 +162,10 @@ Meteor.methods({
                 Lanes.update(lane_id, lane);
               }))
               .stderr.on('data', Meteor.bindEnvironment((buffer) => {
+                console.log(
+                  'Command "' + stop.command + '" errored with error:\n',
+                  buffer.toString('utf8')
+                );
                 stop.stderr_history.push({
                   stderr: buffer.toString('utf8'),
                   start_date: start_date,
@@ -145,9 +180,12 @@ Meteor.methods({
             }));
           }
 
+          console.log('Connection ready.');
+
           execute_stop(destination.stops[stops_complete]);
         }))
         .on('error', Meteor.bindEnvironment((err) => {
+          console.log('Error with connection!');
           lane.shipment_active = false;
           Lanes.update(lane_id, lane);
           throw err;
@@ -156,6 +194,8 @@ Meteor.methods({
       });
 
     }
+
+    console.log('Starting shipment for lane:', lane.name);
 
     visit_destinations();
 
