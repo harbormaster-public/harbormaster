@@ -70,7 +70,7 @@ Meteor.methods({
             'Logging into',
             address,
             'as',
-            username,
+            user,
             'with key',
             destination.private_key_location ?
               destination.private_key_location :
@@ -88,7 +88,7 @@ Meteor.methods({
             'Logging into',
             address,
             'as',
-            username,
+            user,
             'with a password and key',
             destination.private_key_location ?
               destination.private_key_location :
