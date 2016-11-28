@@ -4,27 +4,30 @@ import { Users } from '../../../api/users/users';
 
 Template.root.helpers({
   latest_shipment: function () {
-    var lanes = Lanes.find({}, { sort: { latest_shipment: -1 } }).fetch();
-    var latest_lane = lanes[0];
-    var split_date = latest_lane ? latest_lane.latest_shipment.split('-') : '';
-    var parsed_date = [];
+    var lanes = Lanes.find({}, {
+      sort: function (lane1, lane2) {
+        let latest_lane1_shipment = lane1.date_history ?
+          lane1.date_history[lane1.date_history.length - 1] :
+          0;
+        let latest_lane2_shipment = lane2.date_history ?
+          lane2.date_history[lane2.date_history.length - 1] :
+          0;
 
-    _.each(split_date, function (number) {
-      parsed_date.push(parseInt(number, 10));
-    });
+        if (latest_lane1_shipment > latest_lane2_shipment) { return -1; }
+        else if (latest_lane1_shipment < latest_lane2_shipment) { return 1; }
+        return 0;
+      }
+    }).fetch();
+    var latest_lane = lanes[lanes.length - 1];
 
-    if (parsed_date.length) {
+    if (latest_lane.date_history.length) {
       return {
         name: latest_lane.name,
         date: latest_lane.latest_shipment,
-        locale: new Date(
-          parsed_date[0],
-          parsed_date[1],
-          parsed_date[2],
-          parsed_date[3],
-          parsed_date[4],
-          parsed_date[5],
-        ).toLocaleString()
+        locale: latest_lane
+          .date_history[latest_lane.date_history.length - 1]
+          .actual
+          .toLocaleString()
       };
     }
     return {
@@ -35,7 +38,7 @@ Template.root.helpers({
   },
 
   shipments_last_24_hours: function () {
-    var yesterday = Date.now() - 86400000;
+    var yesterday = new Date(Date.now() - 86400000);
     var lanes = Lanes.find({
       date_history: {
         $elemMatch: {

@@ -24,6 +24,7 @@ Meteor.methods({
         ''
       ;
       var private_key;
+      var addresses_complete = 0;
 
       if (current_destination_index >= lane.destinations.length) {
         lane.shipment_active = false;
@@ -56,7 +57,6 @@ Meteor.methods({
 
       _.each(destination.addresses, function (address, index) {
         var stops_complete = 0;
-        var addresses_complete = 0;
         var connection = new Client();
         var connection_options = {
           host: address,
