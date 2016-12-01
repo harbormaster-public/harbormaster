@@ -11,11 +11,11 @@ RUN curl https://install.meteor.com/ | sh \
  && cd /harbormaster/bundle/programs/server \
  && npm install
 
-ADD start.sh /opt/harbormaster/start.sh
+ADD start.sh /start.sh
 
 EXPOSE 80
 
 VOLUME /root/.ssh
 
-ENTRYPOINT ["/opt/harbormaster/start.sh"]
+ENTRYPOINT ["/start.sh"]
 
