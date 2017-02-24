@@ -10,6 +10,10 @@ Template.lanes.events({
     Lanes.remove(this._id);
   },
 
+  'click .edit-lane' (event) {
+    event.stopPropagation();
+  },
+
   'click th' (event) {
     let sort_value = $(event.target).attr('data-value');
 

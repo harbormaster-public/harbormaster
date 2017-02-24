@@ -74,7 +74,7 @@
       <button {{check_salvage_plan}} class="button tiny warning">Add a Salvage Plan</button>
     </form>
   {{/if}}
-  <h2>Shipping Log</h2>
+  <h2>Shipping Log: Last {{shipping_log_amount_shown}} shipments</h2>
   <ul>
     {{#if lane}}
       {{#if lane.shipment_active}}

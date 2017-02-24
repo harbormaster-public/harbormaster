@@ -3,6 +3,10 @@ import Client from 'ssh2';
 import fs from 'fs';
 import expandTilde from 'expand-tilde';
 
+Meteor.publish('Lanes', function () {
+  return Lanes.find();
+});
+
 Meteor.methods({
   'Lanes#start_shipment': function (lane_id, start_date) {
     var lane = Lanes.findOne(lane_id);

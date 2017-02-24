@@ -17,8 +17,3 @@ Meteor.Spinner.options = {
   left: '50%' // Left position relative to parent in px
 };
 
-Template.main.helpers({
-  is_loaded () {
-    return ! Meteor.loggingIn();
-  }
-})

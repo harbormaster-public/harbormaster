@@ -1,6 +1,10 @@
 import { Accounts } from 'meteor/accounts-base';
 import { Users } from '../users';
 
+Meteor.publish('Users', function () {
+  return Users.find();
+});
+
 Meteor.methods({
   'Users#invite_user' (email, password, confirm) {
     var existing_user = Users.findOne(email);

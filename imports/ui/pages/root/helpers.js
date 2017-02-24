@@ -4,8 +4,9 @@ import { Users } from '../../../api/users/users';
 
 Template.root.helpers({
   latest_shipment: function () {
-    var lanes = Lanes.find({}, {
-      sort: function (lane1, lane2) {
+    var lanes = Lanes.find().fetch().sort(
+      function (lane1, lane2) {
+
         let latest_lane1_shipment = lane1.date_history ?
           lane1.date_history[lane1.date_history.length - 1] :
           0;
@@ -13,14 +14,15 @@ Template.root.helpers({
           lane2.date_history[lane2.date_history.length - 1] :
           0;
 
-        if (latest_lane1_shipment > latest_lane2_shipment) { return -1; }
-        else if (latest_lane1_shipment < latest_lane2_shipment) { return 1; }
+        if (latest_lane1_shipment > latest_lane2_shipment) return -1;
+        else if (latest_lane1_shipment < latest_lane2_shipment) return 1;
         return 0;
       }
-    }).fetch();
-    var latest_lane = lanes[lanes.length - 1];
+    );
 
-    if (latest_lane.date_history.length) {
+    let latest_lane = lanes[lanes.length - 1];
+
+    if (latest_lane && latest_lane.date_history.length) {
       return {
         name: latest_lane.name,
         date: latest_lane.latest_shipment,
@@ -30,6 +32,7 @@ Template.root.helpers({
           .toLocaleString()
       };
     }
+
     return {
       name: latest_lane ? latest_lane.name : '',
       date: '',

@@ -4,6 +4,8 @@ import { Session } from 'meteor/session';
 import { Users } from '../../../../api/users/users.js';
 import { moment } from 'meteor/momentjs:moment';
 
+let AMOUNT_SHOWN = 20;
+
 Template.edit_lane.helpers({
   lane_name (current_name) {
     var name = FlowRouter.getParam('name');
@@ -22,11 +24,20 @@ Template.edit_lane.helpers({
   lane (sort_order) {
     var name = FlowRouter.getParam('name');
     var lane = Lanes.findOne({ name: name });
+    var START_INDEX = 0;
+    var END_INDEX = AMOUNT_SHOWN - 1;
 
     if (sort_order == 'history' && lane) {
-      return lane.date_history ? lane.date_history.reverse() : [];
+      return lane.date_history ?
+        lane.date_history.reverse().slice(START_INDEX, END_INDEX) :
+        []
+      ;
     }
     return lane;
+  },
+
+  shipping_log_amount_shown () {
+    return AMOUNT_SHOWN;
   },
 
   validate_done () {
