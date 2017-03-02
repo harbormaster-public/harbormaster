@@ -31,7 +31,7 @@ Template.main.helpers({
   },
 
   no_users () {
-    if (! Meteor.users.find().fetch().length) { return true; }
+    if (! Users.find().fetch().length) { return true; }
     return false;
   }
 });
