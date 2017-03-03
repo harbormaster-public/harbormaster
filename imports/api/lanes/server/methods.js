@@ -203,11 +203,22 @@ Meteor.methods({
 
     visit_destinations();
 
+    //if (! lane.shipment_active) {
+      //_.each(connections, function (ssh) { ssh.end(); });
+    //}
+
     lane.date_history[lane.date_history.length - 1].finished = new Date();
     Lanes.update(lane_id, lane);
 
     return lane;
+  },
 
+  'Lanes#abort_shipment': function (name) {
+    let lane = Lanes.findOne({ name: name });
+
+    lane.shipment_active = false;
+
+    return Lanes.update(lane._id, lane);
   }
 });
 

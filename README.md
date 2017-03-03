@@ -23,6 +23,7 @@ Features:
 - [ ] **Dynamic stdin**, letting users input commands which require user input when run
 - [x] **Hooks**, allowing remote calls to trigger shipments
 - [ ] **Abort shipment**, canceling a shipment in the middle of it, optionally triggering a Salvage Plan
+- [ ] **Plugins**, for modular capabilities
 
 Environment variables you'll want if you run this docker container:
 
@@ -33,3 +34,12 @@ ROOT_URL=http[s]://[wherever the app is running][:port]
 PORT=[usually 80]
 ```
 
+Calling webhooks can be done like so:
+```
+# Can be triggered via RPC, e.g.:
+curl \
+  -f \
+  -H "token: [the token for this user with this lane]" \
+  -H "user_id: [the user id]" \
+  -X POST [url]/lanes/[lane name]/ship
+```

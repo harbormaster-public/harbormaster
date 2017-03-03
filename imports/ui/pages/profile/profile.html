@@ -19,7 +19,7 @@
               {{name}}
             </label>
             <label>
-              <input data-lane-id={{_id}} class="from-webhook" disabled={{can_change_plying}} type=checkbox checked={{webhook_allowed}} value={{webhook_token}}>
+              <input data-lane-id={{_id}} class="from-webhook" disabled={{can_change_webhook}} type=checkbox checked={{webhook_allowed}} value={{webhook_token}}>
               Webhook allowed?
             </label>
             {{#if webhook_allowed}} Token: <pre>{{webhook_token}}</pre> {{/if}}

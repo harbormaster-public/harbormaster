@@ -87,18 +87,34 @@ Template.profile.helpers({
     if (! user || ! user.harbormaster) { return true; }
   },
 
+  can_change_webhook () {
+    var current_user = Meteor.user().emails[0].address;
+    var current_harbormaster = Users.findOne(current_user) ?
+      Users.findOne(current_user).harbormaster :
+      false
+    ;
+
+    return ! current_harbormaster;
+  },
+
   webhook_allowed () {
-    var user_id = FlowRouter.getParam('user_id');
+    var user_id = FlowRouter.getParam('user_id') ||
+      Meteor.user().emails[0].address
+    ;
 
     if (! this.tokens) { return false; }
 
-    return _.contains(this.tokens, user_id);
+    return _.find(this.tokens, function (tokens) {
+      return tokens == user_id;
+    });
   },
 
   webhook_token () {
-    var user_id = FlowRouter.getParam('user_id');
+    var user_id = FlowRouter.getParam('user_id') ||
+      Meteor.user().emails[0].address
+    ;
 
-    if (! this.tokens) { return '' }
+    if (! this.tokens) { return ''; }
 
     return _.invert(this.tokens)[user_id];
   }

@@ -1,7 +1,6 @@
 import { Template } from 'meteor/templating';
 import { Users } from '../../../api/users/users';
 import { Lanes } from '../../../api/lanes/lanes';
-import uuid from 'uuid';
 
 Template.profile.events({
   'change .is-harbormaster' (event) {
@@ -36,18 +35,23 @@ Template.profile.events({
 
   'change .from-webhook' (event) {
     var lane_id = $(event.target).attr('data-lane-id');
-    var user_id = FlowRouter.getParam('user_id');
-    var lane = Lanes.findOne(lane_id);
-    var token = $(event.target).val() || uuid.v4();
-
-    lane.tokens = lane.tokens || {};
+    var user_id = FlowRouter.getParam('user_id') ||
+      Meteor.user().emails[0].address
+    ;
+    let remove_token;
 
     if (event.target.checked) {
-      lane.tokens[token] = user_id;
+      remove_token = false;
     } else {
-      delete lane.tokens[token];
+      remove_token = true;
     }
 
-    Lanes.update(lane_id, lane);
+    Meteor.call(
+      'Lanes#update_webhook_token',
+      lane_id, user_id, remove_token,
+      function (err) {
+
+      if (err) throw err;
+    });
   }
 });

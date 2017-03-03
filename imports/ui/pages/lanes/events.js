@@ -2,11 +2,11 @@ import { Template } from 'meteor/templating';
 import { Lanes } from '../../../api/lanes/lanes.js';
 
 Template.lanes.events({
-  'click #new-lane' (event) {
+  'click #new-lane' () {
     Session.set('lane', null);
   },
 
-  'click .delete-lane' (event) {
+  'click .delete-lane' () {
     Lanes.remove(this._id);
   },
 

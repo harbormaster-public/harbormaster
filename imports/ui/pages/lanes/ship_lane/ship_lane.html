@@ -6,10 +6,11 @@
   {{else}}
     <h1>That lane doesn't exist.</h1>
   {{/if}}
-  <a href="/lanes" class="button hollow show-lanes">Back to Lanes</a>
+    <a href="/lanes" class="button hollow show-lanes">Back to Lanes</a>
   {{#if lane}}
     {{#if lane.shipment_active}}
       <a href="/lanes/{{lane.name}}/ship/{{lane.latest_shipment}}" class="button">View Active Shipment</a>
+      <button class="button warning abort-shipment">Abort Sipment</button>
     {{else}}
       <button class="button success start-shipment">Start Shipment</button>
     {{/if}}

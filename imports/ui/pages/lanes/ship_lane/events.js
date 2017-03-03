@@ -2,7 +2,7 @@ import { Template } from 'meteor/templating';
 import { Lanes } from '../../../../api/lanes/lanes.js';
 
 Template.ship_lane.events({
-  'click .start-shipment': function (event) {
+  'click .start-shipment': function () {
     var name = FlowRouter.getParam('name');
     var lane = Lanes.findOne({ name: name });
     var date = new Date();
@@ -22,10 +22,20 @@ Template.ship_lane.events({
         lane._id,
         shipment_start_date,
         function (err, res) {
-          console.log(res);
+          if (err) throw err;
+          console.log('Shipment started for lane:', res.name);
         }
       );
     }
     FlowRouter.go('/lanes/' + name + '/ship/' + lane.latest_shipment);
+  },
+
+  'click .abort-shipment': function () {
+    let name = FlowRouter.getParam('name');
+
+    Meteor.call('Lanes#abort_shipment', name, function (err, res) {
+      if (err) throw err;
+      console.log('Aborted shipment response:', res);
+    });
   }
 });

@@ -7,12 +7,12 @@ const sort_by_length = function (doc1, doc2, key, reverse) {
   let length2 = doc2[key] ? doc2[key].length : 0;
   let order = 0;
 
-  if (length1 > length2) { order = -1; }
-  else if (length1 < length2) { order = 1; }
+  if (length1 > length2) order = -1;
+  else if (length1 < length2) order = 1;
 
   if (reverse == -1) { order = -order; }
   return order;
-}
+};
 
 Template.lanes.helpers({
   lanes () {
