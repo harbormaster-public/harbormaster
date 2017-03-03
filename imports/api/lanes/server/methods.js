@@ -2,15 +2,33 @@ import { Lanes } from '../lanes';
 import Client from 'ssh2';
 import fs from 'fs';
 import expandTilde from 'expand-tilde';
+import uuid from 'uuid';
 
 Meteor.publish('Lanes', function () {
   return Lanes.find();
 });
 
 Meteor.methods({
+  'Lanes#update_webhook_token': function (lane_id, user_id, remove) {
+    let lane = Lanes.findOne(lane_id);
+    let token = uuid.v4();
+
+    if (lane.tokens && remove) {
+      let tokens = _.invert(lane.tokens);
+      delete tokens[user_id];
+      lane.tokens = tokens;
+    }
+
+    lane.tokens = lane.tokens || {};
+
+    if (! remove) lane.tokens[token] = user_id;
+
+    return Lanes.update(lane_id, lane);
+  },
+
   'Lanes#start_shipment': function (lane_id, start_date) {
-    var lane = Lanes.findOne(lane_id);
-    var current_destination_index = 0;
+    let lane = Lanes.findOne(lane_id);
+    let current_destination_index = 0;
     lane.date_history = lane.date_history || [];
     lane.date_history.push({
       start_date: start_date,
@@ -103,6 +121,7 @@ Meteor.methods({
         connection.on('ready', Meteor.bindEnvironment((err, stream) => {
 
           function execute_stop (stop) {
+
             stop.date_history = stop.date_history || [];
             stop.stdout_history = stop.stdout_history || [];
             stop.stderr_history = stop.stderr_history || [];
@@ -128,6 +147,7 @@ Meteor.methods({
               }
 
               stream.on('close', Meteor.bindEnvironment((code, signal) => {
+
                 console.log(
                   'Command "' + stop.command + '" exited with code', code
                 );
@@ -152,6 +172,7 @@ Meteor.methods({
                 }
               }))
               .on('data', Meteor.bindEnvironment((buffer) => {
+
                 console.log(
                   'Command "' + stop.command + '" logged data:\n',
                   buffer.toString('utf8')
@@ -166,6 +187,7 @@ Meteor.methods({
                 Lanes.update(lane_id, lane);
               }))
               .stderr.on('data', Meteor.bindEnvironment((buffer) => {
+
                 console.log(
                   'Command "' + stop.command + '" errored with error:\n',
                   buffer.toString('utf8')
@@ -202,10 +224,6 @@ Meteor.methods({
     console.log('Starting shipment for lane:', lane.name);
 
     visit_destinations();
-
-    //if (! lane.shipment_active) {
-      //_.each(connections, function (ssh) { ssh.end(); });
-    //}
 
     lane.date_history[lane.date_history.length - 1].finished = new Date();
     Lanes.update(lane_id, lane);
