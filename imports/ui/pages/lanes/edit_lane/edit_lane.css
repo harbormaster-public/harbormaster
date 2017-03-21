@@ -1,3 +1,8 @@
+li {
+  list-style-type: circle;
+  margin: 5px;
+}
+
 .destination[data-destination-index="0"] .remove-destination {
   display: none;
 }

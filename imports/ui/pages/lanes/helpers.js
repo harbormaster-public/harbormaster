@@ -1,6 +1,7 @@
 import { Template } from 'meteor/templating';
 import { Lanes } from '../../../api/lanes/lanes.js';
 import { Users } from '../../../api/users/users.js';
+import { Shipments } from '../../../api/shipments/shipments.js';
 
 const sort_by_length = function (doc1, doc2, key, reverse) {
   let length1 = doc1[key] ? doc1[key].length : 0;
@@ -20,6 +21,7 @@ Template.lanes.helpers({
     let sort_by = Session.get('lanes_table_sort_by');
     let reverse = Session.get('lanes_table_sort_reverse') ? -1 : 1;
 
+    //TODO: modularize
     switch (sort_by) {
       case 'name':
         lanes = Lanes.find({}, { sort: { name: reverse } });
@@ -28,6 +30,7 @@ Template.lanes.helpers({
         lanes = Lanes.find({}, { sort: { captains: -reverse } });
         break;
       case 'destinations':
+        return []
         lanes = Lanes.find({}, {
           sort: function (lane1, lane2) {
             return sort_by_length(lane1, lane2, 'destinations', reverse);
@@ -35,6 +38,7 @@ Template.lanes.helpers({
         })
         break;
       case 'stops':
+        return []
         lanes = Lanes.find({}, {
           sort: function (lane1, lane2) {
             let total_lane1_stops = 0;
@@ -62,6 +66,7 @@ Template.lanes.helpers({
         });
         break;
       case 'shipped':
+        debugger;
         lanes = Lanes.find({}, {
           sort: function (lane1, lane2) {
             let lane1_date = lane1.date_history ? 
@@ -137,8 +142,12 @@ Template.lanes.helpers({
     var last_shipped_parsed;
     var last_shipped_date;
 
-    if (! this.latest_shipment) { return 'never'; }
-    last_shipped_parsed = this.latest_shipment.split('-');
+    if (! this.shipments || ! this.shipments.length) { return 'never'; }
+
+    let last_shipment = this.shipments[this.shipments.length - 1];
+    last_shipment = Shipments.findOne(last_shipment);
+
+    last_shipped_parsed = last_shipment.start.split('-');
     last_shipped_date = new Date(
       last_shipped_parsed[0],
       last_shipped_parsed[1],
@@ -157,15 +166,16 @@ Template.lanes.helpers({
   },
 
   total_shipments () {
-    if (! this.date_history) { return 0; }
-
-    return this.date_history.length;
+    return this.shipments && this.shipments.length ?
+      this.shipments.length :
+      0
+    ;
   },
 
   salvage_plans () {
     if (! this.salvage_plans) { return 0; }
 
-    return this.salvage_plans.length;
+    return Object.keys(this.salvage_plans).length;
   },
 
   can_ply () {
@@ -183,5 +193,43 @@ Template.lanes.helpers({
     }
 
     return false;
+  },
+
+  current_state () {
+    let shipment_active = this.shipment_active;
+    let latest_shipment = this.shipments && this.shipments.length ?
+      this.shipments[this.shipments.length - 1] :
+      false
+    ;
+    let latest_exit_code;
+
+    latest_shipment = Shipments.findOne(latest_shipment) || false;
+
+    if (
+      latest_shipment &&
+      typeof latest_shipment.exit_code == 'string' ||
+      typeof latest_shipment.exit_code == 'number'
+    ) {
+      latest_exit_code = latest_shipment.exit_code;
+    }
+
+    if (shipment_active) return 'active';
+    if (latest_exit_code == 0) return 'ready';
+    if (latest_exit_code) return 'error';
+    return 'new';
+  },
+
+  latest_shipment () {
+    let latest_shipment = this.shipments && this.shipments.length ?
+      this.shipments[this.shipments.length - 1] :
+      false
+    ;
+
+    latest_shipment = latest_shipment ?
+      Shipments.findOne(latest_shipment).start :
+      ''
+    ;
+
+    return latest_shipment;
   }
 });

@@ -1,32 +1,3 @@
-.stop-title {
-  margin: 5px;
-}
-
-.command-executed {
-  display: inline;
-  margin: 0 5px;
-}
-
-/*
-TODO: Make multiple addresses multi-colored
-*/
-.command-results {
-  padding: 5px;
-}
-
-.command-results:nth-child(odd) {
-  background: rgba(0, 0, 0, 0.066);
-}
-
-.command-results:nth-child(even) {
-  background: rgba(0, 0, 0, 0.1);
-}
-
-.results-title {
-  color: #666;
-  font-style: italic;
-}
-
 .exit-code {
   background: rgba(255, 150, 0, 0.75);
 }
@@ -37,6 +8,7 @@ TODO: Make multiple addresses multi-colored
 
 .exit-code.code-0 {
   background: rgba(0, 255, 0, 0.25);
+  border-color: rgba(0, 100, 0, 0.25);
 }
 
 .prompt {
@@ -47,4 +19,30 @@ TODO: Make multiple addresses multi-colored
 
 .results {
   margin: 0 10px;
+}
+
+figure {
+  border: 1px solid #ccc;
+  padding: 20px 10px;
+}
+
+.pre {
+  white-space: pre;
+  font: bold 18px monospace;
+  color: #777;
+}
+
+.work-caption {
+  position: absolute;
+  margin-top: -32.5px;
+  background: #fff;
+  padding: 0 5px;
+}
+
+p {
+  margin: 0;
+}
+
+.work-preview.active {
+  background: #eee;
 }

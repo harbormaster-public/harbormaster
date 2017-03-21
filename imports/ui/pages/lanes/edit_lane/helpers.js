@@ -2,9 +2,21 @@ import { Template } from 'meteor/templating';
 import { Lanes } from '../../../../api/lanes/lanes.js';
 import { Session } from 'meteor/session';
 import { Users } from '../../../../api/users/users.js';
+import { Harbors } from '../../../../api/harbors';
+import { Shipments } from '../../../../api/shipments/shipments.js';
 import { moment } from 'meteor/momentjs:moment';
 
+//TODO: expose this
 let AMOUNT_SHOWN = 20;
+
+Template.edit_lane.onCreated(function () {
+  if (! Session.get('lane')) {
+    let name = FlowRouter.getParam('name');
+    let lane = Lanes.findOne({ name: name });
+
+    return Session.set('lane', lane);
+  }
+})
 
 Template.edit_lane.helpers({
   lane_name (current_name) {
@@ -18,20 +30,40 @@ Template.edit_lane.helpers({
 
     Session.set('lane', lane);
 
-    return current_name == 'New' ? '' : lane.name;
+    return lane.name == 'New' ? '' : lane.name;
+  },
+
+  followup_lane () {
+    let name = FlowRouter.getParam('name');
+    let lane = Lanes.findOne({ name: name });
+    let followup_lane = Lanes.findOne(lane.followup);
+
+    if (followup_lane) return followup_lane.name;
+
+    return '';
+  },
+
+  lanes () {
+    return Lanes.find()
   },
 
   lane (sort_order) {
     var name = FlowRouter.getParam('name');
     var lane = Lanes.findOne({ name: name });
+    let has_shipments = lane && lane.shipments && lane.shipments.length ?
+      true :
+      false
+    ;
     var START_INDEX = 0;
     var END_INDEX = AMOUNT_SHOWN - 1;
 
-    if (sort_order == 'history' && lane) {
-      return lane.date_history ?
-        lane.date_history.reverse().slice(START_INDEX, END_INDEX) :
-        []
-      ;
+    if (sort_order == 'history' && has_shipments) {
+      let dates = lane.shipments;
+      let relevant_dates = dates.reverse().slice(START_INDEX, END_INDEX);
+
+      relevant_dates = Shipments.find({ _id: { $in: relevant_dates } });
+
+      return relevant_dates;
     }
     return lane;
   },
@@ -48,33 +80,35 @@ Template.edit_lane.helpers({
     return false;
   },
 
-  validate_shippable () {
-    var lane = Session.get('lane');
-    var saved_lane = Lanes.findOne(lane._id);
-
-    if (! saved_lane) {
-      return true;
-    }
-
-    return false;
-  },
-
-  validate_prior_destination () {
-    var lane = Session.get('lane');
+  no_followup () {
+    let name = FlowRouter.getParam('name');
+    let lane = Lanes.findOne({ name: name });
 
     if (
-      ! lane.destinations ||
-      ! lane.destinations.length ||
-      ! lane.destinations[lane.destinations.length - 1].complete
-    ) {
-      return true;
-    }
+      Lanes.find().fetch().length < 2 ||
+      (lane && lane.followup) ||
+      Session.get('choose_followup')
+    ) return true;
 
     return false;
   },
 
-  check_salvage_plan () {
-    return 'disabled';
+  no_salvage () {
+    return true;
+  },
+
+  choose_followup () {
+    let lane = Lanes.findOne({ name: FlowRouter.getParam('name') });
+
+    if (! lane) return false;
+
+    return Session.get('choose_followup') || lane.followup;
+  },
+
+  chosen_lane () {
+    let lane = Lanes.findOne({ name: FlowRouter.getParam('name') });
+
+    return this._id == lane.followup;
   },
 
   captain_list () {
@@ -84,7 +118,7 @@ Template.edit_lane.helpers({
   },
 
   can_ply () {
-    var lane = Session.get('lane');
+    var lane = Session.get('lane') || {};
 
     if (this.harbormaster) { return true; }
 
@@ -129,108 +163,6 @@ Template.edit_lane.helpers({
     return false;
   },
 
-  destinations () {
-    var lane = Session.get('lane');
-    var destinations = lane.destinations || [];
-
-    if (! destinations.length) {
-      destinations.push({ name: "(New)" });
-    }
-
-    return destinations;
-  },
-
-  destination_name_value () {
-    if (this.name != "(New)") {
-      return this.name;
-    }
-
-    return '';
-  },
-
-  has_no_address () {
-    var lane = Session.get('lane');
-    var destination = _.where(lane.destinations, {
-      name: this.name
-    })[0];
-
-    if (
-      ! destination ||
-      ! destination.addresses ||
-      ! destination.addresses.length
-    ) {
-      return true;
-    }
-
-    return _.any(destination.addresses, function (address) {
-      return address == "";
-    });
-
-  },
-
-  has_no_name () {
-    var lane = Session.get('lane');
-    var destination = _.find(lane.destinations, function (target) {
-      return target.name;
-    });
-
-    if (! destination) { return true; }
-
-    return false;
-
-  },
-
-  addresses () {
-    var addresses = this.addresses || [''];
-
-    return addresses;
-  },
-
-  has_incomplete_stops () {
-    if (
-      ! this.stops ||
-      ! this.stops.length ||
-      this.stops[this.stops.length - 1].name == '' ||
-      this.stops[this.stops.length - 1].command == ''
-    ) {
-      return true;
-    }
-
-    return false;
-  },
-
-  stops () {
-    var stops = this.stops || [{
-      name: '',
-      command: ''
-    }];
-
-    return stops;
-  },
-
-  pretty_index (index) {
-    return index + 1;
-  },
-
-  has_no_name_or_address (target) {
-    var lane = Session.get('lane');
-    var destination = _.where(lane.destinations, {
-      name: target.name
-    })[0];
-
-    if (
-      ! destination ||
-      ! destination.name ||
-      ! destination.addresses ||
-      ! destination.addresses.length ||
-      destination.addresses[0] == ''
-    ) {
-      return true;
-    }
-
-    return false;
-  },
-
   pretty_date (date) {
     return new Date(date).toLocaleString();
   },
@@ -239,40 +171,54 @@ Template.edit_lane.helpers({
     return moment.duration(this.finished - this.actual).humanize();
   },
 
-  destination_user_value () {
-    if (this.user) {
-      return this.user;
+  harbors () {
+    let harbors = Harbors.find().fetch();
+
+    return harbors;
+  },
+
+  choose_type () {
+    return Session.get('choose_type');
+  },
+
+  current_lane () {
+    let name = FlowRouter.getParam('name');
+    let lane = Session.get('lane') || Lanes.findOne({ name: name });
+
+    return lane;
+  },
+
+  lane_type () {
+    let name = FlowRouter.getParam('name');
+    let lane = Session.get('lane') || Lanes.findOne({ name: name });
+
+    return lane.type;
+  },
+
+  render_harbor () {
+    let name = FlowRouter.getParam('name');
+    let lane = Session.get('lane') || Lanes.findOne({ name: name });
+
+    let harbor = Harbors.findOne(lane.type);
+    let manifest = harbor.lanes[lane._id] ?
+      harbor.lanes[lane._id].manifest :
+      false
+    ;
+
+    if (manifest) {
+      Meteor.call(
+        'Harbors#render_input',
+        lane,
+        manifest,
+        function (err, lane) {
+          if (err) throw err;
+
+          Session.set('lane', lane);
+      });
     }
 
-    return '';
-  },
-
-  destination_use_private_key () {
-    if (this.use_private_key) { return this.use_private_key; }
-
-    return false;
-  },
-
-  destination_private_key_location () {
-    if (this.private_key_location) { return this.private_key_location; }
-
-    return '';
-  },
-
-  has_private_key_location () {
-    if (this.use_private_key) {
-      return false;
-    }
-
-    return true;
-  },
-
-  destination_password_value () {
-    if (this.password) {
-      return this.password;
-    }
-
-    return '';
+    return lane.rendered_input;
   }
+
 });
 

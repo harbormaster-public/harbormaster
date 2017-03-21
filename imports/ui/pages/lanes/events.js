@@ -15,6 +15,7 @@ Template.lanes.events({
   },
 
   'click th' (event) {
+    //TODO: revisit this sorting
     let sort_value = $(event.target).attr('data-value');
 
     $(event.target).siblings('.active')

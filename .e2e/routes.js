@@ -35,6 +35,7 @@ describe('Routing', function () {
     }
 
     if (fresh && ! existing) {
+      console.log('Fresh instance detected with no existing account.');
       browser.setValue('.email-user-invite', test_email);
       browser.setValue('.password-user-invite', test_password);
       browser.setValue('.confirm-user-invite', test_password);
@@ -43,8 +44,9 @@ describe('Routing', function () {
       browser.click('.acknowledge-new-harbormaster');
 
     } else if (existing) {
+      console.log('Existing accounts detected.  Attempting to login.');
       browser.click('#login-sign-in-link');
-      browser.waitForExist('#login-email', 1000);
+      browser.waitForExist('#login-email', 2000);
       browser.setValue('#login-email', test_email);
       browser.setValue('#login-password', test_password);
       browser.click('#login-buttons-password');

@@ -1,3 +1,7 @@
 @import '{zurb:foundation-sites}/scss/foundation';
 
 @include foundation-everything;
+
+.button {
+  margin: 0;
+}

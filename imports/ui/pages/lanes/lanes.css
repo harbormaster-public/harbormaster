@@ -49,3 +49,15 @@
   left: 100%;
   margin-left: 55px;
 }
+
+td.active {
+  color: darkgoldenrod;
+}
+
+td.ready {
+  color: green;
+}
+
+td.error {
+  color: red;
+}

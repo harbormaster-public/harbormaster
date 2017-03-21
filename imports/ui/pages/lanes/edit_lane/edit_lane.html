@@ -1,13 +1,16 @@
 <template name="edit_lane">
-  <h1>Edit Lane: {{lane_name}}</h1>
+  <h1>Edit Lane:</h1>
   {{#if plying}}
     <form>
       <label>Lane Name
-        <input type=text required class="lane-name" value={{lane_name lane_name}}>
+        <input type=text required class="lane-name" value={{lane_name}}>
       </label>
-      <button disabled={{validate_done}} class="button hollow lane-done">Done</button>
       <button class="button hollow secondary back-to-lanes">Back to Lanes</button>
-      <a href=/lanes/{{lane_name}}/ship disabled={{validate_shippable}} class="button success ship-lane hollow">Ship to this Lane</a>
+      {{#unless validate_done}}
+        <a href=/lanes/{{lane_name}}/ship class="button success ship-lane hollow">Ship to this Lane</a>
+      {{else}}
+        <button disabled class="button hollow alert lane-done">Not Ready</button>
+      {{/unless}}
       <fieldset class="fieldset captains">
         <legend>Captain(s)</legend>
         <ul>
@@ -21,57 +24,43 @@
           {{/each}}
         </ul>
       </fieldset>
-      <h2>Destinations</h2>
-      <fieldset class="fieldset">
-        <legend>Manifest</legend>
-        {{#each destinations}}
-          {{manifest_index @index}}: {{this.name}}
+      <h2>Harbor</h2>
+      <fieldset class="fieldset harbor">
+        {{#unless current_lane.type}}
+          {{#if choose_type}}
+            <legend>Choose your type of Work:</legend>
+            {{#each harbors}}
+            <button id=button-choose-{{_id}} class="button choose-harbor-type" data-type={{_id}}>{{_id}}</button>
+            {{/each}}
+          {{else}}
+            <button class="button add-harbor"><h3>Add some Work for this Harbor <span>+</span></h3></button>
+          {{/if}}
+        {{/unless}}
+        {{#if current_lane.type}}
+          <legend>Work: {{lane_type}}</legend>
+          <section>
+            {{{render_harbor}}}
+          </section>
+        {{/if}}
+      </fieldset>
+      {{#unless no_followup}}
+        <button class="button tiny add-followup">Add Followup Destination</button>
+      {{/unless}}
+      {{#unless no_salvage}}
+        <button class="button tiny warning add-salvage-plan">Add a Salvage Plan</button>
+      {{/unless}}
+
+      {{#if choose_followup}}
+      <fieldset class="fieldset followup">
+        <legend>Followup: {{followup_lane}}</legend>
+        {{#each lanes}}
+          <label>
+            <input checked={{chosen_lane}} type=radio name="lanes" value={{_id}}>
+            {{name}}
+          </label>
         {{/each}}
       </fieldset>
-      {{#each destinations}}
-        <fieldset data-destination-index={{@index}} class="fieldset destination">
-          <legend>{{name}}</legend>
-          <label>Destination Name
-            <input type=text class="destination-name" value="{{destination_name_value}}">
-          </label>
-          <label>Destination Address(es)
-            {{#each addresses}}
-            <span class="address-field">
-              <input type=text data-address-index={{@index}} class="destination-address" value={{this}} disabled={{has_no_name}} placeholder="Single IP or hostname">
-              <button class="remove-address close-button" aria-label="Delete address" type="button">
-                <span aria-hidden="true">&times;</span>
-              </button>
-            </span>
-            {{/each}}
-          </label>
-          <label>Destination User
-            <input type=text class="destination-user" placeholder="ubuntu (default)" value={{destination_user_value}}>
-          </label>
-          <label>Destination User Password
-            <input type=password class="destination-password" value={{destination_password_value}}>
-          </label>
-          <label>Use Private Key
-            <input type=checkbox class="use-private-key" checked={{destination_use_private_key}}>
-          </label>
-          <label>Private Key Location
-            <input type=text class="private-key-location" placeholder="~/.ssh/id_rsa (default)" disabled={{has_private_key_location}} value={{destination_private_key_location}}>
-          </label>
-          <button disabled={{has_no_address}} class="button tiny add-address">Add another address</button>
-          {{#each stops}}
-          <label data-stop-index={{@index}} class="stop">Stop {{pretty_index @index}}
-            <input type=text disabled={{has_no_name_or_address ..}} class="stop-name" placeholder=Name value={{name}}>
-            <button class="remove-stop close-button" aria-label="Delete address" type="button">
-              <span aria-hidden="true">&times;</span>
-            </button>
-            <textarea disabled={{has_no_name_or_address ..}} class="stop-command" placeholder="Command to execute">{{command}}</textarea>
-          </label>
-          {{/each}}
-          <button disabled={{has_incomplete_stops}} class="button tiny success add-stop">Add another Stop at this Destination</button>
-          <button class="remove-destination button tiny hollow alert">Remove this destination</button>
-        </fieldset>
-      {{/each}}
-      <button disabled={{validate_prior_destination}} class="button tiny add-destination">Add new Destination</button>
-      <button {{check_salvage_plan}} class="button tiny warning">Add a Salvage Plan</button>
+      {{/if}}
     </form>
   {{/if}}
   <h2>Shipping Log: Last {{shipping_log_amount_shown}} shipments</h2>
@@ -84,13 +73,13 @@
     {{#each lane "history"}}
       {{#if this.salvaged}}
         <li>
-          <a href="/lanes/{{lane.name}}/ship/{{this.start_date}}" class="button tiny alert hollow">
+          <a href="/lanes/{{lane.name}}/ship/{{this.manifest.shipment_start_date}}" class="button tiny alert hollow">
             Salvaged on {{pretty_date this.finished}}, {{duration}} duration
           </a>
         </li>
       {{else}}
         <li>
-          <a href="/lanes/{{lane.name}}/ship/{{this.start_date}}" class="button tiny hollow">
+          <a href="/lanes/{{lane.name}}/ship/{{this.manifest.shipment_start_date}}" class="button tiny hollow">
             Shipped on {{pretty_date this.actual}}, finished on {{pretty_date this.finished}}, {{duration}} duration
           </a>
         </li>
