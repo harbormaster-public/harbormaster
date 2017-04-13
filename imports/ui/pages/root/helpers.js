@@ -6,7 +6,10 @@ import { Shipments } from '../../../api/shipments/shipments.js';
 Template.root.helpers({
   latest_shipment: function () {
     let latest_shipment = Shipments.find().fetch().reverse()[0];
-    let latest_lane = Lanes.findOne(latest_shipment.lane);
+    let latest_lane = latest_shipment ?
+      Lanes.findOne(latest_shipment.lane) :
+      false
+    ;
 
     if (latest_shipment && latest_lane) {
       return {
