@@ -46,6 +46,8 @@ Meteor.methods({
     manifest.shipment_start_date = shipment_start_date;
     lane.shipment_active = true;
     lane.shipments = lane.shipments || [];
+    lane.salvage_runs = lane.salvage_runs || [];
+    lane.followups = lane.followups || [];
     lane.shipments.push(
       Shipments.insert({
         start: shipment_start_date,
@@ -101,7 +103,7 @@ Meteor.methods({
     ;
 
 
-    Shipments.update({ start: date }, {
+    Shipments.update({ start: date, lane: lane._id }, {
       $set: {
         finished: finished,
         exit_code: exit_code,
@@ -120,6 +122,8 @@ Meteor.methods({
         .manifest
       ;
       salvage_manifest.prior_manifest = manifest;
+      lane.salvage_runs.push(next_shipment_start_date);
+      Lanes.update(lane._id, lane);
 
       return Meteor.call(
         'Lanes#start_shipment',
@@ -136,6 +140,8 @@ Meteor.methods({
         .manifest
       ;
       followup_manifest.prior_manifest = manifest;
+      lane.followups.push(next_shipment_start_date);
+      Lanes.update(lane._id, lane);
 
       return Meteor.call(
         'Lanes#start_shipment',

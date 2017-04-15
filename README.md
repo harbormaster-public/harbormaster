@@ -9,21 +9,20 @@ Features:
 - [x] **Users**, who are able to login, edit their own profiles, and view the status of Lanes
 - [x] **Harbormasters**, who can create Users, Ship to all Lanes, and promote Users to Captains or Harbormasters
 - [x] **Captains**, who can sent Shipments to Lanes they Ply
-- [x] **Lanes**, which represent deployment paths, comprised of individual Stops
-- [x] **Stops**, which represent discrete individual deployment commands
-- [x] **Shipments**, which represent individual executions of a Stop on a Lane
-- [x] **Logs**, which are the output of Shipments
-- [x] **Destinations**, which represent individual environments where Stops are executed
-- [ ] **Manifests**, which are the order in which Stops are made at Destinations
-- [ ] **Salvage Plans**, which are specialized Lanes to be executed when a Shipment fails
+- [x] **Lanes**, which represent deployment paths, comprised of Harbors
+- [x] **Shipments**, which represent discrete actions at a specific Harbor
+- [x] **Harbors**, which represent a specific custom task
+- [ ] **Logs**, which are the output of Shipments
+- [x] **Manifests**, which are passed from lane to lane
+- [x] **Salvage Plans**, which are Lanes to be executed when a Shipment fails
 - [x] **Shipping**, the act of initiating discreet Shipments to a Lane
 - [x] **Plying**, the responsibility of Shipping to a Lane
-- [x] **Defining a Lane**, which allows input of individual commands as Stops, ordering them, and saving them for later execution
+- [x] **Defining a Lane**, which allows input of individual commands as Harbors
 - [x] **Promoting & Demoting Users**, allowing Harbormasters to change roles
-- [ ] **Dynamic stdin**, letting users input commands which require user input when run
 - [x] **Hooks**, allowing remote calls to trigger shipments
-- [ ] **Abort shipment**, canceling a shipment in the middle of it, optionally triggering a Salvage Plan
-- [ ] **Plugins**, for modular capabilities
+- [x] **Abort shipment**, canceling a shipment in the middle of it, optionally triggering a Salvage Plan
+- [x] **Plugins**, for modular capabilities
+- [ ] **MOAR VEEYOUS**
 
 Environment variables you'll want if you run this docker container:
 
@@ -42,4 +41,5 @@ curl \
   -H "token: [the token for this user with this lane]" \
   -H "user_id: [the user id]" \
   -X POST [url]/lanes/[lane name]/ship
+# TODO: Add passing of manifests here ^
 ```

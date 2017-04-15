@@ -139,30 +139,24 @@ Template.lanes.helpers({
   },
 
   last_shipped () {
-    var last_shipped_parsed;
-    var last_shipped_date;
-
     if (! this.shipments || ! this.shipments.length) { return 'never'; }
 
     let last_shipment = this.shipments[this.shipments.length - 1];
     last_shipment = Shipments.findOne(last_shipment);
 
-    last_shipped_parsed = last_shipment.start.split('-');
-    last_shipped_date = new Date(
-      last_shipped_parsed[0],
-      last_shipped_parsed[1],
-      last_shipped_parsed[2],
-      last_shipped_parsed[3],
-      last_shipped_parsed[4],
-      last_shipped_parsed[5]
-    );
-    return last_shipped_date.toLocaleString();
+    return last_shipment ? last_shipment.finished.toLocaleString() : 'never';
   },
 
-  last_salvage_run () {
-    if (! this.latest_salvage_run) { return 'never'; }
+  last_salvaged () {
+    if (! this.salvage_runs || ! this.salvage_runs.length) { return 'never'; }
 
-    return new Date(this.latest_salvage_run).toLocaleString();
+    let last_salvage_run = this.salvage_runs[this.salvage_runs.length - 1];
+    last_salvage_shipment = Shipments.findOne({
+      start: last_salvage_run,
+      lane: this.salvage_plan
+    });
+
+    return last_salvage_shipment.finished.toLocaleString()
   },
 
   total_shipments () {
@@ -172,10 +166,11 @@ Template.lanes.helpers({
     ;
   },
 
-  salvage_plans () {
-    if (! this.salvage_plans) { return 0; }
-
-    return Object.keys(this.salvage_plans).length;
+  total_salvage_runs () {
+    return this.salvage_runs && this.salvage_runs.length ?
+      this.salvage_runs.length :
+      0
+    ;
   },
 
   can_ply () {
@@ -231,5 +226,17 @@ Template.lanes.helpers({
     ;
 
     return latest_shipment;
+  },
+
+  followup_name () {
+    let followup = Lanes.findOne(this.followup);
+
+    return followup ? followup.name : '';
+  },
+
+  salvage_plan_name () {
+    let salvage_plan = Lanes.findOne(this.salvage_plan);
+
+    return salvage_plan ? salvage_plan.name : '';
   }
 });

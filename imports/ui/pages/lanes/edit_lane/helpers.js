@@ -64,7 +64,9 @@ Template.edit_lane.helpers({
       relevant_dates = Shipments.find({ _id: { $in: relevant_dates } });
 
       return relevant_dates;
-    }
+
+    } else if (sort_order) return [];
+
     return lane;
   },
 
@@ -94,7 +96,16 @@ Template.edit_lane.helpers({
   },
 
   no_salvage () {
-    return true;
+    let name = FlowRouter.getParam('name');
+    let lane = Lanes.findOne({ name: name });
+
+    if (
+      Lanes.find().fetch().length < 2 ||
+      (lane && lane.salvage_plan) ||
+      Session.get('choose_salvage_plan')
+    ) return true;
+
+    return false;
   },
 
   choose_followup () {
@@ -105,10 +116,24 @@ Template.edit_lane.helpers({
     return Session.get('choose_followup') || lane.followup;
   },
 
-  chosen_lane () {
+  choose_salvage_plan () {
     let lane = Lanes.findOne({ name: FlowRouter.getParam('name') });
 
-    return this._id == lane.followup;
+    if (! lane) return false;
+
+    return Session.get('choose_salvage_plan') || lane.salvage_plan;
+  },
+
+  chosen_followup () {
+    let lane = Lanes.findOne({ name: FlowRouter.getParam('name') });
+
+    return this._id == lane ? lane.followup : false;
+  },
+
+  chose_salvage_plan () {
+    let lane = Lanes.findOne({ name: FlowRouter.getParam('name') });
+
+    return this._id == lane.salvage_plan;
   },
 
   captain_list () {
@@ -199,9 +224,10 @@ Template.edit_lane.helpers({
     let name = FlowRouter.getParam('name');
     let lane = Session.get('lane') || Lanes.findOne({ name: name });
 
-    let harbor = Harbors.findOne(lane.type);
-    let manifest = harbor.lanes[lane._id] ?
-      harbor.lanes[lane._id].manifest :
+    let harbor = Harbors.findOne(lane.type) || {};
+    let harbor_lane_reference = harbor.lanes ? harbor.lanes[lane._id] : false;
+    let manifest = harbor_lane_reference ?
+      harbor_lane_reference.manifest :
       false
     ;
 
@@ -217,7 +243,9 @@ Template.edit_lane.helpers({
       });
     }
 
-    return lane.rendered_input;
+    if (lane.rendered_input) return lane.rendered_input;
+
+    return harbor.rendered_input;
   }
 
 });

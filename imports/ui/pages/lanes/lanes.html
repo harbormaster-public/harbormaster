@@ -12,6 +12,8 @@
         <th class="total-shipments-header {{active 'shipments'}}" data-value=shipments>Total Shipments</th>
         <th class="total-salvage-runs-header {{active 'salvage-runs'}}" data-value=salvage-runs>Total Salvage Runs</th>
         <th class="current-state-header {{active 'current-state'}}" data-value=current-state>Current State</th>
+        <th class="followup-header {{active 'followup'}}" data-value=followup>Followup</th>
+        <th class="salvage-plan-header {{active 'salvage-plan'}}" data-value=salvage-plan>Salvage Plan</th>
       </tr>
     </thead>
     <tbody>
@@ -30,10 +32,12 @@
           <td>{{total_captains}}</td>
           <td>{{type}}</td>
           <td width=125><a href="/lanes/{{this.name}}/ship/{{latest_shipment}}">{{last_shipped}}</a></td>
-          <td>{{last_salvage_run}}</td>
+          <td>{{last_salvaged}}</td>
           <td>{{total_shipments}}</td>
-          <td>{{salvage_plans}}</td>
+          <td>{{total_salvage_runs}}</td>
           <td class="{{current_state}}">{{current_state}}</td>
+          <td>{{followup_name}}</td>
+          <td>{{salvage_plan_name}}</td>
         </tr>
       {{/each}}
     </tbody>

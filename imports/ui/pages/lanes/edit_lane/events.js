@@ -7,7 +7,10 @@ let update_harbor = function (template) {
   let lane = Session.get('lane');
 
   _.each(inputs, function (element) {
-    values[element.name] = element.value;
+    values[element.name] = element.type == 'checkbox' ?
+      element.checked :
+      element.value
+    ;
   });
 
   return Meteor.call(
@@ -52,6 +55,17 @@ Template.edit_lane.events({
     if (! lane || ! followup_lane) debugger;
 
     lane.followup = followup_lane._id;
+    Lanes.update(lane._id, lane);
+    Session.set('lane', lane);
+  },
+
+  'change .salvage-plan': function change_salvage_plan (event) {
+    let lane = Session.get('lane');
+    let salvage_plan_lane = Lanes.findOne(event.target.value);
+
+    if (! lane || ! salvage_plan_lane) debugger;
+
+    lane.salvage_plan = salvage_plan_lane._id;
     Lanes.update(lane._id, lane);
     Session.set('lane', lane);
   },
@@ -115,6 +129,6 @@ Template.edit_lane.events({
   },
 
   'click .add-salvage-plan': function add_salvage_plan (event) {
-    debugger;
+    return Session.set('choose_salvage_plan', true);
   }
 });

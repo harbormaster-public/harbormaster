@@ -51,15 +51,27 @@
       {{/unless}}
 
       {{#if choose_followup}}
-      <fieldset class="fieldset followup">
-        <legend>Followup: {{followup_lane}}</legend>
-        {{#each lanes}}
-          <label>
-            <input checked={{chosen_lane}} type=radio name="lanes" value={{_id}}>
-            {{name}}
-          </label>
-        {{/each}}
-      </fieldset>
+        <fieldset class="fieldset followup">
+          <legend>Followup: {{followup_lane}}</legend>
+          {{#each lanes}}
+            <label>
+              <input checked={{chosen_followup}} type=radio name="followup_lanes" value={{_id}}>
+              {{name}}
+            </label>
+          {{/each}}
+        </fieldset>
+      {{/if}}
+
+      {{#if choose_salvage_plan}}
+        <fieldset class="fieldset salvage-plan">
+          <legend>Salvage Plan: {{salvage_plan_lane}}</legend>
+          {{#each lanes}}
+            <label>
+              <input checked={{chosen_salvage_plan}} type=radio name="salvage_plan_lanes" value={{_id}}>
+              {{name}}
+            </label>
+          {{/each}}
+        </fieldset>
       {{/if}}
     </form>
   {{/if}}

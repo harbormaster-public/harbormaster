@@ -28,7 +28,7 @@ Template.ship_lane.helpers({
       relevant_dates = Shipments.find({ _id: { $in: relevant_dates } });
 
       return relevant_dates;
-    }
+    } else if (sort_order) return [];
 
     return lane ? lane : false;
   },
@@ -157,6 +157,12 @@ Template.ship_lane.helpers({
     let followup = Lanes.findOne(lane.followup);
 
     return followup ? followup.name : false;
+  },
+
+  salvage_plan_name (lane) {
+    let salvage_plan = Lanes.findOne(lane.salvage_plan);
+
+    return salvage_plan ? salvage_plan.name : false;
   }
 
 });
