@@ -128,7 +128,7 @@ Template.ship_lane.helpers({
     let lane = Session.get('lane') || Lanes.findOne({ name: name });
 
     let harbor = Harbors.findOne(lane.type);
-    let manifest = harbor.lanes[lane._id] ?
+    let manifest = harbor && harbor.lanes[lane._id] ?
       harbor.lanes[lane._id].manifest :
       false
     ;
@@ -147,6 +147,38 @@ Template.ship_lane.helpers({
     }
 
     return lane.rendered_work_preview;
+  },
+
+  work_output () {
+    let name = FlowRouter.getParam('name');
+    let lane = Session.get('lane') || Lanes.findOne({ name: name });
+    let date = FlowRouter.getParam('date');
+    let shipment;
+
+    if (date) {
+      shipment = Shipments.findOne({ lane: lane._id, start: date });
+    }
+
+    return shipment ?
+      shipment.stdout[shipment.stdout.length - 1].result :
+      false
+    ;
+  },
+
+  work_date () {
+    let name = FlowRouter.getParam('name');
+    let lane = Session.get('lane') || Lanes.findOne({ name: name });
+    let date = FlowRouter.getParam('date');
+    let shipment;
+
+    if (date) {
+      shipment = Shipments.findOne({ lane: lane._id, start: date });
+    }
+
+    return shipment ?
+      shipment.stdout[shipment.stdout.length - 1].date.toLocaleString() :
+      false
+    ;
   },
 
   duration () {

@@ -4,6 +4,7 @@ import expandTilde from 'expand-tilde';
 import { Lanes } from '../../api/lanes/lanes';
 import { Users } from '../../api/users/users';
 import { Harbors } from '../../api/harbors';
+import { Shipments } from '../../api/shipments/shipments';
 
 let harbormaster_data_dir = expandTilde('~/.harbormaster');
 let harbors_dir = harbormaster_data_dir + '/harbors';
@@ -35,7 +36,7 @@ fs.readdirSync(harbors_dir).forEach(function (file) {
     let string = fs.readFileSync(harbor_path).toString();
 
     $H.harbors[harbor_name] = eval(string);
-    $H.harbors[harbor_name].register(Lanes, Users, Harbors);
+    $H.harbors[harbor_name].register(Lanes, Users, Harbors, Shipments);
 
     let harbor = Harbors.findOne(harbor_name);
 

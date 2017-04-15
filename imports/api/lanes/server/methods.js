@@ -42,19 +42,21 @@ Meteor.methods({
 
     let lane = Lanes.findOne(id);
     let new_manifest;
+    let shipment = Shipments.insert({
+      start: shipment_start_date,
+      actual: new Date(),
+      lane: lane._id,
+      stdin: [],
+      stdout: [],
+      stderr: []
+    });
 
     manifest.shipment_start_date = shipment_start_date;
     lane.shipment_active = true;
     lane.shipments = lane.shipments || [];
     lane.salvage_runs = lane.salvage_runs || [];
     lane.followups = lane.followups || [];
-    lane.shipments.push(
-      Shipments.insert({
-        start: shipment_start_date,
-        actual: new Date(),
-        lane: lane._id
-      })
-    );
+    lane.shipments.push(shipment);
     Lanes.update(lane._id, lane);
 
     console.log('Starting shipment for lane:', lane.name);
