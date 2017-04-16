@@ -9,11 +9,6 @@ import { Shipments } from '../../api/shipments/shipments';
 let harbormaster_data_dir = expandTilde('~/.harbormaster');
 let harbors_dir = harbormaster_data_dir + '/harbors';
 
-fs.watch(harbors_dir, function reload (event, filename) {
-  console.log('Harbors changed, exiting.');
-  process.exit();
-});
-
 if (! fs.existsSync(harbormaster_data_dir)) {
   console.log(
     'No data directory found at:\n',
@@ -23,6 +18,11 @@ if (! fs.existsSync(harbormaster_data_dir)) {
   fs.mkdirSync(harbors_dir);
   console.log('Data directory scaffolding created.');
 }
+
+fs.watch(harbors_dir, function reload (event, filename) {
+  console.log('Harbors changed, exiting.');
+  process.exit();
+});
 
 console.log('Registering Harbors from:', harbors_dir);
 fs.readdirSync(harbors_dir).forEach(function (file) {
