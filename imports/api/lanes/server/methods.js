@@ -57,23 +57,28 @@ Meteor.methods({
     lane.salvage_runs = lane.salvage_runs || [];
     lane.followups = lane.followups || [];
     lane.shipments.push(shipment);
+
     Lanes.update(lane._id, lane);
 
     console.log('Starting shipment for lane:', lane.name);
     try {
       new_manifest = $H.harbors[lane.type].work(lane, manifest);
+
     } catch (err) {
-      console.error(err);
+      //TODO: Surface this error to the client
+      console.error('Shipment failed with error:', err);
       manifest.error = err;
       new_manifest = manifest;
-    }
 
-    if (manifest.error && lane.salvage_plan) {
-      let exit_code = 1;
-      return Meteor.call('Lanes#end_shipment', lane, exit_code, new_manifest);
-    }
+    } finally {
 
-    return new_manifest;
+      if (new_manifest.error) {
+        let exit_code = 1;
+        return Meteor.call('Lanes#end_shipment', lane, exit_code, new_manifest);
+      }
+
+      return new_manifest;
+    }
   },
 
   'Lanes#end_shipment': function (lane, exit_code, manifest) {
@@ -167,7 +172,10 @@ Meteor.methods({
     let lane = Lanes.findOne({ name: name });
     let shipment = Shipments.findOne({ start: date, lane: lane._id });
 
-    return Shipments.update(shipment._id, { $set: { active: false } });
+    return Shipments.update(shipment._id, { $set: {
+      active: false,
+      exit_code: 1
+    }});
   }
 });
 
