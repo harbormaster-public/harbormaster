@@ -23,18 +23,20 @@ Template.ship_lane.helpers({
 
     if (sort_order == 'history' && has_shipments) {
       let dates = lane.shipments;
-      let relevant_dates = dates.reverse().slice(START_INDEX, END_INDEX);
+      let relevant_dates = dates.slice(START_INDEX, END_INDEX);
 
       relevant_dates = Shipments.find({ _id: { $in: relevant_dates } });
 
-      return relevant_dates;
+      return relevant_dates.fetch().reverse();
     } else if (sort_order) return [];
 
     return lane ? lane : false;
   },
 
   pretty_date (date) {
-    return new Date(date).toLocaleString();
+    if (date) return new Date(date).toLocaleString();
+
+    return 'never';
   },
 
   shipping_log_amount_shown () {
@@ -100,13 +102,10 @@ Template.ship_lane.helpers({
 
   exit_code () {
     let name = FlowRouter.getParam('name');
+    let date = this.start || FlowRouter.getParam('date');
     let current_date = FlowRouter.getParam('date');
     let lane = Session.get('lane') || Lanes.findOne({ name: name });
-    let last_shipment = lane.shipments && lane.shipments.length ?
-      lane.shipments[lane.shipments.length - 1] :
-      false
-    ;
-    let shipment = last_shipment ? Shipments.findOne(last_shipment) : false;
+    let shipment = Shipments.findOne({ start: date, lane: lane._id });
     let exit_code = shipment ? shipment.exit_code : false;
 
     if (current_date && typeof exit_code == 'number') return exit_code;
@@ -117,8 +116,10 @@ Template.ship_lane.helpers({
   active () {
     let name = FlowRouter.getParam('name');
     let lane = Session.get('lane') || Lanes.findOne({ name: name });
+    let date = FlowRouter.getParam('date');
+    let shipment = Shipments.findOne({ start: date, lane: lane._id });
 
-    if (lane.shipment_active) return 'active';
+    if (shipment && shipment.active) return 'active';
 
     return '';
   },
@@ -133,7 +134,7 @@ Template.ship_lane.helpers({
       false
     ;
 
-    if (! lane.work_preview_html) {
+    if (! lane.rendered_work_preview) {
       Meteor.call(
         'Harbors#render_work_preview',
         lane,
@@ -141,12 +142,30 @@ Template.ship_lane.helpers({
         function (err, lane) {
           if (err) throw err;
 
+          Lanes.update(lane._id, lane);
           Session.set('lane', lane);
         }
       );
     }
 
     return lane.rendered_work_preview;
+  },
+
+  has_work_output () {
+    let name = FlowRouter.getParam('name');
+    let lane = Session.get('lane') || Lanes.findOne({ name: name });
+    let date = FlowRouter.getParam('date');
+    let shipment;
+
+    if (date) {
+      shipment = Shipments.findOne({ lane: lane._id, start: date });
+    }
+
+    if (shipment && (shipment.stdout.length || shipment.stderr.length)) {
+      return true;
+    }
+
+    return false;
   },
 
   work_output () {
@@ -195,6 +214,12 @@ Template.ship_lane.helpers({
     let salvage_plan = Lanes.findOne(lane.salvage_plan);
 
     return salvage_plan ? salvage_plan.name : false;
+  },
+
+  shipment_active () {
+    if (this.active) return 'warning';
+
+    return '';
   }
 
 });

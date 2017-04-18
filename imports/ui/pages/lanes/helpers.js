@@ -144,7 +144,10 @@ Template.lanes.helpers({
     let last_shipment = this.shipments[this.shipments.length - 1];
     last_shipment = Shipments.findOne(last_shipment);
 
-    return last_shipment ? last_shipment.finished.toLocaleString() : 'never';
+    return last_shipment && last_shipment.actual ?
+      last_shipment.actual.toLocaleString() :
+      'never'
+    ;
   },
 
   last_salvaged () {
@@ -191,7 +194,10 @@ Template.lanes.helpers({
   },
 
   current_state () {
-    let shipment_active = this.shipment_active;
+    let active_shipments = Shipments.find({
+      _id: { $in: this.shipments || [] },
+      active: true
+    }).fetch();
     let latest_shipment = this.shipments && this.shipments.length ?
       this.shipments[this.shipments.length - 1] :
       false
@@ -208,7 +214,7 @@ Template.lanes.helpers({
       latest_exit_code = latest_shipment.exit_code;
     }
 
-    if (shipment_active) return 'active';
+    if (active_shipments.length) return 'active';
     if (latest_exit_code == 0) return 'ready';
     if (latest_exit_code) return 'error';
     return 'new';
@@ -220,7 +226,7 @@ Template.lanes.helpers({
       false
     ;
 
-    latest_shipment = latest_shipment ?
+    latest_shipment = latest_shipment && Shipments.findOne(latest_shipment) ?
       Shipments.findOne(latest_shipment).start :
       ''
     ;

@@ -1,4 +1,5 @@
 import { Harbors } from '..';
+import { Lanes } from '../../lanes/lanes';
 
 Meteor.publish('Harbors', function () {
   return Harbors.find();
@@ -7,7 +8,16 @@ Meteor.publish('Harbors', function () {
 Meteor.methods({
   'Harbors#update': function update_harbor (lane, values) {
     try {
-      return $H.harbors[lane.type].update(lane, values);
+      let success = $H.harbors[lane.type].update(lane, values);
+      lane = Meteor.call('Harbors#render_work_preview', lane, values);
+
+      lane.minimum_complete = success;
+
+      if (success && lane.rendered_work_preview) {
+        Lanes.update(lane._id, lane);
+      }
+
+      return lane;
 
     } catch (err) { throw err; }
   },

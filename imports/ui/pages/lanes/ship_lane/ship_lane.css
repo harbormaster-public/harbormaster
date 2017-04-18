@@ -11,6 +11,11 @@
   border-color: rgba(0, 100, 0, 0.25);
 }
 
+.exit-code.code-1 {
+  background-color: #ec5840;
+  color: #fff;
+}
+
 .prompt {
   color: #666;
   padding: 0 10px 0 0;
@@ -26,9 +31,17 @@ figure {
   padding: 20px 10px;
 }
 
+figcaption {
+  color: #000;
+}
+
 .pre {
   white-space: pre;
   font: bold 18px monospace;
+  color: #ccc;
+}
+
+.code- .pre, .code-0 .pre {
   color: #777;
 }
 

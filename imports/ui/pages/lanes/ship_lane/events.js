@@ -1,6 +1,7 @@
 import { Template } from 'meteor/templating';
 import { Lanes } from '../../../../api/lanes/lanes.js';
 import { Harbors } from '../../../../api/harbors';
+import { Shipments } from '../../../../api/shipments/shipments';
 
 Template.ship_lane.events({
   'click .start-shipment': function () {
@@ -17,8 +18,12 @@ Template.ship_lane.events({
       date.getMinutes() + '-' +
       date.getSeconds()
     ;
+    let shipment = Shipments.findOne({
+      start: shipment_start_date,
+      lane: lane._id
+    });
 
-    if (! lane.shipment_active) {
+    if (! shipment || ! shipment.active) {
       Meteor.call(
         'Lanes#start_shipment',
         lane._id,
@@ -40,8 +45,9 @@ Template.ship_lane.events({
 
   'click .reset-shipment': function () {
     let name = FlowRouter.getParam('name');
+    let date = FlowRouter.getParam('date');
 
-    Meteor.call('Lanes#reset_shipment', name, function (err, res) {
+    Meteor.call('Lanes#reset_shipment', name, date, function (err, res) {
       if (err) throw err;
       console.log('Reset shipment response:', res);
     });

@@ -8,6 +8,7 @@ let post_hooks = Picker.filter(function (req) {
   return req.method == 'POST';
 });
 
+//TODO: Send an array, maybe, of active shipments?
 get_hooks.route('/lanes/:name/ship', function (params, req, res, next) {
 
   let lane_name = decodeURI(params.name);

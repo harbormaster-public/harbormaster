@@ -48,11 +48,11 @@ Meteor.methods({
       lane: lane._id,
       stdin: [],
       stdout: [],
-      stderr: []
+      stderr: [],
+      active: true
     });
 
     manifest.shipment_start_date = shipment_start_date;
-    lane.shipment_active = true;
     lane.shipments = lane.shipments || [];
     lane.salvage_runs = lane.salvage_runs || [];
     lane.followups = lane.followups || [];
@@ -103,19 +103,26 @@ Meteor.methods({
       next_date.getMinutes() + '-' +
       next_date.getSeconds()
     ;
+    let shipment = Shipments.findOne({ start: date, lane: lane._id });
 
 
-    Shipments.update({ start: date, lane: lane._id }, {
+    Shipments.update(shipment._id, {
       $set: {
         finished: finished,
         exit_code: exit_code,
-        manifest: manifest
+        manifest: manifest,
+        active: false
       }
     });
 
-    lane.shipment_active = false;
-    Lanes.update(lane._id, lane);
-    console.log('Shipping completed for lane:', lane.name);
+    console.log(
+      'Shipping completed for lane:',
+      lane.name,
+      'with shipment:',
+      shipment._id,
+      'and exit code:',
+      exit_code
+    );
 
     if (exit_code != 0 && lane.salvage_plan) {
       let salvage_lane = Lanes.findOne(lane.salvage_plan);
@@ -156,12 +163,11 @@ Meteor.methods({
     return manifest;
   },
 
-  'Lanes#reset_shipment': function (name) {
+  'Lanes#reset_shipment': function (name, date) {
     let lane = Lanes.findOne({ name: name });
+    let shipment = Shipments.findOne({ start: date, lane: lane._id });
 
-    lane.shipment_active = false;
-
-    return Lanes.update(lane._id, lane);
+    return Shipments.update(shipment._id, { $set: { active: false } });
   }
 });
 

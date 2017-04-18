@@ -17,11 +17,9 @@ let update_harbor = function (template) {
     'Harbors#update',
     lane,
     values,
-    function update_harbor (err, res) {
+    function update_harbor (err, lane) {
       if (err) throw err;
 
-      lane.minimum_complete = res;
-      Lanes.update(lane._id, lane);
       Session.set('lane', lane);
     }
   );
