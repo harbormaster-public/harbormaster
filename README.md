@@ -1,6 +1,6 @@
 # harbormaster
 
-[![Build Status](https://travis-ci.org/strictlyskyler/harbormaster.svg?branch=master)](https://travis-ci.org/strictlyskyler/harbormaster)
+[![Build Status](https://travis-ci.org/StrictlySkyler/harbormaster.svg?branch=master)](https://travis-ci.org/StrictlySkyler/harbormaster)
 
 General notes on things to do and how things work.
 
