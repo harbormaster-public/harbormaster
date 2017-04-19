@@ -1,5 +1,5 @@
 import { Template } from 'meteor/templating';
-import { Lanes } from '../../../../api/lanes/lanes.js';
+import { Lanes } from '../../../../api/lanes';
 
 let update_harbor = function (template) {
   let inputs = template.$('.harbor').find('input');

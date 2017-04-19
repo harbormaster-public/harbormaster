@@ -1,7 +1,7 @@
 import { Template } from 'meteor/templating';
-import { Lanes } from '../../../../api/lanes/lanes.js';
+import { Lanes } from '../../../../api/lanes';
 import { Harbors } from '../../../../api/harbors';
-import { Shipments } from '../../../../api/shipments/shipments';
+import { Shipments } from '../../../../api/shipments';
 
 Template.ship_lane.events({
   'click .start-shipment': function () {

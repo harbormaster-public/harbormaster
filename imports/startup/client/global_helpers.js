@@ -1,5 +1,5 @@
 import { Template } from 'meteor/templating';
-import { Lanes } from '../../api/lanes/lanes';
+import { Lanes } from '../../api/lanes';
 
 export const manifest_index = (index) => {
   pretty_index = index + 1;

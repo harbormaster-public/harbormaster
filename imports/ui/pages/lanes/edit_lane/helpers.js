@@ -1,9 +1,9 @@
 import { Template } from 'meteor/templating';
-import { Lanes } from '../../../../api/lanes/lanes.js';
+import { Lanes } from '../../../../api/lanes';
 import { Session } from 'meteor/session';
-import { Users } from '../../../../api/users/users.js';
+import { Users } from '../../../../api/users';
 import { Harbors } from '../../../../api/harbors';
-import { Shipments } from '../../../../api/shipments/shipments.js';
+import { Shipments } from '../../../../api/shipments';
 import { moment } from 'meteor/momentjs:moment';
 
 //TODO: expose this

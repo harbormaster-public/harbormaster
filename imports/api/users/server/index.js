@@ -1,5 +1,5 @@
 import { Accounts } from 'meteor/accounts-base';
-import { Users } from '../users';
+import { Users } from '..';
 
 Meteor.publish('Users', function () {
   return Users.find();

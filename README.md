@@ -26,8 +26,7 @@ Features:
 TODO:
 - Blur bug on form input in harbor
 - Convenience methods?
-- Charters
-- Cleanup imports
+- Charters?
 
 Environment variables you'll want if you run this docker container:
 

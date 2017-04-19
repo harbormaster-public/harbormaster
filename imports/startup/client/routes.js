@@ -1,12 +1,12 @@
-import '../../ui/layouts/main/main';
-import '../../ui/components/nav/nav';
-import '../../ui/pages/root/root';
-import '../../ui/pages/lanes/lanes';
-import '../../ui/pages/users/users';
-import '../../ui/pages/profile/profile';
-import '../../ui/pages/lanes/edit_lane/edit_lane';
-import '../../ui/pages/lanes/ship_lane/ship_lane';
-import '../../ui/pages/users/add_user/add_user';
+import '../../ui/layouts/main';
+import '../../ui/components/nav';
+import '../../ui/pages/root';
+import '../../ui/pages/lanes';
+import '../../ui/pages/users';
+import '../../ui/pages/profile';
+import '../../ui/pages/lanes/edit_lane';
+import '../../ui/pages/lanes/ship_lane';
+import '../../ui/pages/users/add_user';
 
 FlowRouter.route('/', {
   name: 'root',

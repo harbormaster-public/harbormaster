@@ -1,7 +1,7 @@
 import { Template } from 'meteor/templating';
-import { Lanes } from '../../../api/lanes/lanes';
-import { Users } from '../../../api/users/users';
-import { Shipments } from '../../../api/shipments/shipments.js';
+import { Lanes } from '../../../api/lanes';
+import { Users } from '../../../api/users';
+import { Shipments } from '../../../api/shipments';
 
 Template.root.helpers({
   latest_shipment: function () {

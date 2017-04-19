@@ -1,5 +1,5 @@
-import { Lanes } from '../lanes';
-import { Shipments } from '../../shipments/shipments';
+import { Lanes } from '..';
+import { Shipments } from '../../shipments';
 import { Harbors } from '../../harbors';
 import uuid from 'uuid';
 

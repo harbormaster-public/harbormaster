@@ -1,7 +1,7 @@
 import { Template } from 'meteor/templating';
-import { Lanes } from '../../../api/lanes/lanes.js';
-import { Users } from '../../../api/users/users.js';
-import { Shipments } from '../../../api/shipments/shipments.js';
+import { Lanes } from '../../../api/lanes';
+import { Users } from '../../../api/users';
+import { Shipments } from '../../../api/shipments';
 
 const sort_by_length = function (doc1, doc2, key, reverse) {
   let length1 = doc1[key] ? doc1[key].length : 0;

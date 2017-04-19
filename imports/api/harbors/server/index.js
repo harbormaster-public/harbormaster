@@ -1,5 +1,5 @@
 import { Harbors } from '..';
-import { Lanes } from '../../lanes/lanes';
+import { Lanes } from '../../lanes';
 
 Meteor.publish('Harbors', function () {
   return Harbors.find();
@@ -44,3 +44,4 @@ Meteor.methods({
 
   }
 })
+

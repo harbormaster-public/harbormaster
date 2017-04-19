@@ -1,6 +1,6 @@
 import { Template } from 'meteor/templating';
-import { Users } from '../../../api/users/users';
-import { Lanes } from '../../../api/lanes/lanes';
+import { Users } from '../../../api/users';
+import { Lanes } from '../../../api/lanes';
 
 Template.users.helpers({
   users () {

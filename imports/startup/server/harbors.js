@@ -1,10 +1,10 @@
 import fs from 'fs';
 import path from 'path';
 import expandTilde from 'expand-tilde';
-import { Lanes } from '../../api/lanes/lanes';
-import { Users } from '../../api/users/users';
+import { Lanes } from '../../api/lanes';
+import { Users } from '../../api/users';
 import { Harbors } from '../../api/harbors';
-import { Shipments } from '../../api/shipments/shipments';
+import { Shipments } from '../../api/shipments';
 
 let harbormaster_data_dir = expandTilde('~/.harbormaster');
 let harbors_dir = harbormaster_data_dir + '/harbors';

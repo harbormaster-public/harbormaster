@@ -1,5 +1,5 @@
 import { Template } from 'meteor/templating';
-import { Users } from '../../../../api/users/users';
+import { Users } from '../../../../api/users';
 
 Template.add_user.helpers({
   is_harbormaster () {

@@ -1,4 +1,4 @@
-import { Users } from '../../api/users/users.js';
+import { Users } from '../../api/users';
 
 Accounts.onLogin(function () {
   var user_id = Meteor.user().emails[0].address;

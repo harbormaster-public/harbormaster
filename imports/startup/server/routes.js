@@ -1,6 +1,6 @@
-import { Lanes } from '../../api/lanes/lanes';
+import { Lanes } from '../../api/lanes';
 import { Harbors } from '../../api/harbors';
-import { Shipments } from '../../api/shipments/shipments';
+import { Shipments } from '../../api/shipments';
 
 let post_hooks = Picker.filter(function (req) {
   return req.method == 'POST';

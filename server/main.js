@@ -6,16 +6,16 @@ import '../imports/startup/server/accounts';
 import '../imports/startup/server/routes';
 import '../imports/startup/server/harbors';
 
-import { Captains } from '../imports/api/captains/captains';
-import { Harbormasters } from '../imports/api/harbormasters/harbormasters';
-import { Lanes } from '../imports/api/lanes/lanes';
-import { Shipments } from '../imports/api/shipments/shipments';
-import { Users } from '../imports/api/users/users';
+import { Captains } from '../imports/api/captains';
+import { Harbormasters } from '../imports/api/harbormasters';
+import { Lanes } from '../imports/api/lanes';
+import { Shipments } from '../imports/api/shipments';
+import { Users } from '../imports/api/users';
 import { Harbors } from '../imports/api/harbors';
-import '../imports/api/lanes/server/methods';
-import '../imports/api/users/server/methods';
-import '../imports/api/harbors/server/methods';
-import '../imports/api/shipments/server/methods';
+import '../imports/api/lanes/server';
+import '../imports/api/users/server';
+import '../imports/api/harbors/server';
+import '../imports/api/shipments/server';
 
 console.log('Modules loaded.');
 Meteor.startup(() => {
