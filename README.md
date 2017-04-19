@@ -12,7 +12,7 @@ Features:
 - [x] **Lanes**, which represent deployment paths, comprised of Harbors
 - [x] **Shipments**, which represent discrete actions at a specific Harbor
 - [x] **Harbors**, which represent a specific custom task
-- [ ] **Logs**, which are the output of Shipments
+- [x] **Logs**, which are the output of Shipments
 - [x] **Manifests**, which are passed from lane to lane
 - [x] **Salvage Plans**, which are Lanes to be executed when a Shipment fails
 - [x] **Shipping**, the act of initiating discreet Shipments to a Lane
@@ -22,7 +22,12 @@ Features:
 - [x] **Hooks**, allowing remote calls to trigger shipments
 - [x] **Abort shipment**, canceling a shipment in the middle of it, optionally triggering a Salvage Plan
 - [x] **Plugins**, for modular capabilities
-- [ ] **MOAR VEEYOUS**
+
+TODO:
+- Blur bug on form input in harbor
+- Convenience methods?
+- Charters
+- Cleanup imports
 
 Environment variables you'll want if you run this docker container:
 
@@ -40,6 +45,6 @@ curl \
   -f \
   -H "token: [the token for this user with this lane]" \
   -H "user_id: [the user id]" \
-  -X POST [url]/lanes/[lane name]/ship
-# TODO: Add passing of manifests here ^
+  -X POST [url]/lanes/[lane name]/ship[?key=value]
+# Any query passed will be assigned as a prior_manifest on the manifest for the lane
 ```

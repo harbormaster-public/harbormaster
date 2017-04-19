@@ -42,7 +42,7 @@ Meteor.methods({
 
     let lane = Lanes.findOne(id);
     let new_manifest;
-    let shipment = Shipments.insert({
+    let shipment_id = Shipments.insert({
       start: shipment_start_date,
       actual: new Date(),
       lane: lane._id,
@@ -56,7 +56,7 @@ Meteor.methods({
     lane.shipments = lane.shipments || [];
     lane.salvage_runs = lane.salvage_runs || [];
     lane.followups = lane.followups || [];
-    lane.shipments.push(shipment);
+    lane.shipments.push(shipment_id);
 
     Lanes.update(lane._id, lane);
 
@@ -74,6 +74,15 @@ Meteor.methods({
 
       if (new_manifest.error) {
         let exit_code = 1;
+        let shipment = Shipments.findOne(shipment_id);
+
+        shipment.stderr.push({
+          date: new Date(),
+          result: new_manifest.error.toString()
+        });
+
+        Shipments.update(shipment_id, shipment);
+
         return Meteor.call('Lanes#end_shipment', lane, exit_code, new_manifest);
       }
 

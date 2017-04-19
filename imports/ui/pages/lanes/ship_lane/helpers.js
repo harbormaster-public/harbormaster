@@ -23,7 +23,7 @@ Template.ship_lane.helpers({
 
     if (sort_order == 'history' && has_shipments) {
       let dates = lane.shipments;
-      let relevant_dates = dates.slice(START_INDEX, END_INDEX);
+      let relevant_dates = dates.reverse().slice(START_INDEX, END_INDEX);
 
       relevant_dates = Shipments.find({ _id: { $in: relevant_dates } });
 
@@ -103,12 +103,14 @@ Template.ship_lane.helpers({
   exit_code () {
     let name = FlowRouter.getParam('name');
     let date = this.start || FlowRouter.getParam('date');
-    let current_date = FlowRouter.getParam('date');
     let lane = Session.get('lane') || Lanes.findOne({ name: name });
-    let shipment = Shipments.findOne({ start: date, lane: lane._id });
+    let shipment = lane ?
+      Shipments.findOne({ start: date, lane: lane._id }) :
+      false
+    ;
     let exit_code = shipment ? shipment.exit_code : false;
 
-    if (current_date && typeof exit_code == 'number') return exit_code;
+    if (date && typeof exit_code == 'number') return exit_code;
 
     return false;
   },
@@ -178,26 +180,9 @@ Template.ship_lane.helpers({
       shipment = Shipments.findOne({ lane: lane._id, start: date });
     }
 
-    return shipment ?
-      shipment.stdout[shipment.stdout.length - 1].result :
-      false
-    ;
-  },
-
-  work_date () {
-    let name = FlowRouter.getParam('name');
-    let lane = Session.get('lane') || Lanes.findOne({ name: name });
-    let date = FlowRouter.getParam('date');
-    let shipment;
-
-    if (date) {
-      shipment = Shipments.findOne({ lane: lane._id, start: date });
-    }
-
-    return shipment ?
-      shipment.stdout[shipment.stdout.length - 1].date.toLocaleString() :
-      false
-    ;
+    if (shipment && shipment.stdout.length) return shipment.stdout;
+    if (shipment && shipment.stderr.length) return shipment.stderr;
+    return false;
   },
 
   duration () {

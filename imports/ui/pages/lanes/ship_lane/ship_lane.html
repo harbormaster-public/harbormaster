@@ -27,7 +27,9 @@
       <figcaption class="work-caption">Work Output</figcaption>
       <section>
         {{#if has_work_output}}
-          {{work_date}}: {{work_output}}
+          {{#each work_output}}
+            {{date}}: {{result}}<br>
+          {{/each}}
         {{/if}}
       </section>
     </figure>

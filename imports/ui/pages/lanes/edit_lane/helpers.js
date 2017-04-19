@@ -63,7 +63,7 @@ Template.edit_lane.helpers({
 
       relevant_dates = Shipments.find({ _id: { $in: relevant_dates } });
 
-      return relevant_dates;
+      return relevant_dates.fetch().reverse();
 
     } else if (sort_order) return [];
 
@@ -127,10 +127,10 @@ Template.edit_lane.helpers({
   chosen_followup () {
     let lane = Lanes.findOne({ name: FlowRouter.getParam('name') });
 
-    return this._id == lane ? lane.followup : false;
+    return this._id == lane.followup;
   },
 
-  chose_salvage_plan () {
+  chosen_salvage_plan () {
     let lane = Lanes.findOne({ name: FlowRouter.getParam('name') });
 
     return this._id == lane.salvage_plan;

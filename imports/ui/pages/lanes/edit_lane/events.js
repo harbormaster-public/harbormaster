@@ -50,9 +50,7 @@ Template.edit_lane.events({
     let lane = Session.get('lane');
     let followup_lane = Lanes.findOne(event.target.value);
 
-    if (! lane || ! followup_lane) debugger;
-
-    lane.followup = followup_lane._id;
+    lane.followup = followup_lane ? followup_lane._id : null;
     Lanes.update(lane._id, lane);
     Session.set('lane', lane);
   },
@@ -61,9 +59,8 @@ Template.edit_lane.events({
     let lane = Session.get('lane');
     let salvage_plan_lane = Lanes.findOne(event.target.value);
 
-    if (! lane || ! salvage_plan_lane) debugger;
 
-    lane.salvage_plan = salvage_plan_lane._id;
+    lane.salvage_plan = salvage_plan_lane ? salvage_plan_lane._id : null;
     Lanes.update(lane._id, lane);
     Session.set('lane', lane);
   },
