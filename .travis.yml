@@ -34,5 +34,5 @@ install:
 
 script:
   - npm run test
-  - MONGO_URL=mongodb://127.0.0.1 ROOT_URL=http://localhost:3000 PORT=3000 node /home/travis/build/trueandco/harbormaster/.build/bundle/main.js &
+  - MONGO_URL=mongodb://127.0.0.1 ROOT_URL=http://localhost:3000 PORT=3000 node /home/travis/build/StrictlySkyler/harbormaster/.build/bundle/main.js &
   - npm run test:e2e
