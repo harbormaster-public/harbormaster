@@ -1,7 +1,7 @@
 import { resetDatabase } from 'meteor/xolvio:cleaner';
 import faker from 'faker';
-import './methods';
-import { Lanes } from '../lanes';
+import '.';
+import { Lanes } from '..';
 
 var test_lane_id = faker.random.uuid();
 var test_start_date = faker.date.recent();

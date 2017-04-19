@@ -1,5 +1,5 @@
 import { chai } from 'meteor/practicalmeteor:chai';
-import Lanes from './lanes';
+import Lanes from '.';
 
 var should = chai.should();
 

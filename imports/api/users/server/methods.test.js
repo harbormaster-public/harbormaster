@@ -1,7 +1,7 @@
 import { resetDatabase } from 'meteor/xolvio:cleaner';
 import faker from 'faker';
-import './methods';
-import { Users } from '../users';
+import '.';
+import { Users } from '..';
 import { Meteor } from 'meteor/meteor';
 
 const test_email = faker.internet.email();

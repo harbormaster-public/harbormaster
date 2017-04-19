@@ -1,5 +1,5 @@
 import { chai } from 'meteor/practicalmeteor:chai';
-import Users from './users';
+import Users from '.';
 
 var should = chai.should();
 
