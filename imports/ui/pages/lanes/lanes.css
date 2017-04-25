@@ -36,6 +36,17 @@
   position: absolute;
 }
 
+.admin .charter {
+  left: -112px;
+  border-color: #f0a;
+  color: #f0a;
+}
+
+.admin .charter:hover {
+  border-color: #a03;
+  color: #a03;
+}
+
 .admin .ship-lane {
   left: -50px;
 }

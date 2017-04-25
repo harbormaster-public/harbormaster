@@ -1,0 +1,36 @@
+<template name="charter">
+  <h1>Lane Charter (beta)</h1>
+  <figure class="charter">
+    <figcaption>Starting with lane: {{lane.name}}</figcaption>
+    <div>
+      <a
+        href="/lanes/{{lane.name}}/ship"
+        id={{lane._id}}
+        target=_blank
+        class="charter-lane lane button exit-code code-{{exit_code}} {{active}}">
+          {{lane.name}}
+      </a>
+    </div>
+
+    {{#each charter_lanes}}
+      <div class="reference">
+        {{#each this}}
+          <span
+            id=svg-{{this.lane._id}}
+            data-parent={{this.parent}}
+            data-child={{this.lane._id}}
+            class="svg-path">
+          </span>
+          <a
+            href="/lanes/{{this.lane.name}}/ship"
+            id={{this.lane._id}}
+            target=_blank
+            class="{{this.type}}-lane lane button exit-code code-{{exit_code}} {{active}}">
+              {{this.lane.name}}
+          </a>
+        {{/each}}
+      </div>
+    {{/each}}
+  </figure>
+</template>
+

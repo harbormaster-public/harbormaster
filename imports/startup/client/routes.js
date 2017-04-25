@@ -7,6 +7,7 @@ import '../../ui/pages/profile';
 import '../../ui/pages/lanes/edit_lane';
 import '../../ui/pages/lanes/ship_lane';
 import '../../ui/pages/users/add_user';
+import '../../ui/pages/lanes/charter';
 
 FlowRouter.route('/', {
   name: 'root',
@@ -62,6 +63,16 @@ FlowRouter.route('/lanes//ship', {
   name: 'redirect_to_lanes',
   action: function () {
     FlowRouter.go('/lanes');
+  }
+});
+
+FlowRouter.route('/lanes/:name/charter', {
+  name: 'lane_charter',
+  action: function () {
+    BlazeLayout.render('main', {
+      header: 'nav',
+      main: 'charter'
+    });
   }
 });
 
