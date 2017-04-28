@@ -3,18 +3,6 @@ import { Lanes } from '../../../api/lanes';
 import { Users } from '../../../api/users';
 import { Shipments } from '../../../api/shipments';
 
-const sort_by_length = function (doc1, doc2, key, reverse) {
-  let length1 = doc1[key] ? doc1[key].length : 0;
-  let length2 = doc2[key] ? doc2[key].length : 0;
-  let order = 0;
-
-  if (length1 > length2) order = -1;
-  else if (length1 < length2) order = 1;
-
-  if (reverse == -1) { order = -order; }
-  return order;
-};
-
 Template.lanes.helpers({
   lanes () {
     let lanes;
@@ -29,52 +17,21 @@ Template.lanes.helpers({
       case 'captains':
         lanes = Lanes.find({}, { sort: { captains: -reverse } });
         break;
-      case 'destinations':
-        return []
-        lanes = Lanes.find({}, {
-          sort: function (lane1, lane2) {
-            return sort_by_length(lane1, lane2, 'destinations', reverse);
-          }
-        })
-        break;
-      case 'stops':
-        return []
-        lanes = Lanes.find({}, {
-          sort: function (lane1, lane2) {
-            let total_lane1_stops = 0;
-            let total_lane2_stops = 0;
-            let sort_order = 0;
-
-            _.each(lane1.destinations, function (destination) {
-              total_lane1_stops += destination.stops.length;
-            });
-
-            _.each(lane2.destinations, function (destination) {
-              total_lane2_stops += destination.stops.length;
-            });
-
-            if (total_lane1_stops > total_lane2_stops) {
-              sort_order = -1;
-            } else if (total_lane1_stops < total_lane2_stops) {
-              sort_order = 1;
-            }
-
-            if (reverse == -1) { sort_order = -sort_order; }
-
-            return sort_order;
-          }
-        });
+      case 'type':
+        lanes = Lanes.find({}, { sort: { type: reverse } });
         break;
       case 'shipped':
-        debugger;
         lanes = Lanes.find({}, {
           sort: function (lane1, lane2) {
-            let lane1_date = lane1.date_history ? 
-              lane1.date_history[lane1.date_history.length - 1].actual :
+            let lane1_shipments = Shipments.find({ lane: lane1._id }).fetch();
+            let lane2_shipments = Shipments.find({ lane: lane2._id }).fetch();
+
+            let lane1_date = lane1_shipments.length ? 
+              lane1_shipments[lane1_shipments.length - 1].actual :
               0
             ;
-            let lane2_date = lane2.date_history ?
-              lane2.date_history[lane2.date_history.length - 1].actual :
+            let lane2_date = lane2_shipments.length ?
+              lane2_shipments[lane2_shipments.length - 1].actual :
               0
             ;
             let sort_order = 0;
@@ -85,18 +42,51 @@ Template.lanes.helpers({
             if (reverse == -1) { sort_order = -sort_order; }
             return sort_order;
           }
-        })
-        break;
-      case 'salvaged':
+        });
         break;
       case 'shipments':
         lanes = Lanes.find({}, {
           sort: function (lane1, lane2) {
-            return sort_by_length(lane1, lane2, 'date_history', reverse);
+            let lane1_shipments = Shipments.find({ lane: lane1._id }).fetch();
+            let lane2_shipments = Shipments.find({ lane: lane2._id }).fetch();
+            let sort_order = 0;
+
+            if (lane1_shipments.length > lane2_shipments.length) {
+              sort_order = -1;
+            }
+            else if (lane1_shipments.length < lane2_shipments.length) {
+             sort_order = 1;
+            }
+
+            if (reverse == -1) { sort_order = -sort_order; }
+            return sort_order;
           }
         });
         break;
       case 'salvage-runs':
+        lanes = Lanes.find({}, {
+          sort: function (lane1, lane2) {
+            let lane1_shipments = Shipments.find({
+              lane: lane1._id,
+              exit_code: { $ne: 0 }
+            }).fetch();
+            let lane2_shipments = Shipments.find({
+              lane: lane2._id,
+              exit_code: { $ne: 0 }
+            }).fetch();
+            let sort_order = 0;
+
+            if (lane1_shipments.length > lane2_shipments.length) {
+              sort_order = -1;
+            }
+            else if (lane1_shipments.length < lane2_shipments.length) {
+             sort_order = 1;
+            }
+
+            if (reverse == -1) { sort_order = -sort_order; }
+            return sort_order;
+          }
+        });
         break;
       default:
         lanes = Lanes.find();
@@ -151,15 +141,18 @@ Template.lanes.helpers({
   },
 
   last_salvaged () {
-    if (! this.salvage_runs || ! this.salvage_runs.length) { return 'never'; }
+    let salvage_runs = Shipments.find({
+      lane: this._id,
+      exit_code: { $ne: 0 }
+    }).fetch();
+    if (! salvage_runs.length) return 'never';
 
-    let last_salvage_run = this.salvage_runs[this.salvage_runs.length - 1];
-    last_salvage_shipment = Shipments.findOne({
-      start: last_salvage_run,
-      lane: this.salvage_plan
-    });
+    let last_salvage_run = salvage_runs[salvage_runs.length - 1];
 
-    return last_salvage_shipment.finished.toLocaleString()
+    return last_salvage_run.finished ?
+      last_salvage_run.finished.toLocaleString() :
+      'never'
+    ;
   },
 
   total_shipments () {
@@ -170,10 +163,10 @@ Template.lanes.helpers({
   },
 
   total_salvage_runs () {
-    return this.salvage_runs && this.salvage_runs.length ?
-      this.salvage_runs.length :
-      0
-    ;
+    return Shipments.find({
+      lane: this._id,
+      exit_code: { $ne: 0 }
+    }).fetch().length;
   },
 
   can_ply () {

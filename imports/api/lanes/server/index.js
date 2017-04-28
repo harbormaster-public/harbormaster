@@ -66,7 +66,12 @@ Meteor.methods({
 
     } catch (err) {
       //TODO: Surface this error to the client
-      console.error('Shipment failed with error:', err);
+      console.error(
+        'Shipment failed with error:\n',
+        err + '\n',
+        'for lane:\n',
+        lane.name
+      );
       manifest.error = err;
       new_manifest = manifest;
 

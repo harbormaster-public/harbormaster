@@ -2,6 +2,12 @@
   cursor: pointer;
 }
 
+.lanes-table th.current-state-header,
+.lanes-table th.followup-header,
+.lanes-table th.salvage-plan-header {
+  cursor: default;
+}
+
 .lanes-table {
   position: relative;
 }

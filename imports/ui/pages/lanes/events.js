@@ -7,7 +7,9 @@ Template.lanes.events({
   },
 
   'click .delete-lane' () {
-    Lanes.remove(this._id);
+    let confirm_message = `Delete lane?\n${this.name}`;
+
+    if (window.confirm(confirm_message)) Lanes.remove(this._id);
   },
 
   'click .edit-lane' (event) {

@@ -44,7 +44,7 @@ Template.edit_lane.helpers({
   },
 
   lanes () {
-    return Lanes.find()
+    return Lanes.find({}, { sort: { name: 1 } });
   },
 
   lane (sort_order) {
