@@ -124,7 +124,6 @@ Meteor.methods({
     ;
     let shipment = Shipments.findOne({ start: date, lane: lane._id });
 
-
     Shipments.update(shipment._id, {
       $set: {
         finished: finished,
@@ -143,8 +142,10 @@ Meteor.methods({
       exit_code
     );
 
-    if (exit_code != 0 && lane.salvage_plan) {
-      let salvage_lane = Lanes.findOne(lane.salvage_plan);
+    let salvage_lane = Lanes.findOne(lane.salvage_plan);
+    let followup_lane = Lanes.findOne(lane.followup);
+
+    if (exit_code != 0 && salvage_lane) {
       let salvage_manifest = Harbors.findOne(salvage_lane.type)
         .lanes[salvage_lane._id]
         .manifest
@@ -161,8 +162,7 @@ Meteor.methods({
       );
     }
 
-    if (exit_code == 0 && lane.followup) {
-      let followup_lane = Lanes.findOne(lane.followup);
+    if (exit_code == 0 && followup_lane) {
       let followup_manifest = Harbors.findOne(followup_lane.type)
         .lanes[followup_lane._id]
         .manifest
