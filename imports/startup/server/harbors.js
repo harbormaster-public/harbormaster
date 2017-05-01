@@ -32,11 +32,21 @@ fs.readdirSync(harbors_dir).forEach(function (file) {
   if (stats.isDirectory() || ! stats.isFile() || ! file.match(/\.js$/)) return;
 
   try {
-    let harbor_name = file.replace('\.js', '');
     let string = fs.readFileSync(harbor_path).toString();
 
-    $H.harbors[harbor_name] = eval(string);
-    $H.harbors[harbor_name].register(Lanes, Users, Harbors, Shipments);
+    let entrypoint = eval(string);
+    let harbor_name = entrypoint.register(Lanes, Users, Harbors, Shipments);
+    let lanes_exist = (
+      Harbors.findOne(harbor_name) && Harbors.findOne(harbor_name).lanes
+    );
+
+    $H.harbors[harbor_name] = entrypoint;
+
+    Harbors.upsert(harbor_name, {
+      lanes: lanes_exist ?
+        Harbors.findOne(harbor_name).lanes :
+        {}
+    });
 
     let harbor = Harbors.findOne(harbor_name);
 
