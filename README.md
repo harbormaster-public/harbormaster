@@ -6,17 +6,17 @@ A framework for microservices.
 
 ## Outline
 
-- Purpose
-- Design
-  - Terms
-  - Architecture
-- Installation
-  - Shell
-  - Docker
-- Usage
-  - Dashboard
-  - Endpoints
-  - API
+- [Purpose](#purpose)
+- [Design](#design)
+  - [Terms](#terms)
+  - [Architecture](#architecture)
+- [Installation](#installation)
+  - [Shell](#shell)
+  - [Docker](#docker)
+- [Usage](#usage)
+  - [Dashboard](#dashboard)
+  - [Endpoints](#endpoints)
+  - [API](#api)
 
 ## Purpose
 
