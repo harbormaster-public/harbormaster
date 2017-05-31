@@ -17,9 +17,6 @@ A framework for microservices.
   - Dashboard
   - Endpoints
   - API
-- Example Use Cases
-- Contributing
-- License
 
 ## Purpose
 
@@ -31,9 +28,9 @@ In this way, Harbormaster provides a common interface for integrating as many pr
 
 Some examples of harbors include:
 
-- [sleep]
-- [ssh]
-- [other_lanes]
+- [sleep](https://github.com/strictlyskyler/harbormaster-sleep)
+- [ssh](https://github.com/strictlyskyler/harbormaster-ssh)
+- [other_lanes](https://github.com/strictlyskyler/harbormaster-other-lanes)
 
 Harbors are meant to be modular, small, and tracked as projects separate from Harbormaster core itself (presented here).
 
@@ -100,24 +97,22 @@ Currently Harbormaster is not aware of and does not manage how Harbors are loade
 
 ## Usage
 
+There are, broadly, three interfaces for Harbormaster: the **Dashboard**, a simplistic series of HTML pages providing the ability to interact with Harbormaster's Lanes and Users; the **Hooks**, allowing remote triggering of a Lanes via HTTP; and the **API**, which provides programmatic interfaces for Harbors and the database.
+
 ### Dashboard
 
-### Endpoints
+The dashboard provides the ability to administrate Harbormaster visually.  It can be accessed by visiting the `ROOT_URL` variable passed to Harbormaster at runtime in a browser, e.g. `http://localhost`.
 
-### API
+It provides a limited walkthrough when Harbormaster is run for the first time, allowing for manual setup of Lanes and Users, as desired.  It provides the ability to setup Lanes and assign work via Harbors, along with a list of all Lanes and their status.  Finally, it provides a Charter for each lane, represented as a visual tree.
 
-## Example Use Cases
+Each visual representation is reactive, and reflects the state live as it changes.
 
-## Roadmap
+### Hooks
 
-## Contributing
+Endpoints are available for each Lane, and can be called remotely via HTTP.  Doing so requires both a `token` and `user_id` header to be present, both provided from the Dashboard.  This triggers a shipment to the lane matching the Endpoint.
 
-## License
+Calling Hooks can be done like so:
 
-#######
-
-
-Calling webhooks can be done like so:
 ```
 # Can be triggered via RPC, e.g.:
 curl \
@@ -127,3 +122,26 @@ curl \
   -X POST [url]/lanes/[lane name]/ship[?key=value]
 # Any query passed will be assigned as a prior_manifest on the manifest for the lane
 ```
+
+A successful start of a shipment returns HTTP code 200 along with the manifest as a JSON string.  Unauthorized access returns 401.
+
+### API
+
+Harbormaster provides an API for starting and ending Shipments from within a Harbor through a few mechanisms.
+
+Firstly, Harbormaster passes a reference to the Collections it uses to each Harbor as a part of its Registration: `Lanes, Users, Harbors, Shipments` are arguments passed to each Harbor's `register` method.  These can be referenced later, perhaps during a Harbor's `work` method, for arbitrary updates.
+
+Harbormaster also exposes a global variable, `$H`, with methods for starting and stopping shipments:
+
+#### #start_shipment
+```
+$H.call('Lanes#start_shipment', lane_id, manifest, start_date)
+```
+Starts a shipment for a Lane matching the `lane_id` string, with a `manfiest` object containing relevant data, and a canonical `start_date` string to use as reference.  Typically called from a client.
+
+#### #end_shipment
+```
+$H.call('Lanes#end_shipment', lane_id, exit_code, manifest)
+```
+Ends a Shipment for a Lane matching the `lane_id` string when its `work` is done.  Expects a number, `exit_code`, representing the success or failure of the work, with `0` as success and anything else as failure.  Accepts any updated `manifest` object representing state to be tracked.  Typically called at the end of a Harbor's `work` method.
+
