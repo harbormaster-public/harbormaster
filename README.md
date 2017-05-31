@@ -145,3 +145,4 @@ $H.call('Lanes#end_shipment', lane_id, exit_code, manifest)
 ```
 Ends a Shipment for a Lane matching the `lane_id` string when its `work` is done.  Expects a number, `exit_code`, representing the success or failure of the work, with `0` as success and anything else as failure.  Accepts any updated `manifest` object representing state to be tracked.  Typically called at the end of a Harbor's `work` method.
 
+Finally, changes can be written directly to Harbormaster's database, should the need arise.
