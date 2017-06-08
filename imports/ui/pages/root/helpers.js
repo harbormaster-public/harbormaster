@@ -27,14 +27,16 @@ Template.root.helpers({
   },
 
   shipments_last_24_hours: function () {
-    var yesterday = new Date(Date.now() - 86400000);
-    var shipments = Shipments.find({
-      actual: {
-        $gte: yesterday
-      }
-    }).fetch();
+    let total = Session.get('total_shipments') || 'Loading';
 
-    return shipments.length;
+    if (! total) {
+      Meteor.call('Shipments#get_total', (err, res) => {
+        if (err) throw err;
+
+        Session.set('total_shipments', res);
+      });
+    }
+    return total;
   },
 
   total_lanes: function () {

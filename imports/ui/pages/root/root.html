@@ -1,6 +1,6 @@
 <template name="root">
   <h1>Welcome to your Harbor</h1>
-  <h2>{{shipments_last_24_hours}} shipments have been made in the last 24 hours</h2>
+  <h2>{{shipments_last_24_hours}} shipments made in the last day</h2>
   <h3 id="last-time-shipped-header">
     <a class="button hollow" href="/lanes/{{latest_shipment.name}}/ship/{{latest_shipment.date}}">
       The last time something was shipped was {{latest_shipment.locale}}
