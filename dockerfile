@@ -5,11 +5,10 @@ ADD . /opt/harbormaster
 
 WORKDIR /opt/harbormaster
 
-RUN curl https://install.meteor.com/ | sh \
- && mkdir /harbormaster \
- && meteor --allow-superuser build /harbormaster --directory \
- && cd /harbormaster/bundle/programs/server \
- && npm install
+RUN curl https://install.meteor.com/ | sh
+RUN mkdir /harbormaster
+RUN meteor --allow-superuser build /harbormaster --directory
+RUN cd /harbormaster/bundle/programs/server; npm install
 
 ADD start.sh /start.sh
 
