@@ -143,19 +143,17 @@ Template.ship_lane.helpers({
       false
     ;
 
-    if (! lane.rendered_work_preview) {
-      Meteor.call(
-        'Harbors#render_work_preview',
-        lane,
-        manifest,
-        function (err, lane) {
-          if (err) throw err;
+    Meteor.call(
+      'Harbors#render_work_preview',
+      lane,
+      manifest,
+      function (err, lane) {
+        if (err) throw err;
 
-          Lanes.update(lane._id, lane);
-          Session.set('lane', lane);
-        }
-      );
-    }
+        Lanes.update(lane._id, lane);
+        Session.set('lane', lane);
+      }
+    );
 
     return lane.rendered_work_preview;
   },
