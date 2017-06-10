@@ -8,6 +8,13 @@ import { moment } from 'meteor/momentjs:moment';
 //TODO: expose this
 let AMOUNT_SHOWN = 20;
 
+Template.ship_lane.onCreated(function () {
+  var name = FlowRouter.getParam('name');
+  var lane = Lanes.findOne({ name: name });
+
+  shipments_subscription = Meteor.subscribe('Shipments', lane);
+});
+
 Template.ship_lane.helpers({
   lane (sort_order) {
     var name = FlowRouter.getParam('name');

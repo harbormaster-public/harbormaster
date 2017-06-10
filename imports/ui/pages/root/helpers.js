@@ -5,29 +5,23 @@ import { Shipments } from '../../../api/shipments';
 
 Template.root.helpers({
   latest_shipment: function () {
-    let latest_shipment = Shipments.find().fetch().reverse()[0];
-    let latest_lane = latest_shipment ?
-      Lanes.findOne(latest_shipment.lane) :
-      false
-    ;
+    let latest_shipment = Session.get('latest_shipment') || false;
 
-    if (latest_shipment && latest_lane) {
-      return {
-        name: latest_lane.name,
-        date: latest_shipment.start,
-        locale: latest_shipment.finished.toLocaleString()
-      };
+    if (! latest_shipment) {
+      Meteor.call('Shipments#get_latest_date', function (err, res) {
+        if (err) throw err;
+
+        Session.set('latest_shipment', res);
+      });
+
+      return { locale: 'loading' };
     }
 
-    return {
-      name: latest_lane ? latest_lane.name : '',
-      date: '',
-      locale: 'Never'
-    };
+    return latest_shipment;
   },
 
   shipments_last_24_hours: function () {
-    let total = Session.get('total_shipments') || 'Loading';
+    let total = Session.get('total_shipments') || 0;
 
     if (! total) {
       Meteor.call('Shipments#get_total', (err, res) => {
@@ -35,7 +29,10 @@ Template.root.helpers({
 
         Session.set('total_shipments', res);
       });
+
+      return 'Loading';
     }
+
     return total;
   },
 
