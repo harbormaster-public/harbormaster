@@ -137,25 +137,27 @@ Template.ship_lane.helpers({
     let name = FlowRouter.getParam('name');
     let lane = Session.get('lane') || Lanes.findOne({ name: name });
 
-    let harbor = Harbors.findOne(lane.type);
-    let manifest = harbor && harbor.lanes[lane._id] ?
-      harbor.lanes[lane._id].manifest :
-      false
-    ;
+    if (lane) {
+      let harbor = Harbors.findOne(lane.type);
+      let manifest = harbor && harbor.lanes[lane._id] ?
+        harbor.lanes[lane._id].manifest :
+        false
+      ;
 
-    Meteor.call(
-      'Harbors#render_work_preview',
-      lane,
-      manifest,
-      function (err, lane) {
-        if (err) throw err;
+      Meteor.call(
+        'Harbors#render_work_preview',
+        lane,
+        manifest,
+        function (err, lane) {
+          if (err) throw err;
 
-        Lanes.update(lane._id, lane);
-        Session.set('lane', lane);
-      }
-    );
+          Lanes.update(lane._id, lane);
+          Session.set('lane', lane);
+        }
+      );
 
-    return lane.rendered_work_preview;
+      return lane.rendered_work_preview;
+    }
   },
 
   has_work_output () {
