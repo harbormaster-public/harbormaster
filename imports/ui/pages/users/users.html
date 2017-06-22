@@ -1,14 +1,40 @@
 
 <template name="users">
   <h1>Users</h1>
-  <ul>
-    {{#each users}}
-    <li>
-      User: {{_id}}; Harbormaster: {{is_harbormaster}}; Captain of lanes: {{captain_lanes}}
-      <a href="/profile/{{_id}}">&lt;&lt; Edit User</a>
-    </li>
-    {{/each}}
-  </ul>
+  <table class="users-table">
+    <thead>
+      <tr>
+        <th>User</th>
+        <th>Harbormaster?</th>
+        <th>Lanes Captained</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#each users}}
+      <tr>
+        <td>
+          {{#if is_harbormaster}}
+              <div class="admin">
+                <a href="/profile/{{_id}}" class="button hollow tiny secondary profile">Edit User</a>
+              </div>
+          {{/if}}
+          {{_id}}
+        </td>
+        <td>
+          {{is_harbormaster}}
+        </td>
+        <td>
+          {{captain_lanes}}
+          {{#if is_harbormaster}}
+            <div class="admin">
+              <button class="button hollow tiny alert expire-user">Expire User</button>
+            </div>
+          {{/if}}
+        </td>
+      </tr>
+      {{/each}}
+    </tbody>
+  </table>
   {{#if is_harbormaster}}
     <a href="/users/add-user" class="button hollow invite-user">Invite User</a>
   {{/if}}

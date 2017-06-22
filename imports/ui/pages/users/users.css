@@ -1,0 +1,70 @@
+.users-table th {
+  cursor: pointer;
+}
+
+.users-table th.current-state-header,
+.users-table th.followup-header,
+.users-table th.salvage-plan-header {
+  cursor: default;
+}
+
+.users-table {
+  position: relative;
+}
+
+.users-table th.active {
+  background: #0af;
+  position: relative;
+  color: #fff;
+}
+
+.users-table th.active::after {
+  content: 'v';
+  color: #fff;
+  position: absolute;
+  bottom: -5px;
+  left: 50%;
+  margin-left: -4px;
+}
+
+.users-table th.active.reverse:after {
+  content: '^';
+  color: #fff;
+  position: absolute;
+  top: 0;
+  left: 50%;
+  font-size: 18px;
+  margin-left: -4px;
+  margin-top: -2px;
+}
+
+.admin .button {
+  position: absolute;
+}
+
+.admin .profile {
+  left: -75px;
+}
+
+.admin .expire-user {
+  right: -100px;
+  margin-top: -25px;
+}
+
+.admin .delete-lane {
+  left: 100%;
+  margin-left: 55px;
+}
+
+td.active {
+  color: darkgoldenrod;
+}
+
+td.ready {
+  color: green;
+}
+
+td.error {
+  color: red;
+}
+

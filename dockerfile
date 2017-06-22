@@ -5,6 +5,8 @@ ADD . /opt/harbormaster
 
 WORKDIR /opt/harbormaster
 
+RUN apt update
+RUN apt install -y sendmail
 RUN curl https://install.meteor.com/ | sh
 RUN mkdir /harbormaster
 RUN meteor --allow-superuser build /harbormaster --directory

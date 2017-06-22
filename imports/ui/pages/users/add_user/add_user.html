@@ -1,37 +1,26 @@
 <template name="add_user">
   {{#if fresh}}
     <h1>Welcome to Harbormaster!</h1>
-    <h2>You're the first user to sign in.  Please enter your email and a password.</h2>
+    <h2>You're the first user to sign in.</h2>
+    <h3>Please enter your email, and Harbormaster will send you a link to set your password.</h3>
     <form id="new-instance">
       <label>Email:
         <input type=email required class="email-user-invite" placeholder="user@example.com">
       </label>
-      <label>Password:
-        <input type=password required class="password-user-invite" placeholder="An awesome password">
-      </label>
-      <label>Confirm:
-        <input type=password required class="confirm-user-invite" placeholder="Confirm that same awesome password">
-      </label>
-      <button class="button initial-sign-in">Sign-In</button>
+      <button class="button initial-sign-in">Okay!</button>
     </form>
   {{else}}
-    <h1>Add A User</h1>
+    <h1>Invite A User</h1>
     {{#if is_harbormaster}}
-      <h2>Enter a user's email address and password to create an account for them.</h2>
+      <h2>Enter a user's email address and password to setup an account for them.</h2>
       <form>
         <label>Email:
           <input type=email required class="email-user-invite" placeholder="user@example.com">
         </label>
-        <label>Password:
-          <input type=password required class="password-user-invite" placeholder="An awesome password">
-        </label>
-        <label>Confirm:
-          <input type=password required class="confirm-user-invite" placeholder="Confirm that same awesome password">
-        </label>
-        <button class="button send-invitation">Add User</button>
+        <button class="button send-invitation">Invite User</button>
       </form>
     {{else}}
-      <h2>You need to be a Harbormaster to add users.</h2>
+      <h2>You need to be a Harbormaster to invite users.</h2>
     {{/if}}
   {{/if}}
 </template>
