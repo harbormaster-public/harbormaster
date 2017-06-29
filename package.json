@@ -5,7 +5,7 @@
     "test": "NODE_OPTIONS=--debug=5959 meteor test --port=4000 --once --driver-package dispatch:mocha-phantomjs",
     "test:watch": "NODE_OPTIONS=--debug=5959 TEST_WATCH=1 meteor test --port=4000 --driver-package dispatch:mocha-phantomjs",
     "start": "meteor run",
-    "test:e2e": "SELENIUM_BROWSER=phantomjs chimp --mocha --chai --path=.e2e --browser=phantomjs",
+    "test:e2e": "SELENIUM_BROWSER=phantomjs chimp --ddp=http://localhost:3000 --mocha --chai --path=.e2e --browser=phantomjs",
     "test:e2e:watch": "SELENIUM_BROWSER=phantomjs chimp --ddp=http://localhost:3000 --watch --mocha --chai --path=.e2e --browser=phantomjs"
   },
   "dependencies": {

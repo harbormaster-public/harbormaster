@@ -8,20 +8,21 @@ Meteor.publish('Users', function () {
 
 Meteor.methods({
   'Users#invite_user' (email) {
-    let existing_user = Accounts.findUserByEmail(email);
-
     if (! email) return false;
 
-    if (! existing_user) {
+    let user_account = Accounts.findUserByEmail(email);
+    let user_record = Users.findOne(email);
+
+    if (! user_account && ! user_record) {
       let tmp_password = uuid.v4();
       Accounts.createUser({ email, tmp_password });
       Users.insert({ _id: email });
-      existing_user = Accounts.findUserByEmail(email);
+      user_account = Accounts.findUserByEmail(email);
     }
 
-    Accounts.sendResetPasswordEmail(existing_user._id);
+    if (user_account) Accounts.sendResetPasswordEmail(user_account._id);
 
-    return existing_user;
+    return user_account || user_record || false;
   },
 
   'Users#expire_user' (email) {
