@@ -29,7 +29,7 @@ install:
   - curl https://install.meteor.com | /bin/sh
   - npm i -g chimp@0.40.4
   - npm install
-  - meteor build .build --directory
+  - meteor build .build --directory --debug
   - cd .build/bundle/programs/server && npm install && cd ../../../..
 
 script:
