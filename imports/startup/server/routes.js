@@ -2,6 +2,11 @@ import { Lanes } from '../../api/lanes';
 import { Harbors } from '../../api/harbors';
 import { Shipments } from '../../api/shipments';
 
+import bodyParser from 'body-parser';
+
+Picker.middleware(bodyParser.json());
+Picker.middleware(bodyParser.urlencoded({ extended: false }));
+
 let post_hooks = Picker.filter(function (req) {
   return req.method == 'POST';
 });
@@ -15,7 +20,7 @@ post_hooks.route('/lanes/:name/ship', function (params, req, res) {
   let results;
   let harbor = Harbors.findOne(lane.type);
   let manifest = harbor.lanes[lane._id].manifest;
-  let prior_manifest = require('url').parse(req.url, true).query;
+  let query = require('url').parse(req.url, true).query;
   let date = new Date();
   //TODO: share w/ other code
   let shipment_start_date = date.getFullYear() + '-' +
@@ -29,6 +34,7 @@ post_hooks.route('/lanes/:name/ship', function (params, req, res) {
     start: shipment_start_date,
     lane: lane._id
   });
+  let prior_manifest = Object.keys(query).length != 0 ? query : req.body;
 
   if (prior_manifest) {
     console.log(
