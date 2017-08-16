@@ -3,6 +3,7 @@ import { Harbors } from '../../api/harbors';
 import { Shipments } from '../../api/shipments';
 
 import bodyParser from 'body-parser';
+import url from 'url';
 
 Picker.middleware(bodyParser.json());
 Picker.middleware(bodyParser.urlencoded({ extended: false }));
@@ -13,14 +14,16 @@ let post_hooks = Picker.filter(function (req) {
 
 post_hooks.route('/lanes/:name/ship', function (params, req, res) {
 
+  let query = require('url').parse(req.url, true).query;
   let lane_name = decodeURI(params.name);
-  let token = req.headers.token;
-  let user_id = req.headers.user_id;
+  let auth = url.parse(req.url).auth;
+  let user_id = query ? query.user_id : false;
+  let token = query ? query.token : false;
+
   let lane = Lanes.findOne({ name: lane_name });
   let results;
   let harbor = Harbors.findOne(lane.type);
   let manifest = harbor.lanes[lane._id].manifest;
-  let query = require('url').parse(req.url, true).query;
   let date = new Date();
   //TODO: share w/ other code
   let shipment_start_date = date.getFullYear() + '-' +
@@ -34,7 +37,19 @@ post_hooks.route('/lanes/:name/ship', function (params, req, res) {
     start: shipment_start_date,
     lane: lane._id
   });
-  let prior_manifest = Object.keys(query).length != 0 ? query : req.body;
+  let prior_manifest = req.body;
+
+  if (
+    ! user_id ||
+    ! token ||
+    ! lane.tokens ||
+    lane.tokens[token] != user_id
+  ) {
+    res.statusCode = 401;
+    return res.end();
+  }
+
+  console.log('Shipping via RPC to lane:', lane.name, 'with user:', user_id);
 
   if (prior_manifest) {
     console.log(
@@ -43,11 +58,6 @@ post_hooks.route('/lanes/:name/ship', function (params, req, res) {
       '\n adding to recorded manifest.'
     );
     manifest.prior_manifest = prior_manifest;
-  }
-
-  if (! lane.tokens || lane.tokens[token] != user_id) {
-    res.statusCode = 401;
-    return res.end();
   }
 
   if (shipment && shipment.active) {
@@ -62,7 +72,6 @@ post_hooks.route('/lanes/:name/ship', function (params, req, res) {
 
   }
 
-  console.log('Shipping via RPC to lane:', lane.name, 'with user:', user_id);
   results = Meteor.call(
     'Lanes#start_shipment',
     lane._id,
