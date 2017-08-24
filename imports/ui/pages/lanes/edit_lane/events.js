@@ -13,6 +13,8 @@ let update_harbor = function (template) {
     ;
   });
 
+  values.timestamp = Date.now();
+
   return Meteor.call(
     'Harbors#update',
     lane,

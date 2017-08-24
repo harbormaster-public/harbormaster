@@ -77,7 +77,7 @@ Meteor.methods({
 
     } finally {
 
-      if (new_manifest.error) {
+      if (new_manifest && new_manifest.error) {
         let exit_code = 1;
         let shipment = Shipments.findOne(shipment_id);
 
