@@ -12,8 +12,14 @@ let post_hooks = Picker.filter(function (req) {
   return req.method == 'POST';
 });
 
+function respondNotAllowed (res) {
+  res.statusCode = 401;
+  return res.end();
+}
+
 post_hooks.route('/lanes/:name/ship', function (params, req, res) {
 
+  let results;
   let query = require('url').parse(req.url, true).query;
   let lane_name = decodeURI(params.name);
   let auth = url.parse(req.url).auth;
@@ -21,7 +27,8 @@ post_hooks.route('/lanes/:name/ship', function (params, req, res) {
   let token = query ? query.token : false;
 
   let lane = Lanes.findOne({ name: lane_name });
-  let results;
+  if (! lane) return respondNotAllowed(res);
+
   let harbor = Harbors.findOne(lane.type);
   let manifest = harbor.lanes[lane._id].manifest;
   let date = new Date();
@@ -45,8 +52,7 @@ post_hooks.route('/lanes/:name/ship', function (params, req, res) {
     ! lane.tokens ||
     lane.tokens[token] != user_id
   ) {
-    res.statusCode = 401;
-    return res.end();
+    return respondNotAllowed(res);
   }
 
   console.log('Shipping via RPC to lane:', lane.name, 'with user:', user_id);
