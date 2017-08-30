@@ -2,3 +2,4 @@ node_modules/
 .build
 npm-debug.log
 screenshots/*.png
+.DS_Store
