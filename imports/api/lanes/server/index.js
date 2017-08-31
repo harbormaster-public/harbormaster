@@ -53,6 +53,7 @@ Meteor.methods({
     });
 
     manifest.shipment_start_date = shipment_start_date;
+    manifest.shipment_id = shipment_id;
     lane.shipments = lane.shipments || [];
     lane.salvage_runs = lane.salvage_runs || [];
     lane.followups = lane.followups || [];
@@ -111,7 +112,7 @@ Meteor.methods({
       );
     }
 
-    let date = manifest.shipment_start_date;
+    let shipment_id = manifest.shipment_id;
     let finished = new Date();
     let next_date = finished;
     //TODO: share w/ client code
@@ -122,9 +123,8 @@ Meteor.methods({
       next_date.getMinutes() + '-' +
       next_date.getSeconds()
     ;
-    let shipment = Shipments.findOne({ start: date, lane: lane._id });
 
-    Shipments.update(shipment._id, {
+    Shipments.update(shipment_id, {
       $set: {
         finished: finished,
         exit_code: exit_code,
@@ -137,7 +137,7 @@ Meteor.methods({
       'Shipping completed for lane:',
       lane.name,
       'with shipment:',
-      shipment._id,
+      shipment_id,
       'and exit code:',
       exit_code
     );

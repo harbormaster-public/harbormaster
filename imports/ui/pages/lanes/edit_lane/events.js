@@ -83,7 +83,9 @@ Template.edit_lane.events({
     FlowRouter.go('/lanes/' + lane.name + '/edit');
   },
 
-  'keypress .lane-name': function (event) { event.preventDefault() },
+  'keypress .lane-name': function (event) {
+    if (event.key == 'Enter') event.preventDefault();
+  },
 
   'change .captains': function change_captains (event) {
     let lane = Session.get('lane');

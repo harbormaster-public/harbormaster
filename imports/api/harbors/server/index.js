@@ -8,10 +8,17 @@ Meteor.publish('Harbors', function () {
 Meteor.methods({
   'Harbors#update': function update_harbor (lane, values) {
     try {
+      let harbor = Harbors.findOne(lane.type);
       let success = $H.harbors[lane.type].update(lane, values);
-      lane = Meteor.call('Harbors#render_work_preview', lane, values);
 
-      lane.minimum_complete = success;
+      if (success) {
+        harbor.lanes[lane._id] = {
+          manifest: values
+        };
+        Harbors.update(harbor._id, harbor);
+        lane = Meteor.call('Harbors#render_work_preview', lane, values);
+        lane.minimum_complete = success;
+      }
 
       if (success && lane.rendered_work_preview) {
         Lanes.update(lane._id, lane);
