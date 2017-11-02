@@ -17,6 +17,20 @@ function respondNotAllowed (res) {
   return res.end();
 }
 
+function setCorsHeaders (res) {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader('Access-Control-Allow-Methods', 'GET,HEAD,OPTIONS,POST,PUT');
+  res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+
+  return res;
+}
+
+WebApp.rawConnectHandlers.use(function(req, res, next) {
+  setCorsHeaders(res);
+
+  return next();
+});
+
 post_hooks.route('/lanes/:name/ship', function (params, req, res) {
 
   let results;
@@ -45,6 +59,8 @@ post_hooks.route('/lanes/:name/ship', function (params, req, res) {
     lane: lane._id
   });
   let prior_manifest = req.body;
+
+  setCorsHeaders(res);
 
   if (
     ! user_id ||
