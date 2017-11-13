@@ -1,5 +1,5 @@
-FROM node:4.6
-MAINTAINER Skyler Brungardt <skyler@trueandco.com>
+FROM node:8
+MAINTAINER Skyler Brungardt <skyler.brungardt@gmail.com>
 
 ADD . /opt/harbormaster
 
