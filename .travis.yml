@@ -1,7 +1,7 @@
 sudo: required
 language: node_js
 node_js:
-  - 4
+  - 8
 
 env:
   global:
@@ -27,7 +27,7 @@ before_install:
 
 install:
   - curl https://install.meteor.com | /bin/sh
-  - npm i -g chimp@0.40.4
+  - npm i -g chimp@0.50.2
   - npm install
   - meteor build .build --directory --debug
   - cd .build/bundle/programs/server && npm install && cd ../../../..
