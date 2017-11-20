@@ -21,7 +21,9 @@ Meteor.methods({
     return shipments.length;
   },
 
-  'Shipments#get_latest_date': function () {
+  'Shipments#get_latest_date': function (shipment) {
+    if (Shipments.findOne(shipment)) return Shipments.findOne(shipment);
+
     let latest_shipment = Shipments.find().fetch().reverse()[0];
     let latest_lane = latest_shipment ?
       Lanes.findOne(latest_shipment.lane) :

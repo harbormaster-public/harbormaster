@@ -129,10 +129,22 @@ Template.lanes.helpers({
   },
 
   last_shipped () {
-    if (! this.shipments || ! this.shipments.length) { return 'never'; }
+    let last_shipment = Session.get('latest_shipments') ?
+      Session.get('latest_shipments')[this.name] :
+      false
+    ;
 
-    let last_shipment = this.shipments[this.shipments.length - 1];
-    last_shipment = Shipments.findOne(last_shipment);
+    Meteor.call(
+      'Shipments#get_latest_date',
+      this.shipments[this.shipments.length -1],
+      (err, res) => {
+        if (err) throw err;
+
+        let latest_shipments = Session.get('latest_shipments') || {};
+        latest_shipments[this.name] = res;
+
+        Session.set('latest_shipments', latest_shipments);
+    });
 
     return last_shipment && last_shipment.actual ?
       last_shipment.actual.toLocaleString() :

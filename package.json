@@ -2,22 +2,22 @@
   "name": "harbormaster",
   "private": true,
   "scripts": {
-    "test": "NODE_OPTIONS=--debug=5959 meteor test --port=4000 --once --driver-package dispatch:mocha-phantomjs",
-    "test:watch": "NODE_OPTIONS=--debug=5959 TEST_WATCH=1 meteor test --port=4000 --driver-package dispatch:mocha-phantomjs",
+    "test": "meteor test --port=4000 --once --driver-package dispatch:mocha-phantomjs",
+    "test:watch": "TEST_WATCH=1 meteor test --port=4000 --driver-package dispatch:mocha-phantomjs",
     "start": "meteor run",
     "test:e2e": "SELENIUM_BROWSER=phantomjs chimp --ddp=http://localhost:3000 --mocha --chai --path=.e2e --browser=phantomjs",
     "test:e2e:watch": "SELENIUM_BROWSER=phantomjs chimp --ddp=http://localhost:3000 --watch --mocha --chai --path=.e2e --browser=phantomjs"
   },
   "dependencies": {
-    "babel-runtime": "^6.26.0",
-    "bcrypt": "^0.8.7",
-    "body-parser": "^1.18.2",
-    "expand-tilde": "^1.2.2",
-    "faker": "^3.1.0",
-    "meteor-node-stubs": "^0.2.4",
-    "slack": "^9.0.9",
-    "svg": "^0.1.0",
-    "svg.js": "^2.6.0",
-    "uuid": "^2.0.3"
+    "babel-runtime": "6.26.0",
+    "bcrypt": "0.8.7",
+    "body-parser": "1.18.2",
+    "expand-tilde": "1.2.2",
+    "faker": "3.1.0",
+    "meteor-node-stubs": "0.2.4",
+    "slack": "9.0.9",
+    "svg": "0.1.0",
+    "svg.js": "2.6.0",
+    "uuid": "2.0.3"
   }
 }
