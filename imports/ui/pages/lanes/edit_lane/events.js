@@ -2,7 +2,7 @@ import { Template } from 'meteor/templating';
 import { Lanes } from '../../../../api/lanes';
 
 let update_harbor = function (template) {
-  let inputs = template.$('.harbor').find('input');
+  let inputs = template.$('.harbor').find('input, textarea');
   let values = {};
   let lane = Session.get('lane');
 
