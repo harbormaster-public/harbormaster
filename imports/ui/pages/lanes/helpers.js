@@ -148,7 +148,7 @@ Template.lanes.helpers({
 
     return last_shipment && last_shipment.actual ?
       last_shipment.actual.toLocaleString() :
-      'never'
+      ''
     ;
   },
 
@@ -199,31 +199,27 @@ Template.lanes.helpers({
   },
 
   current_state () {
-    let state = Session.get('lane_state') || {};
+    let state = Session.get('lane_state');
     Meteor.call('Shipments#check_state', this, (err, res) => {
       if (err) throw err;
 
+      state = Session.get('lane_state') || {};
       if (res != state[this.name]) {
         state[this.name] = res;
         Session.set('lane_state', state);
       }
     });
 
-    return state[this.name];
+    return state && state[this.name];
   },
 
   latest_shipment () {
-    let latest_shipment = this.shipments && this.shipments.length ?
-      this.shipments[this.shipments.length - 1] :
+    let latest_shipment = Session.get('latest_shipments') ?
+      Session.get('latest_shipments')[this.name] :
       false
     ;
 
-    latest_shipment = latest_shipment && Shipments.findOne(latest_shipment) ?
-      Shipments.findOne(latest_shipment).start :
-      ''
-    ;
-
-    return latest_shipment;
+    return latest_shipment ? latest_shipment.start : '';
   },
 
   followup_name () {
