@@ -7,10 +7,17 @@ let update_harbor = function (template) {
   let lane = Session.get('lane');
 
   _.each(inputs, function (element) {
-    values[element.name] = element.type == 'checkbox' ?
-      element.checked :
-      element.value
-    ;
+    let type = element.type;
+    let value = element.value;
+    let checked = element.checked;
+    let name = element.name;
+
+    if (! values[element.name]) {
+      values[name] = type == 'checkbox' || type == 'radio' ?
+        (checked && (value || checked)) || values[name] :
+        element.value
+      ;
+    }
   });
 
   values.timestamp = Date.now();

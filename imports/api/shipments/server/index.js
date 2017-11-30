@@ -8,6 +8,31 @@ Meteor.publish('Shipments', function (lane) {
 });
 
 Meteor.methods({
+  'Shipments#check_state': function (lane) {
+    let active_shipments = Shipments.find({
+      _id: { $in: lane.shipments || [] },
+      active: true
+    }).fetch();
+    let latest_shipment = lane.shipments && lane.shipments.length ?
+      lane.shipments[lane.shipments.length - 1] :
+      false
+    ;
+    let latest_exit_code;
+    latest_shipment = Shipments.findOne(latest_shipment) || false;
+
+    if (
+      latest_shipment &&
+      typeof latest_shipment.exit_code == 'string' ||
+      typeof latest_shipment.exit_code == 'number'
+    ) {
+      latest_exit_code = latest_shipment.exit_code;
+    }
+
+    if (active_shipments.length) return 'active';
+    if (latest_exit_code == 0) return 'ready';
+    if (latest_exit_code) return 'error';
+    return 'new';
+  },
   'Shipments#get_total': function () {
     let now = Date.now();
     let interval = 86400000; // 24 hours

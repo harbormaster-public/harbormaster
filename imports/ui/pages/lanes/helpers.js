@@ -199,30 +199,17 @@ Template.lanes.helpers({
   },
 
   current_state () {
-    let active_shipments = Shipments.find({
-      _id: { $in: this.shipments || [] },
-      active: true
-    }).fetch();
-    let latest_shipment = this.shipments && this.shipments.length ?
-      this.shipments[this.shipments.length - 1] :
-      false
-    ;
-    let latest_exit_code;
+    let state = Session.get('lane_state') || {};
+    Meteor.call('Shipments#check_state', this, (err, res) => {
+      if (err) throw err;
 
-    latest_shipment = Shipments.findOne(latest_shipment) || false;
+      if (res != state[this.name]) {
+        state[this.name] = res;
+        Session.set('lane_state', state);
+      }
+    });
 
-    if (
-      latest_shipment &&
-      typeof latest_shipment.exit_code == 'string' ||
-      typeof latest_shipment.exit_code == 'number'
-    ) {
-      latest_exit_code = latest_shipment.exit_code;
-    }
-
-    if (active_shipments.length) return 'active';
-    if (latest_exit_code == 0) return 'ready';
-    if (latest_exit_code) return 'error';
-    return 'new';
+    return state[this.name];
   },
 
   latest_shipment () {
