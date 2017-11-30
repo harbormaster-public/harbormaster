@@ -49,8 +49,7 @@ Meteor.methods({
   'Shipments#get_latest_date': function (shipment) {
     if (Shipments.findOne(shipment)) return Shipments.findOne(shipment);
 
-    let latest_shipment = Shipments.find({ sort: { finished: -1 } })
-      .limit(1)
+    let latest_shipment = Shipments.find({ sort: { finished: -1 }, limit: 1 })
       .fetch();
     let latest_lane = latest_shipment ?
       Lanes.findOne(latest_shipment.lane) :
