@@ -1,5 +1,4 @@
 import '../imports/startup/server';
-import '../imports/startup/config/namespace';
 import '../imports/startup/config/login';
 import '../imports/api/lanes/server';
 import '../imports/api/users/server';
