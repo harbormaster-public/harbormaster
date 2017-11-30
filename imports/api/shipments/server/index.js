@@ -49,13 +49,13 @@ Meteor.methods({
   'Shipments#get_latest_date': function (shipment) {
     if (Shipments.findOne(shipment)) return Shipments.findOne(shipment);
 
-    let latest_shipment = Shipments.find({ sort: { finished: -1 }, limit: 1 })
-      .fetch();
+    let latest_shipment = Shipments.find(
+      {}, { sort: { finished: -1 }, limit: 1 }
+    ) .fetch()[0];
     let latest_lane = latest_shipment ?
       Lanes.findOne(latest_shipment.lane) :
       false
     ;
-
     if (latest_shipment && latest_lane) {
       return {
         name: latest_lane.name,
