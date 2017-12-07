@@ -1,4 +1,4 @@
-FROM strictlyskyler/meteor-environment:1.0.1
+FROM strictlyskyler/meteor-environment:1.1.0
 MAINTAINER Skyler Brungardt <skyler.brungardt@gmail.com>
 
 ADD . /opt/harbormaster
