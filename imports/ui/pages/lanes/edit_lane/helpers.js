@@ -231,17 +231,15 @@ Template.edit_lane.helpers({
       false
     ;
 
-    if (manifest) {
-      Meteor.call(
-        'Harbors#render_input',
-        lane,
-        manifest,
-        function (err, lane) {
-          if (err) throw err;
+    Meteor.call(
+      'Harbors#render_input',
+      lane,
+      manifest,
+      function (err, lane) {
+        if (err) throw err;
 
-          Session.set('lane', lane);
-      });
-    }
+        Session.set('lane', lane);
+    });
 
     if (lane.rendered_input) return lane.rendered_input;
 
