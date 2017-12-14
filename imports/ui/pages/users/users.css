@@ -51,11 +51,6 @@
   margin-top: -25px;
 }
 
-.admin .delete-lane {
-  left: 100%;
-  margin-left: 55px;
-}
-
 td.active {
   color: darkgoldenrod;
 }
@@ -68,3 +63,38 @@ td.error {
   color: red;
 }
 
+@media all and (max-width: 1200px) {
+  .harbormaster-column,
+  th.captained-column,
+  .captained-lane-list {
+    display: none;
+  }
+
+  .users-table td {
+    font-size: 1.5625rem;
+    position: relative;
+  }
+
+  .users-table .admin {
+    position: absolute;
+    left: 0;
+    width: 100%;
+  }
+
+  .users-table .admin .button {
+    margin: 0;
+    width: 220px;
+    font-size: 1rem;
+    padding: 0 20px;
+  }
+
+  .users-table .admin .profile {
+    top: 64px;
+    left: 0;
+  }
+
+  .admin .expire-user {
+    top: 24px;
+    right: 0;
+  }
+}

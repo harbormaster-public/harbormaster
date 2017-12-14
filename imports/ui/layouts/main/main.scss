@@ -5,3 +5,34 @@
 .button {
   margin: 0;
 }
+
+.main {
+  width: 100%;
+  max-width: 100%;
+  padding: 0 100px;
+}
+
+@media all and (max-width: 1200px) {
+  html, body {
+    font-size: 34px;
+  }
+
+  .row.main {
+    padding: 0;
+  }
+
+  .small-centered {
+    width: 100%;
+    margin: 0;
+  }
+
+  .main ul a,
+  .main .button {
+    font-size: 1.5625rem;
+  }
+
+  .last-shipped-date {
+    display: block;
+    padding-top: 5px;
+  }
+}

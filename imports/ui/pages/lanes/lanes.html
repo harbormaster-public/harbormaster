@@ -4,39 +4,39 @@
   <table class="lanes-table">
     <thead>
       <tr>
-        <th class="name-header {{active 'name'}}" data-value=name>Name</th>
-        <th class="captains-header {{active 'captains'}}" data-value=captains>Captains</th>
-        <th class="type-header {{active 'type'}}" data-value=type>Type</th>
-        <th class="last-shipped-header {{active 'shipped'}}" data-value=shipped>Last Shipped</th>
-        <th class="total-shipments-header {{active 'shipments'}}" data-value=shipments>Total Shipments</th>
-        <th class="total-salvage-runs-header {{active 'salvage-runs'}}" data-value=salvage-runs>Total Salvage Runs</th>
-        <th class="current-state-header" disabled>Current State</th>
-        <th class="followup-header" disabled>Followup</th>
-        <th class="salvage-plan-header" disabled>Salvage Plan</th>
+        <th class="name-header name-column {{active 'name'}}" data-value=name>Name</th>
+        <th class="captains-column captains-header {{active 'captains'}}" data-value=captains>Captains</th>
+        <th class="type-header type-column {{active 'type'}}" data-value=type>Type</th>
+        <th class="last-shipped-header last-shipped-column {{active 'shipped'}}" data-value=shipped>Last Shipped</th>
+        <th class="total-shipments-column total-shipments-header {{active 'shipments'}}" data-value=shipments>Total Shipments</th>
+        <th class="salvage-runs-column total-salvage-runs-header {{active 'salvage-runs'}}" data-value=salvage-runs>Total Salvage Runs</th>
+        <th class="current-state-header current-state-column" disabled>Current State</th>
+        <th class="followup-header followup-column" disabled>Followup</th>
+        <th class="salvage-plan-header salvage-plan-column" disabled>Salvage Plan</th>
       </tr>
     </thead>
     <tbody>
       {{#each lanes}}
         <tr>
-          <td>
+          <td class="name-column">
             {{#if can_ply}}
-              <div class="admin">
-                <a href="/lanes/{{name}}/charter" class="button hollow tiny charter">Charter</a>
-                <a href="/lanes/{{name}}/ship" class="button hollow tiny success ship-lane">Ship</a>
-                <a href="/lanes/{{name}}/edit" class="button hollow tiny secondary edit-lane">Edit</a>
-                <button class="button hollow tiny warning delete-lane">Delete</button>
+              <div class="admin collapsed">
+                <a href="/lanes/{{name}}/charter" class="button info tiny charter">Charter</a>
+                <a href="/lanes/{{name}}/ship" class="button tiny success ship-lane">Ship</a>
+                <a href="/lanes/{{name}}/edit" class="button tiny secondary edit-lane">Edit</a>
+                <button class="button tiny warning delete-lane">Delete</button>
               </div>
             {{/if}}
             {{name}}
           </td>
-          <td>{{total_captains}}</td>
-          <td>{{type}}</td>
-          <td width=125><a href="/lanes/{{this.name}}/ship/{{latest_shipment}}">{{last_shipped}}</a></td>
-          <td>{{total_shipments}}</td>
-          <td>{{total_salvage_runs}}</td>
-          <td class="{{current_state}}">{{current_state}}</td>
-          <td>{{followup_name}}</td>
-          <td>{{salvage_plan_name}}</td>
+          <td class="captains-column">{{total_captains}}</td>
+          <td class="type-column">{{type}}</td>
+          <td class="last-shipped-column" width=125><a href="/lanes/{{this.name}}/ship/{{latest_shipment}}">{{last_shipped}}</a></td>
+          <td class="total-shipments-column">{{total_shipments}}</td>
+          <td class="salvage-runs-column">{{total_salvage_runs}}</td>
+          <td class="current-state-column {{current_state}}">{{current_state}}</td>
+          <td class="followup-column">{{followup_name}}</td>
+          <td class="salvage-plan-column">{{salvage_plan_name}}</td>
         </tr>
       {{/each}}
     </tbody>

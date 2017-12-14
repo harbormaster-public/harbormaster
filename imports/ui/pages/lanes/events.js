@@ -39,5 +39,9 @@ Template.lanes.events({
     }
 
     Session.set('lanes_table_sort_by', sort_value);
+  },
+
+  'click .admin' (event) {
+    $(event.target).toggleClass('collapsed');
   }
 });

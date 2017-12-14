@@ -1,10 +1,15 @@
 import { Shipments } from '..';
 import { Lanes } from '../../lanes';
 
-Meteor.publish('Shipments', function (lane) {
-  if (lane) return Shipments.find({ lane: lane._id });
+Meteor.publish('Shipments', function (lane, options) {
+  options = options || {};
+  let query = {};
 
-  return Shipments.find();
+  if (lane) query.lane = lane._id;
+
+  let shipments = Shipments.find(query, options);
+
+  return shipments;
 });
 
 Meteor.methods({
@@ -13,10 +18,12 @@ Meteor.methods({
       _id: { $in: lane.shipments || [] },
       active: true
     }).fetch();
+
     let latest_shipment = lane.shipments && lane.shipments.length ?
       lane.shipments[lane.shipments.length - 1] :
       false
     ;
+
     let latest_exit_code;
     latest_shipment = Shipments.findOne(latest_shipment) || false;
 
@@ -28,7 +35,7 @@ Meteor.methods({
       latest_exit_code = latest_shipment.exit_code;
     }
 
-    if (active_shipments.length) return 'active';
+    if (active_shipments.length) return active_shipments.length + ' active';
     if (latest_exit_code == 0) return 'ready';
     if (latest_exit_code) return 'error';
     return 'new';

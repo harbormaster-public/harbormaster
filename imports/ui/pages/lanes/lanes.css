@@ -1,3 +1,8 @@
+
+.last-shipped-header {
+  width: 210px;
+}
+
 .lanes-table th {
   cursor: pointer;
 }
@@ -10,6 +15,7 @@
 
 .lanes-table {
   position: relative;
+  margin-top: 40px
 }
 
 .lanes-table th.active {
@@ -43,14 +49,7 @@
 }
 
 .admin .charter {
-  left: -112px;
-  border-color: #f0a;
-  color: #f0a;
-}
-
-.admin .charter:hover {
-  border-color: #a03;
-  color: #a03;
+  left: -108px;
 }
 
 .admin .ship-lane {
@@ -77,4 +76,80 @@ td.ready {
 
 td.error {
   color: red;
+}
+
+@media all and (max-width: 1200px) {
+  .total-shipments-column,
+  .salvage-runs-column,
+  .type-column,
+  .current-state-column,
+  .followup-column,
+  .salvage-plan-column,
+  .captains-column {
+    display: none;
+  }
+
+  .lanes-table {
+    position: absolute;
+    margin: 40px -30px 0;
+  }
+
+  .lanes-table td {
+    font-size: 1.5625rem;
+    padding-bottom: 1rem;
+    position: relative;
+  }
+
+  .lanes-table .admin {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    bottom: 37px;
+  }
+
+  .lanes-table .admin:after {
+    content: '...';
+    position: absolute;
+    left: 40px;
+    color: grey;
+    font-size: 3rem;
+    top: -130px;
+    bottom: initial;
+  }
+
+  .lanes-table .admin.collapsed:after {
+    bottom: -60px;
+    top: initial;
+    width: 100px;
+    height: 100px;
+    line-height: 50px;
+    text-align: center;
+  }
+
+  .lanes-table .admin.collapsed .button {
+    display: none;
+  }
+
+  .lanes-table .admin .button {
+    margin: 0;
+    width: 25%;
+    font-size: 1rem;
+    padding: 0 20px;
+  }
+
+  .admin .charter {
+    left: 0;
+  }
+
+  .admin .ship-lane {
+    left: 25%;
+  }
+
+  .admin .edit-lane {
+    left: 50%;
+  }
+
+  .lanes-table .admin .delete-lane {
+    left: 75%;
+  }
 }

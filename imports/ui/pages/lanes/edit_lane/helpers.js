@@ -10,13 +10,14 @@ import { moment } from 'meteor/momentjs:moment';
 let AMOUNT_SHOWN = 20;
 
 Template.edit_lane.onCreated(function () {
-  if (! Session.get('lane')) {
-    let name = FlowRouter.getParam('name');
-    let lane = Lanes.findOne({ name: name });
+  let name = FlowRouter.getParam('name');
+  let lane = Lanes.findOne({ name: name });
+  let options = { sort: { actual: 1 }, limit: AMOUNT_SHOWN };
 
-    return Session.set('lane', lane);
-  }
-})
+  if (! Session.get('lane')) Session.set('lane', lane);
+
+  if (lane) Meteor.subscribe('Shipments', lane, options);
+});
 
 Template.edit_lane.helpers({
   lane_name (current_name) {

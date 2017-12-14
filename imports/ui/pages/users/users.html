@@ -1,18 +1,17 @@
-
 <template name="users">
   <h1>Users</h1>
   <table class="users-table">
     <thead>
       <tr>
-        <th>User</th>
-        <th>Harbormaster?</th>
-        <th>Lanes Captained</th>
+        <th class="user-column">User</th>
+        <th class="harbormaster-column">Harbormaster?</th>
+        <th class="captained-column">Lanes Captained</th>
       </tr>
     </thead>
     <tbody>
       {{#each users}}
       <tr>
-        <td>
+        <td class="user-column">
           {{#if is_harbormaster}}
               <div class="admin">
                 <a href="/profile/{{_id}}" class="button hollow tiny secondary profile">Edit User</a>
@@ -20,11 +19,13 @@
           {{/if}}
           {{_id}}
         </td>
-        <td>
+        <td class="harbormaster-column">
           {{is_harbormaster}}
         </td>
-        <td>
-          {{captain_lanes}}
+        <td class="captained-column">
+          <div class="captained-lane-list">
+            {{captain_lanes}}
+          </div>
           {{#if is_harbormaster}}
             <div class="admin">
               <button class="button hollow tiny alert expire-user">Expire User</button>

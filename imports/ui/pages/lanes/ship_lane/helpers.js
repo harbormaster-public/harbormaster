@@ -11,8 +11,9 @@ let AMOUNT_SHOWN = 20;
 Template.ship_lane.onCreated(function () {
   var name = FlowRouter.getParam('name');
   var lane = Lanes.findOne({ name: name });
+  let options = { sort: { actual: 1 }, limit: AMOUNT_SHOWN };
 
-  shipments_subscription = Meteor.subscribe('Shipments', lane);
+  Meteor.subscribe('Shipments', lane, options);
 });
 
 Template.ship_lane.helpers({

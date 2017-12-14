@@ -3,6 +3,17 @@ import { Lanes } from '../../../api/lanes';
 import { Users } from '../../../api/users';
 import { Shipments } from '../../../api/shipments';
 
+Template.lanes.onCreated(() => {
+  let options = {
+    sort: { actual: -1 },
+    limit: 1,
+  };
+
+  Lanes.find().forEach((lane) => {
+    Meteor.subscribe('Shipments', lane, options);
+  });
+});
+
 Template.lanes.helpers({
   lanes () {
     let lanes;
@@ -128,28 +139,16 @@ Template.lanes.helpers({
     return stops;
   },
 
+  latest_shipment () {
+    let shipment = Shipments.find({ lane: this._id }).fetch()[0];
+
+    return shipment && shipment.start;
+  },
+
   last_shipped () {
-    let last_shipment = Session.get('latest_shipments') ?
-      Session.get('latest_shipments')[this.name] :
-      false
-    ;
+    let shipment = Shipments.find({ lane: this._id }).fetch()[0];
 
-    Meteor.call(
-      'Shipments#get_latest_date',
-      this.shipments[this.shipments.length -1],
-      (err, res) => {
-        if (err) throw err;
-
-        let latest_shipments = Session.get('latest_shipments') || {};
-        latest_shipments[this.name] = res;
-
-        Session.set('latest_shipments', latest_shipments);
-    });
-
-    return last_shipment && last_shipment.actual ?
-      last_shipment.actual.toLocaleString() :
-      ''
-    ;
+    return (shipment && shipment.actual.toLocaleString()) || 'N/A';
   },
 
   last_salvaged () {
@@ -163,7 +162,7 @@ Template.lanes.helpers({
 
     return last_salvage_run.finished ?
       last_salvage_run.finished.toLocaleString() :
-      'never'
+      'N/A'
     ;
   },
 
@@ -210,16 +209,7 @@ Template.lanes.helpers({
       }
     });
 
-    return state && state[this.name];
-  },
-
-  latest_shipment () {
-    let latest_shipment = Session.get('latest_shipments') ?
-      Session.get('latest_shipments')[this.name] :
-      false
-    ;
-
-    return latest_shipment ? latest_shipment.start : '';
+    return (state && state[this.name]) || 'N/A';
   },
 
   followup_name () {
