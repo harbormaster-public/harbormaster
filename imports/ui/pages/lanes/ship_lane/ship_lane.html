@@ -11,7 +11,11 @@
   {{#if active}}
     <button class="button warning reset-shipment">Reset Shipment</button>
   {{else}}
-    <button class="button success start-shipment">Start Shipment</button>
+    {{#if working}}
+      <button class="button secondary" disabled>Working...</button>
+    {{else}}
+      <button class="button success start-shipment">Start Shipment</button>
+    {{/if}}
   {{/if}}
 
   {{#if lane}}

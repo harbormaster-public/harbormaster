@@ -41,6 +41,15 @@ Template.ship_lane.helpers({
     return lane ? lane : false;
   },
 
+  working () {
+    let name = FlowRouter.getParam('name');
+    let lane = Lanes.findOne({ name: name });
+    return Session.get('working_lanes') ?
+      Session.get('working_lanes')[lane._id] :
+      false
+    ;
+  },
+
   pretty_date (date) {
     if (date) return new Date(date).toLocaleString();
 

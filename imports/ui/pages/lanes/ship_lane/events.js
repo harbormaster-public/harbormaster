@@ -5,6 +5,7 @@ import { Shipments } from '../../../../api/shipments';
 
 Template.ship_lane.events({
   'click .start-shipment': function () {
+    let working_lanes = Session.get('working_lanes') || {};
     let name = FlowRouter.getParam('name');
     let lane = Lanes.findOne({ name: name });
     let harbor = Harbors.findOne(lane.type);
@@ -23,7 +24,11 @@ Template.ship_lane.events({
       lane: lane._id
     });
 
+    working_lanes[lane._id] = true;
+    Session.set('working_lanes', working_lanes);
+
     if (! shipment || ! shipment.active) {
+      console.log(`Starting shipment for lane: ${lane.name}`);
       Meteor.call(
         'Lanes#start_shipment',
         lane._id,
@@ -32,6 +37,8 @@ Template.ship_lane.events({
         function (err, res) {
           if (err) throw err;
 
+          working_lanes[lane._id] = false;
+          Session.set('working_lanes', working_lanes);
           console.log('Shipment started for lane:', lane.name);
           FlowRouter.go('/lanes/' + name + '/ship/' + shipment_start_date);
 
