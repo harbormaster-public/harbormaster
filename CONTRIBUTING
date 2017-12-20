@@ -1,0 +1,12 @@
+# CONTRIBUTING
+
+To get your code landed quickly and cleanly, please follow these guidelines:
+
+1. All existing tests should pass.  Run `npm test` and `npm run test:e2e` to run the test suites.
+2. New functions should have accompanying unit tests.
+3. New routes and views should have accompanying end-to-end (e2e) tests.
+4. Code should adhere to the style of code already in Harbormaster.
+5. Create a branch with the structure: [type of work]/[any issue no. to reference]/[title]
+6. Submit your work as a PR on the `next` branch.
+
+Cheers!
