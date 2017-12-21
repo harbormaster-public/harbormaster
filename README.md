@@ -22,7 +22,9 @@ A framework for microservices.
 
 Harbormaster is designed to facilitate the deployment, tracking, and management of discrete services.
 
-A service can be any arbitrary bit of work which generates a value: executing business logic, transforming data, and controlling remote hardware all fall well within the purview of what Harbormaster enables.  Harbormaster facilitates this by encapsulating each discrete service call within a module called a "Harbor", which Harbormaster loads at runtime, and for which Harbormaster provides an API for configuration, execution, and tracking.  Harbors can be as simple or complex as required, using whichever libraries and paradigms are idiomatic to the desired environment or workflow, and can be connected together to create complex workflows while maintaining atomicity, scalability, and maintainability.
+A service can be any arbitrary bit of work which generates a value: executing business logic, transforming data, and controlling remote hardware all fall well within the purview of what Harbormaster enables.  Harbormaster facilitates this by encapsulating each discrete service call within a module called a "Harbor", which Harbormaster loads at runtime, and for which Harbormaster provides an API for configuration, execution, and tracking.
+
+Harbors can be as simple or complex as required, using whichever libraries and paradigms are idiomatic to the desired environment or workflow, and can be connected together to create complex workflows while maintaining atomicity, scalability, and maintainability.
 
 In this way, Harbormaster provides a common interface for integrating as many programming paradigms and use cases as it can.
 
