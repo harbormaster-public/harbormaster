@@ -42,21 +42,21 @@ The core of Harbormaster includes very little other than minimalist administrati
 
 Here is a list of Terms used to describe some of Harbormaster's components:
 
-- [x] **Charters**, execution paths representing a complete set of steps in a workflow, comprised of Lanes
-- [x] **Lanes**, conceptual stops along the execution path of a Charter, containing a single Harbor, and pointing at an optional followup Lane or Salvage Plan to execute, depending on the results of its Harbor
-- [x] **Harbors**, a discrete unit of work to be executed by a single Lane, accepting and returning a Manifest for its work containing relevant values
-- [x] **Manifests**, passed from lane to lane, containing configuration for a given Harbor and the results of the prior Lane's execution
-- [x] **Shipments**, logged each time a Harbor starts and completes its work
-- [x] **Users**, anyone who is able to login via the dashboards, edit their own profiles, and view the status of work
-- [x] **Captains**, Users who can start Shipments to Lanes they Ply
-- [x] **Harbormasters**, who can create Users, Ship to all Lanes, and promote Users to Captains or Harbormasters
-- [x] **Salvage Plans**, which are Lanes to be executed when a Shipment returns a non-zero code
-- [x] **Plying**, the responsibility of Shipping to a Lane
-- [x] **Hooks**, allowing remote calls to trigger Shipments via standard interfaces
+- **Harbor**, a discrete unit of work executed by a single Lane, accepting and returning a Manifest for its work containing relevant values
+- **Lane**, a stop along the execution path of a Charter, containing a single Harbor, and pointing at an optional followup Lane or Salvage Plan to execute, depending on the results of its Harbor
+- **Charter**, an execution path representing a complete set of steps in a workflow, comprised of one or more Lanes
+- **Manifest**, passed from lane to lane, containing configuration for a given Harbor and the results of the prior Lane's execution
+- **Shipment**, logged each time a Harbor starts and completes its work, containing the result of and metadata about work done
+- **User**, anyone who is able to login via the dashboards, edit their own profiles, and view the status of work
+- **Captain**, a User who can start Shipments to Lanes they Ply
+- **Harbormaster**, an admin User who can invite new Users, Ship to all Lanes, and promote Users to Captains or Harbormasters
+- **Salvage Plan**, a Lane to be executed when a Shipment returns a non-zero code
+- **Ply**, the responsibility of Shipping to a Lane
+- **Hook**, allowing remote calls to trigger a Shipment via an RPC interface
 
 ### Architecture
 
-Harbormaster is written using Meteor, which implies NodeJS, MongoDB, and a few associated packages which can be listed by executing `meteor list` within this repo.  Harbormaster is not opinionated about which frameworks, libraries, or external code which is used from within any given Harbor, so long as they are able to work within the context of a Harbor.
+Harbormaster is written using Meteor, which implies NodeJS, MongoDB, and a few associated packages which can be listed by executing `meteor list` within this repo.  It is designed to adapt to a variety of situations, facilitating good habits when working with service and/or microservice oriented architectures.  Harbormaster is not opinionated about which frameworks, libraries, or external code which is used from within any given Harbor, so long as they are able to work within the context of a Harbor.
 
 When Harbormaster is started it looks within the `~/.harbormaster/harbors` folder for any `.js` files, and loads any it finds in that directory into its runtime.  These files are the entrypoints for any given Harbor, and can execute any arbitrary command required by a Harbor, such as installing dependencies, loading modules, or even modifying Harbormaster's runtime itself.  Harbormaster also watches this directory and will exit any time a file within it changes; restarting it will load the latest version of whichever files exist within this directory.
 
@@ -109,7 +109,7 @@ Each visual representation is reactive, and reflects the state live as it change
 
 ### Hooks
 
-Endpoints are available for each Lane, and can be called remotely via HTTP.  Doing so requires both a `token` and `user_id` header to be present, both provided from the Dashboard.  This triggers a shipment to the lane matching the Endpoint.
+Endpoints are available for each Lane, and can be called remotely via HTTP.  Doing so requires both a `token` and `user_id` query parameter to be present, both provided from the Dashboard.  This triggers a shipment to the lane matching the Endpoint.
 
 Calling Hooks can be done like so:
 
@@ -117,10 +117,11 @@ Calling Hooks can be done like so:
 # Can be triggered via RPC, e.g.:
 curl \
   -f \
-  -H "token: [the token for this user with this lane]" \
-  -H "user_id: [the user id]" \
-  -X POST [url]/lanes/[lane name]/ship[?key=value]
-# Any query passed will be assigned as a prior_manifest on the manifest for the lane
+  -H "Content-Type: application/json" \
+  -X POST \
+  -d '{ foo: "bar", baz: "qux" }' \
+  [url]/lanes/[lane name]/ship?user_id=[user id who can ply]&token=[generated token for remote triggering]
+# Any JSON passed to the optional -d argument will be treated as a prior_manifest for the lane being triggered.
 ```
 
 A successful start of a shipment returns HTTP code 200 along with the manifest as a JSON string.  Unauthorized access returns 401.
@@ -129,20 +130,62 @@ A successful start of a shipment returns HTTP code 200 along with the manifest a
 
 Harbormaster provides an API for starting and ending Shipments from within a Harbor through a few mechanisms.
 
-Firstly, Harbormaster passes a reference to the Collections it uses to each Harbor as a part of its Registration: `Lanes, Users, Harbors, Shipments` are arguments passed to each Harbor's `register` method.  These can be referenced later, perhaps during a Harbor's `work` method, for arbitrary updates.
+It passes a reference to the Collections it uses to each Harbor as a part of its Registration: `Lanes, Users, Harbors, Shipments` are arguments passed to each Harbor's `register` method.  These can be referenced later, perhaps during a Harbor's `work` method, for arbitrary updates.
 
 Harbormaster also exposes a global variable, `$H`, with methods for starting and stopping shipments:
 
 #### #start_shipment
 ```
-$H.call('Lanes#start_shipment', lane_id, manifest, start_date)
+$H.call('Lanes#start_shipment', lane_id, manifest, start_date);
 ```
 Starts a shipment for a Lane matching the `lane_id` string, with a `manfiest` object containing relevant data, and a canonical `start_date` string to use as reference.  Typically called from a client.
 
+Triggers a call the `work` method exposed by the Harbor associated with the Lane being shipped.
+
 #### #end_shipment
 ```
-$H.call('Lanes#end_shipment', lane_id, exit_code, manifest)
+$H.call('Lanes#end_shipment', lane_id, exit_code, manifest);
 ```
 Ends a Shipment for a Lane matching the `lane_id` string when its `work` is done.  Expects a number, `exit_code`, representing the success or failure of the work, with `0` as success and anything else as failure.  Accepts any updated `manifest` object representing state to be tracked.  Typically called at the end of a Harbor's `work` method.
 
-Finally, changes can be written directly to Harbormaster's database, should the need arise.
+#### `register`
+```
+module.exports.register = function (lanes, users, harbors, shipments) {
+  // Save a reference to the collections passed here as arguments for later
+  // Return the name of the harbor
+};
+```
+The `register` method of a Harbor is called during Harbormaster's bootstrap.  It is passed a reference to the core collections Harbormaster uses as arguments, should a Harbor optionally need to use them.  This method is expected to return a `String` representing the name of the Harbor.
+
+#### `update`
+```
+module.exports.update = function (lane, values) {
+  // If values pass validation, return truthy to save them
+  // else return falsey
+};
+```
+The `update` method of a Harbor is called when the user clicks the "Save" button while editing a Lane.  It takes the values present in the rendered input form, and passes them to this method, where validation of the values entered can occur.  If the values are valid, this method should return something truthy, and the values will be saved to the database.  Otherwise if invalid, something falsey should be returned.
+
+#### `render_input`
+```
+module.exports.render_input = function (values) {
+  // Return an HTML string representing any configurable options a user can
+  // set in the Harbormaster Dashboard for this Harbor.
+}
+```
+The `render_input` method is called when a Lane is edited, showing the options available for configuring a given Harbor.  It's expected to return a string of HTML to insert in the `<form>` tag on the Edit Lane page.  When a user clicks the "Save" button on an Edit Lane page, any values present in the form will be passed to this method as the `values` argument: an object representing the names and values of the `inputs` and `textareas` on the form.  The form will then be re-rendered.  Form elements need to have a `name` attribute to have their values captured.
+
+#### `render_work_preview`
+```
+module.exports.render_work_preview = function (manifest) {
+  // Return an HTML string briefly describing the work to be done by this
+  // particular Harbor.
+}
+```
+The `render_work_preview` method should return a description of the work to be done at a given Harbor, to be displayed on the "Ship" page for any given Lane.  It is purely informational, and meant to sanity-check work to be done before pushing the "Start Shipment" button.
+
+## Contributing
+Contributions welcome.  See the `CONTRIBUTING` file present in this repo for guidelines.
+
+## License
+GPL 3.0, see `LICENSE` file.
