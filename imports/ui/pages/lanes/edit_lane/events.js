@@ -26,10 +26,11 @@ let update_harbor = function (template) {
     'Harbors#update',
     lane,
     values,
-    function update_harbor (err, lane) {
+    function update_harbor (err, res) {
       if (err) throw err;
 
-      Session.set('lane', lane);
+      if (! res.success) alert('Invalid values.');
+      Session.set('lane', res.lane);
     }
   );
 };

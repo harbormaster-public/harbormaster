@@ -66,7 +66,6 @@ Meteor.methods({
       new_manifest = $H.harbors[lane.type].work(lane, manifest);
 
     } catch (err) {
-      //TODO: Surface this error to the client
       console.error(
         'Shipment failed with error:\n',
         err + '\n',
@@ -114,15 +113,7 @@ Meteor.methods({
 
     let shipment_id = manifest.shipment_id;
     let finished = new Date();
-    let next_date = finished;
-    //TODO: share w/ client code
-    let next_shipment_start_date = next_date.getFullYear() + '-' +
-      next_date.getMonth() + '-' +
-      next_date.getDate() + '-' +
-      next_date.getHours() + '-' +
-      next_date.getMinutes() + '-' +
-      next_date.getSeconds()
-    ;
+    let next_shipment_start_date = $H.start_date();
 
     Shipments.update(shipment_id, {
       $set: {

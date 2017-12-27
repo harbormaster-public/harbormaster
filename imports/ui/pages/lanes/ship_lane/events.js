@@ -10,15 +10,7 @@ Template.ship_lane.events({
     let lane = Lanes.findOne({ name: name });
     let harbor = Harbors.findOne(lane.type);
     let manifest = harbor.lanes[lane._id].manifest;
-    let date = new Date();
-    //TODO: share w/ server code
-    let shipment_start_date = date.getFullYear() + '-' +
-      date.getMonth() + '-' +
-      date.getDate() + '-' +
-      date.getHours() + '-' +
-      date.getMinutes() + '-' +
-      date.getSeconds()
-    ;
+    let shipment_start_date = $H.start_date();
     let shipment = Shipments.findOne({
       start: shipment_start_date,
       lane: lane._id

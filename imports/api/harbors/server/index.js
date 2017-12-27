@@ -13,7 +13,7 @@ Meteor.methods({
 
       if (success) {
         harbor.lanes[lane._id] = {
-          manifest: values
+          manifest: values,
         };
         Harbors.update(harbor._id, harbor);
         lane = Meteor.call('Harbors#render_work_preview', lane, values);
@@ -24,14 +24,14 @@ Meteor.methods({
         Lanes.update(lane._id, lane);
       }
 
-      return lane;
+      return { lane, success };
 
     } catch (err) { throw err; }
   },
 
   'Harbors#render_input': function render_input (lane, manifest) {
     try {
-      lane.rendered_input = $H.harbors[lane.type].render_input(manifest);
+      lane.rendered_input = $H.harbors[lane.type].render_input(manifest, lane);
 
       return lane;
 
@@ -43,12 +43,12 @@ Meteor.methods({
       lane.rendered_work_preview = $H
         .harbors
         [lane.type]
-        .render_work_preview(manifest)
+        .render_work_preview(manifest, lane)
       ;
 
       return lane;
     } catch (err) { throw err; }
 
-  }
-})
+  },
+});
 

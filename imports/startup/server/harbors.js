@@ -19,10 +19,12 @@ if (! fs.existsSync(harbormaster_data_dir)) {
   console.log('Data directory scaffolding created.');
 }
 
-fs.watch(harbors_dir, function reload (event, filename) {
+let reload = () => {
   console.log('Harbors changed, exiting.');
   process.exit();
-});
+};
+
+fs.watch(harbors_dir, { recursive: true }, reload);
 
 console.log('Registering Harbors from:', harbors_dir);
 fs.readdirSync(harbors_dir).forEach(function (file) {
@@ -33,6 +35,7 @@ fs.readdirSync(harbors_dir).forEach(function (file) {
 
   try {
     let string = fs.readFileSync(harbor_path).toString();
+    fs.watch(harbor_path, reload);
 
     let entrypoint = eval(string);
     let harbor_name = entrypoint.register(Lanes, Users, Harbors, Shipments);
