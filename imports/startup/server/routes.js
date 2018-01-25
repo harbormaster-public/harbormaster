@@ -13,6 +13,7 @@ let post_hooks = Picker.filter(function (req) {
 });
 
 function respondNotAllowed (res) {
+  console.log('Request not allowed.  Responding with 401.');
   res.statusCode = 401;
   return res.end();
 }
