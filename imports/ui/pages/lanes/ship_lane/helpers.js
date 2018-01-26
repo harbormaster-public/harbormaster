@@ -11,12 +11,16 @@ let AMOUNT_SHOWN = 20;
 Template.ship_lane.onCreated(function () {
   var name = FlowRouter.getParam('name');
   var lane = Lanes.findOne({ name: name });
-  let options = { sort: { actual: 1 }, limit: AMOUNT_SHOWN };
+  let options = { sort: { actual: -1 }, limit: AMOUNT_SHOWN };
 
   Meteor.subscribe('Shipments', lane, options);
 });
 
 Template.ship_lane.helpers({
+  no_history () {
+    return Shipments.find().fetch().length === 0;
+  },
+
   lane (sort_order) {
     var name = FlowRouter.getParam('name');
     var lane = Lanes.findOne({ name: name });
@@ -30,12 +34,7 @@ Template.ship_lane.helpers({
     Session.set('lane', lane);
 
     if (sort_order == 'history' && has_shipments) {
-      let dates = lane.shipments;
-      let relevant_dates = dates.reverse().slice(START_INDEX, END_INDEX);
-
-      relevant_dates = Shipments.find({ _id: { $in: relevant_dates } });
-
-      return relevant_dates.fetch().reverse();
+      return Shipments.find().fetch().slice(START_INDEX, END_INDEX);
     } else if (sort_order) return [];
 
     return lane ? lane : false;

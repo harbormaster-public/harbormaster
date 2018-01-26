@@ -49,12 +49,16 @@
 
   <h2>Shipping Log: Last {{shipping_log_amount_shown}} shipments</h2>
   <ul>
-    {{#each lane "history"}}
-      <li>
-        <a href="/lanes/{{lane.name}}/ship/{{this.start}}" class="button tiny hollow {{shipment_active}} exit-code code-{{exit_code}}">
-          Shipped {{pretty_date this.actual}}, finished {{pretty_date this.finished}}, {{duration}} duration
-        </a>
-      </li>
-    {{/each}}
+    {{#if no_history}}
+      <li>N/A</li>
+    {{else}}
+      {{#each lane "history"}}
+        <li>
+          <a href="/lanes/{{lane.name}}/ship/{{this.start}}" class="button tiny hollow {{shipment_active}} exit-code code-{{exit_code}}">
+            Shipped {{pretty_date this.actual}}, finished {{pretty_date this.finished}}, {{duration}} duration
+          </a>
+        </li>
+      {{/each}}
+    {{/if}}
   </ul>
 </template>
