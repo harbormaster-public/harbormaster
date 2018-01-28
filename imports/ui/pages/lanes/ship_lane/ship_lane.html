@@ -12,10 +12,13 @@
     <button class="button warning reset-shipment">Reset Shipment</button>
   {{else}}
     {{#if working}}
-      <button class="button secondary" disabled>Working...</button>
+      <button class="button secondary disabled" disabled>Working...</button>
     {{else}}
       <button class="button success start-shipment">Start Shipment</button>
     {{/if}}
+  {{/if}}
+  {{#if any_active}}
+    <button class="button alert reset-all-active">Reset All Active Shipments</button>
   {{/if}}
 
   {{#if lane}}

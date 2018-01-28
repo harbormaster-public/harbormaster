@@ -43,7 +43,7 @@ Template.ship_lane.helpers({
   working () {
     let name = FlowRouter.getParam('name');
     let lane = Lanes.findOne({ name: name });
-    return Session.get('working_lanes') ?
+    return Session.get('working_lanes') && lane ?
       Session.get('working_lanes')[lane._id] :
       false
     ;
@@ -142,6 +142,15 @@ Template.ship_lane.helpers({
     return '';
   },
 
+  any_active () {
+    let name = FlowRouter.getParam('name');
+    let lane = Session.get('lane') || Lanes.findOne({ name: name });
+    let shipments = Shipments.find({ lane: lane._id, active: true });
+
+    if (shipments.fetch().length) return true;
+    return false;
+  },
+
   work_preview () {
     let name = FlowRouter.getParam('name');
     let lane = Session.get('lane') || Lanes.findOne({ name: name });
@@ -167,6 +176,8 @@ Template.ship_lane.helpers({
 
       return lane.rendered_work_preview;
     }
+
+    return lane;
   },
 
   has_work_output () {

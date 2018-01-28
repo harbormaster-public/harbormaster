@@ -174,13 +174,26 @@ Meteor.methods({
   },
 
   'Lanes#reset_shipment': function (name, date) {
-    let lane = Lanes.findOne({ name: name });
+    let lane = Lanes.findOne({ name });
     let shipment = Shipments.findOne({ start: date, lane: lane._id });
 
     return Shipments.update(shipment._id, { $set: {
       active: false,
-      exit_code: 1
+      exit_code: 1,
     }});
-  }
+  },
+
+  'Lanes#reset_all_active_shipments': function (name) {
+    let lane = Lanes.findOne({ name });
+
+    return Shipments.update(
+      { lane: lane._id, active: true },
+      { $set: {
+        active: false,
+        exit_code: 1,
+      }},
+      { multi: true }
+    );
+  },
 });
 
