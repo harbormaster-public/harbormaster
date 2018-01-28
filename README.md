@@ -2,7 +2,11 @@
 
 [![Build Status](https://travis-ci.org/StrictlySkyler/harbormaster.svg?branch=master)](https://travis-ci.org/StrictlySkyler/harbormaster)
 
-A framework for microservices.
+_n._
+1. A framework for microservices.
+2. An intelligent pub/sub system.
+3. A metaphor for shipping things, such as deployments, or lines of code.
+4. The person responsible for one or more of the first three items on this list.
 
 ## Outline
 
@@ -95,7 +99,7 @@ docker run -d --name harbormaster \
   strictlyskyler/harbormaster:[tag]
 ```
 
-Currently Harbormaster is not aware of and does not manage how Harbors are loaded into the `~/.harbormaster/harbors` folder.  If it detects a change to one of the index `.js` files there, it will exit.
+Currently Harbormaster is not aware of and does not manage how Harbors are loaded into the `~/.harbormaster/harbors` folder.  If it detects a change to one of the indexed `.js` files there, it will exit.
 
 ## Usage
 
