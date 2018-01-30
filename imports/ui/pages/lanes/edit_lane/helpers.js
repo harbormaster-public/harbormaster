@@ -6,13 +6,10 @@ import { Harbors } from '../../../../api/harbors';
 import { Shipments } from '../../../../api/shipments';
 import { moment } from 'meteor/momentjs:moment';
 
-//TODO: expose this
-let AMOUNT_SHOWN = 20;
-
 Template.edit_lane.onCreated(function () {
   let name = FlowRouter.getParam('name');
   let lane = Lanes.findOne({ name: name });
-  let options = { sort: { actual: 1 }, limit: AMOUNT_SHOWN };
+  let options = { sort: { actual: 1 }, limit: $H.AMOUNT_SHOWN };
 
   if (! Session.get('lane')) Session.set('lane', lane);
 
@@ -20,7 +17,7 @@ Template.edit_lane.onCreated(function () {
 });
 
 Template.edit_lane.helpers({
-  lane_name (current_name) {
+  lane_name () {
     var name = FlowRouter.getParam('name');
     var lane = Lanes.findOne({ name: name }) ||
       Session.get('lane') ||
@@ -56,7 +53,7 @@ Template.edit_lane.helpers({
       false
     ;
     var START_INDEX = 0;
-    var END_INDEX = AMOUNT_SHOWN - 1;
+    var END_INDEX = $H.AMOUNT_SHOWN - 1;
 
     if (sort_order == 'history' && has_shipments) {
       let dates = lane.shipments;
@@ -72,7 +69,7 @@ Template.edit_lane.helpers({
   },
 
   shipping_log_amount_shown () {
-    return AMOUNT_SHOWN;
+    return $H.AMOUNT_SHOWN;
   },
 
   validate_done () {
