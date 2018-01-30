@@ -43,11 +43,11 @@
   {{/if}}
 
   {{#if lane.followup}}
-    <h4><a class="button" target=_blank href="/lanes/{{followup_name lane}}/ship">Followup: {{followup_name lane}}</a></h4>
+    <h4><a class="button" href="/lanes/{{followup_name lane}}/ship">Followup: {{followup_name lane}}</a></h4>
   {{/if}}
 
   {{#if lane.salvage_plan}}
-    <h4><a class="button warning" target=_blank href="/lanes/{{salvage_plan_name lane}}/ship">Salvage Plan: {{salvage_plan_name lane}}</a></h4>
+    <h4><a class="button warning" href="/lanes/{{salvage_plan_name lane}}/ship">Salvage Plan: {{salvage_plan_name lane}}</a></h4>
   {{/if}}
 
   <h2>Shipping Log: Last {{shipping_log_amount_shown}} shipments</h2>
