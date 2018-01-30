@@ -236,16 +236,20 @@ Template.edit_lane.helpers({
       'Harbors#render_input',
       lane,
       manifest,
-      function (err, lane) {
+      function (err, active_lane) {
         if (err) throw err;
 
-        Session.set('lane', lane);
+        Session.set('lane', active_lane);
     });
 
     if (lane.rendered_input) return lane.rendered_input;
 
     return harbor.rendered_input;
-  }
+  },
+
+  validating_fields () {
+    return Session.get('validating_fields');
+  },
 
 });
 

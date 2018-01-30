@@ -41,7 +41,11 @@
           <section>
             {{{render_harbor}}}
           </section>
-          <button class="button hollow">Save</button>
+          {{#if validating_fields}}
+            <button class="button secondary" disabled>Working...</button>
+          {{else}}
+            <button class="button hollow save">Save</button>
+          {{/if}}
         {{/if}}
       </fieldset>
       {{#unless no_followup}}

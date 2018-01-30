@@ -26,31 +26,37 @@ let update_harbor = function (template) {
     'Harbors#update',
     lane,
     values,
-    function update_harbor (err, res) {
+    function update_harbor_method (err, res) {
+      let validating_fields = Session.get('validating_fields');
       if (err) throw err;
 
-      if (! res.success) alert('Invalid values.');
-      Session.set('lane', res.lane);
+      if (! res.success && validating_fields) alert('Invalid values.');
+
+      return Session.set({
+        lane: res.lane,
+        validating_fields: false,
+      });
     }
   );
 };
-let focused_element;
 
 Template.edit_lane.events({
   'submit form': function submit_form (event, template) {
     event.preventDefault();
 
     let lane = Session.get('lane');
-    let saved_lane = Lanes.findOne(lane._id);
 
     if (
       lane.name &&
       lane.name != 'New' &&
       lane.type
     ) {
+      Session.set('validating_fields', true);
 
       return update_harbor(template);
     }
+
+    return lane;
   },
 
   'change .followup': function change_followup_lane (event) {
@@ -141,11 +147,12 @@ Template.edit_lane.events({
     });
   },
 
-  'click .add-followup': function add_followup_lane (event) {
+  'click .add-followup': function add_followup_lane () {
     return Session.set('choose_followup', true);
   },
 
-  'click .add-salvage-plan': function add_salvage_plan (event) {
+  'click .add-salvage-plan': function add_salvage_plan () {
     return Session.set('choose_salvage_plan', true);
-  }
+  },
+
 });
