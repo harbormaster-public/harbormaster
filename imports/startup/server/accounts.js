@@ -8,20 +8,18 @@ Accounts.onLogin(function () {
   let harbormaster = Users.find().fetch().length ? false : true;
   let user = Users.findOne(user_id);
 
-  harbormaster = user ?  user.harbormaster : harbormaster;
+  harbormaster = user ? user.harbormaster : harbormaster;
 
   Users.upsert(user._id, { harbormaster: harbormaster });
-
-  //TODO: plugins
 });
 
 Accounts.emailTemplates.siteName = SITE_NAME;
 Accounts.emailTemplates.from = FROM;
 
 Accounts.emailTemplates.resetPassword = {
-  subject () { return 'Set Your Harbormaster Account Password' },
+  subject () { return 'Set Your Harbormaster Account Password'; },
   text (user, url) {
     let email = user.emails[0].address;
-    return `Click this link to set the password for ${email}: ${url}`
-  }
+    return `Click this link to set the password for ${email}: ${url}`;
+  },
 };
