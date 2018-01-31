@@ -1,6 +1,7 @@
 .charter {
   border: none;
   text-align: center;
+  position: relative;
 }
 
 .charter figcaption {
@@ -52,4 +53,10 @@
   background: #ccc;
   font-weight: bold;
   border-color: #aaa;
+}
+
+#graph {
+  width: 100%;
+  height: 100%;
+  position: absolute;
 }
