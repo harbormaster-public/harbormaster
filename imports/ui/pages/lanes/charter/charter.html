@@ -1,5 +1,5 @@
 <template name="charter">
-  <h1>Lane Charter (beta)</h1>
+  <h1>Lane Charter</h1>
   <figure class="charter">
     <figcaption>Starting with lane: {{lane.name}}</figcaption>
     <div>
@@ -11,6 +11,10 @@
           {{lane.name}}
       </a>
     </div>
+
+    <div class="graph">
+    </div>
+      {{build_graph}}
 
     {{#each charter_lanes}}
       <div class="reference">

@@ -1,11 +1,15 @@
 import { Template } from 'meteor/templating';
 import { Lanes } from '../../../../api/lanes';
-import { Session } from 'meteor/session';
 import { Shipments } from '../../../../api/shipments';
 
-import SVG from 'svg';
+import SVG from 'svg.js';
 
-//TODO: Handle multiples of the same lane and recursion
+import * as d3 from 'd3';
+
+const ROOT = 'ROOT';
+const FOLLOWUP = 'FOLLOWUP';
+const SALVAGE = 'SALVAGE';
+
 Template.charter.onRendered(function () {
   let $svg_spans = this.$('.svg-path');
 
@@ -28,10 +32,11 @@ Template.charter.onRendered(function () {
       color: $child.hasClass('followup-lane') ?
         FOLLOWUP_COLOR :
         SALVAGE_COLOR
+      ,
     });
 
     return line;
-  })
+  });
 
   return $svg_spans;
 });
@@ -40,23 +45,94 @@ Template.charter.helpers({
 
   lane () {
     let name = FlowRouter.getParam('name');
-    let lane = Session.get('lane') || Lanes.findOne({ name: name });
+    let lane = Lanes.findOne({ name: name });
 
     return lane;
   },
 
+  build_graph () {
+    return false;
+    let name = FlowRouter.getParam('name');
+    let lane = Lanes.findOne({ name: name });
+    let assign_children = (target) => {
+      if (target.followup && target.followup != target._id) {
+        let followup = Lanes.findOne(target.followup);
+        followup.role = FOLLOWUP;
+        followup.recursive = followup._id == target._id ? true : false;
+        target.children.push(followup);
+      }
+
+      if (target.salvage_plan && target.salvage_plan != target._id) {
+        let plan = Lanes.findOne(target.salvage_plan);
+        plan.role = SALVAGE;
+        plan.recursive = plan._id == target._id ? true : false;
+        target.children.push(plan);
+      }
+
+      target.children.forEach((child) => {
+        child.children = [];
+        if (! child.recursive) assign_children(child);
+      });
+
+      return target;
+    };
+
+    lane.children = [];
+    lane.role = ROOT;
+
+    lane = assign_children(lane);
+
+    let width = 1024;
+    let height = 768;
+
+    let treemap = d3.tree().size([width, height]);
+    let nodes = treemap(d3.hierarchy(lane));
+
+    let svg = d3.select('.graph').append('svg')
+      .attr('width', width)
+      .attr('height', height);
+    let g = svg.append('g')
+      .attr('transform', 'translate(0,0)');
+    let link = g.selectAll('.link')
+      .data(nodes.descendants().slice(1))
+      .enter().append('path')
+      .attr('d', (d) => {
+        return "M" + d.x + "," + d.y
+          + "C" + d.x + "," + (d.y + d.parent.y) / 2
+          + " " + d.parent.x + "," + (d.y + d.parent.y) / 2
+          + " " + d.parent.x + "," + d.parent.y;
+      });
+    let node = g.selectAll('.node')
+      .data(nodes.descendants())
+      .enter().append('g')
+      .attr("class", (d) => {
+        return "node" + (d.children ? " node--internal" : " node--leaf");
+      })
+      .attr("transform", (d) => {
+        return "translate(" + d.x + "," + d.y + ")";
+      });
+
+    node.append('circle').attr('r', 10);
+    node.append('text')
+      .attr('dy', '.35em')
+      .attr('y', (d) => { return d.children ? -20 : 20; })
+      .style('text-anchor', 'middle')
+      .text((d) => { return d.data.name; });
+
+    //return lane;
+  },
+
   charter_lanes () {
     let name = FlowRouter.getParam('name');
-    let lane = Session.get('lane') || Lanes.findOne({ name: name });
+    let lane = Lanes.findOne({ name: name });
     let charter_lanes = [];
-    let lanes_covered = {};
     let starting_index = 0;
     let starting_lane_list = [{ lane: lane }];
 
     if (! lane) return false;
 
     //TODO: Handle recursive references
-    function get_charter_lanes (index, list) {
+    let get_charter_lanes = function get_charter_lanes (index, list) {
       let indexed_lanes = [];
 
       _.each(list, function (entry) {
@@ -64,7 +140,7 @@ Template.charter.helpers({
           indexed_lanes.push({
             lane: Lanes.findOne(entry.lane.followup),
             type: 'followup',
-            parent: entry.lane._id
+            parent: entry.lane._id,
           });
         }
 
@@ -72,7 +148,7 @@ Template.charter.helpers({
           indexed_lanes.push({
             lane: Lanes.findOne(entry.lane.salvage_plan),
             type: 'salvage',
-            parent: entry.lane._id
+            parent: entry.lane._id,
           });
         }
       });
@@ -84,7 +160,7 @@ Template.charter.helpers({
       }
 
       return charter_lanes;
-    }
+    };
 
     return get_charter_lanes(starting_index, starting_lane_list);
   },
