@@ -159,6 +159,23 @@ Template.charter.onRendered(function () {
     .attr('y', (d) => { return d.children ? -20 : 40; })
     .style('text-anchor', 'middle')
     .text((d) => { return d.data.name; })
+    .attr('stroke', 'none')
+    .attr('fill', (d) => {
+      let fill_color;
+      switch (d.data.role) {
+        case 'FOLLOWUP':
+          fill_color = FOLLOWUP_COLOR;
+          break;
+        case 'SALVAGE':
+          fill_color = SALVAGE_COLOR;
+          break;
+        default:
+          fill_color = '#f09';
+          break;
+      }
+
+      return fill_color;
+    })
   ;
 
 });
