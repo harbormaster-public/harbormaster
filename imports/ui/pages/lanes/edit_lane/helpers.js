@@ -6,10 +6,11 @@ import { Harbors } from '../../../../api/harbors';
 import { Shipments } from '../../../../api/shipments';
 import { moment } from 'meteor/momentjs:moment';
 
+const options = { sort: { actual: -1 }, limit: $H.AMOUNT_SHOWN };
+
 Template.edit_lane.onCreated(function () {
-  let name = FlowRouter.getParam('name');
-  let lane = Lanes.findOne({ name: name });
-  let options = { sort: { actual: 1 }, limit: $H.AMOUNT_SHOWN };
+  const name = FlowRouter.getParam('name');
+  const lane = Lanes.findOne({ name: name });
 
   if (! Session.get('lane')) Session.set('lane', lane);
 
@@ -46,23 +47,15 @@ Template.edit_lane.helpers({
   },
 
   lane (sort_order) {
-    var name = FlowRouter.getParam('name');
-    var lane = Lanes.findOne({ name: name });
+    let name = FlowRouter.getParam('name');
+    let lane = Lanes.findOne({ name: name });
     let has_shipments = lane && lane.shipments && lane.shipments.length ?
       true :
       false
     ;
-    var START_INDEX = 0;
-    var END_INDEX = $H.AMOUNT_SHOWN - 1;
 
     if (sort_order == 'history' && has_shipments) {
-      let dates = lane.shipments;
-      let relevant_dates = dates.reverse().slice(START_INDEX, END_INDEX);
-
-      relevant_dates = Shipments.find({ _id: { $in: relevant_dates } });
-
-      return relevant_dates.fetch().reverse();
-
+      return Shipments.find({ lane: lane._id }, options).fetch();
     } else if (sort_order) return [];
 
     return lane;
