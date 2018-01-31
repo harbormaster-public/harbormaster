@@ -176,14 +176,14 @@ Template.charter.helpers({
     let name = FlowRouter.getParam('name');
     let lane = Lanes.findOne({ name: name });
     let assign_children = (target) => {
-      if (target.followup && target.followup != target._id) {
+      if (target.followup && ! target.recursive) {
         let followup = Lanes.findOne(target.followup);
         followup.role = FOLLOWUP;
         followup.recursive = followup._id == target._id ? true : false;
         target.children.push(followup);
       }
 
-      if (target.salvage_plan && target.salvage_plan != target._id) {
+      if (target.salvage_plan && ! target.recursive) {
         let plan = Lanes.findOne(target.salvage_plan);
         plan.role = SALVAGE;
         plan.recursive = plan._id == target._id ? true : false;
