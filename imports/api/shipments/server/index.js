@@ -1,6 +1,15 @@
 import { Shipments } from '..';
 import { Lanes } from '../../lanes';
 
+Shipments.rawCollection().createIndex({ lane: 1 });
+Shipments.rawCollection().createIndex({ lane: 1, active: 1 });
+Shipments.rawCollection().createIndex({ active: 1 });
+Shipments.rawCollection().createIndex({ active: 1, exit_code: 1 });
+Shipments.rawCollection().createIndex({ actual: -1 });
+Shipments.rawCollection().createIndex({ finished: -1 });
+Shipments.rawCollection().createIndex({ start: -1 });
+Shipments.rawCollection().createIndex({ start: -1, lane: 1 });
+
 Meteor.publish('Shipments', function (lane, options) {
   options = options || {};
   let query = {};

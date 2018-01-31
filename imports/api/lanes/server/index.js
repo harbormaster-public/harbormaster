@@ -3,6 +3,8 @@ import { Shipments } from '../../shipments';
 import { Harbors } from '../../harbors';
 import uuid from 'uuid';
 
+Lanes.rawCollection().createIndex({ name: 1 });
+
 Meteor.publish('Lanes', function () {
   return Lanes.find();
 });
