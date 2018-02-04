@@ -43,5 +43,14 @@ Template.lanes.events({
 
   'click .admin' (event) {
     $(event.target).toggleClass('collapsed');
+  },
+
+  'click a.button' (e) {
+    e.preventDefault();
+    let $link = $(e.target);
+    let path = $link.attr('href');
+    Session.set('loading', true);
+    FlowRouter.go(path);
+    Session.set('loading', false);
   }
 });

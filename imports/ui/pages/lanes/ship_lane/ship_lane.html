@@ -3,6 +3,7 @@
     <h1>Ship to lane: {{lane.name}}</h1>
     <h2>Let's review.  Ready to ship?</h2>
     <a href="/lanes/{{lane.name}}/edit" class="button secondary hollow edit-lane">Edit this lane</a>
+    <a href="/lanes/{{lane.name}}/charter" class="button success hollow lane-charter">Lane Charter</a>
   {{else}}
     <h1>That lane doesn't exist.</h1>
   {{/if}}
