@@ -14,10 +14,16 @@ Template.root.helpers({
         Session.set('latest_shipment', res);
       });
 
-      return { locale: 'loading' };
+      return { locale: 'loading...' };
     }
 
-    return latest_shipment;
+    if (latest_shipment.lane && ! latest_shipment.name) {
+      latest_shipment.name = Lanes.findOne(latest_shipment.lane).name;
+
+      Session.set('latest_shipment', latest_shipment);
+    }
+
+    return Session.get('latest_shipment');
   },
 
   shipments_last_24_hours: function () {
@@ -37,11 +43,11 @@ Template.root.helpers({
   },
 
   total_lanes: function () {
-    return Lanes.find().fetch().length;
+    return Lanes.find().count();
   },
 
   total_users: function () {
-    return Users.find().fetch().length;
+    return Users.find().count();
   },
 
   total_captains: function () {

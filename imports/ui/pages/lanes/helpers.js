@@ -3,7 +3,7 @@ import { Lanes } from '../../../api/lanes';
 import { Users } from '../../../api/users';
 import { Shipments } from '../../../api/shipments';
 
-Template.lanes.onCreated(() => {
+Template.lanes.onRendered(() => {
   let options = {
     sort: { actual: -1 },
     limit: 1,
@@ -11,6 +11,7 @@ Template.lanes.onCreated(() => {
 
   Lanes.find().forEach((lane) => {
     Meteor.subscribe('Shipments', lane, options);
+    Meteor.subscribe('Shipments#check_state', lane);
   });
 });
 
@@ -140,13 +141,17 @@ Template.lanes.helpers({
   },
 
   latest_shipment () {
-    let shipment = Shipments.find({ lane: this._id }).fetch()[0];
+    let shipment = Shipments.findOne({ lane: this._id });
 
     return shipment && shipment.start;
   },
 
   last_shipped () {
-    let shipment = Shipments.find({ lane: this._id }).fetch()[0];
+    if (! this.shipments || ! this.shipments.length) return 'Never';
+
+    let shipment = Shipments.findOne({ lane: this._id });
+
+    if (this.shipments.length && ! shipment) return 'Loading...';
 
     return (shipment && shipment.actual.toLocaleString()) || 'N/A';
   },
@@ -198,18 +203,24 @@ Template.lanes.helpers({
   },
 
   current_state () {
-    let state = Session.get('lane_state');
-    Meteor.call('Shipments#check_state', this, (err, res) => {
-      if (err) throw err;
+    let active_shipments = Shipments.find({
+      lane: this._id,
+      active: true,
+    }).count();
 
-      state = Session.get('lane_state') || {};
-      if (res != state[this.name]) {
-        state[this.name] = res;
-        Session.set('lane_state', state);
-      }
+    if (active_shipments) return `${active_shipments} active`;
+
+    let latest_shipment = Shipments.findOne({
+      lane: this._id,
+    }, {
+      sort: { actual: -1 },
     });
 
-    return (state && state[this.name]) || 'N/A';
+    if (! latest_shipment) return 'N/A';
+
+    if (latest_shipment.exit_code) return 'error';
+
+    if (latest_shipment.exit_code == 0) return 'ready';
   },
 
   followup_name () {

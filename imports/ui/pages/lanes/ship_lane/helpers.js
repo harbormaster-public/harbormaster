@@ -12,6 +12,7 @@ Template.ship_lane.onCreated(function () {
   const lane = Lanes.findOne({ name: name });
 
   Meteor.subscribe('Shipments', lane, options);
+  Meteor.subscribe('Shipments#check_state', lane);
 });
 
 Template.ship_lane.helpers({
@@ -115,7 +116,7 @@ Template.ship_lane.helpers({
   exit_code () {
     let name = FlowRouter.getParam('name');
     let date = this.start || FlowRouter.getParam('date');
-    let lane = Session.get('lane') || Lanes.findOne({ name: name });
+    let lane = Lanes.findOne({ name: name });
     let shipment = lane ?
       Shipments.findOne({ start: date, lane: lane._id }) :
       false
@@ -129,7 +130,7 @@ Template.ship_lane.helpers({
 
   active () {
     let name = FlowRouter.getParam('name');
-    let lane = Session.get('lane') || Lanes.findOne({ name: name });
+    let lane = Lanes.findOne({ name: name });
     let date = FlowRouter.getParam('date');
     let shipment = Shipments.findOne({ start: date, lane: lane._id });
 
@@ -140,16 +141,16 @@ Template.ship_lane.helpers({
 
   any_active () {
     let name = FlowRouter.getParam('name');
-    let lane = Session.get('lane') || Lanes.findOne({ name: name });
+    let lane = Lanes.findOne({ name: name });
     let shipments = Shipments.find({ lane: lane._id, active: true });
 
-    if (shipments.fetch().length) return true;
+    if (shipments.count()) return true;
     return false;
   },
 
   work_preview () {
     let name = FlowRouter.getParam('name');
-    let lane = Session.get('lane') || Lanes.findOne({ name: name });
+    let lane = Lanes.findOne({ name: name });
 
     if (lane) {
       let harbor = Harbors.findOne(lane.type);
@@ -178,7 +179,7 @@ Template.ship_lane.helpers({
 
   has_work_output () {
     let name = FlowRouter.getParam('name');
-    let lane = Session.get('lane') || Lanes.findOne({ name: name });
+    let lane = Lanes.findOne({ name: name });
     let date = FlowRouter.getParam('date');
     let shipment;
 
@@ -195,7 +196,7 @@ Template.ship_lane.helpers({
 
   work_output () {
     let name = FlowRouter.getParam('name');
-    let lane = Session.get('lane') || Lanes.findOne({ name: name });
+    let lane = Lanes.findOne({ name: name });
     let date = FlowRouter.getParam('date');
     let shipment;
 

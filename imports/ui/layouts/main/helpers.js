@@ -10,17 +10,12 @@ Template.main.onCreated(function () {
   users_subscription = Meteor.subscribe('Users');
   lanes_subscription = Meteor.subscribe('Lanes');
   harbors_subscription = Meteor.subscribe('Harbors');
-
-  //TODO: Make these subscriptions specific to the totals needed, do it server-side
-  // Maybe this: https://stackoverflow.com/questions/27948046/meteor-publish-just-the-count-for-a-collection
-  // Or this: https://atmospherejs.com/tmeasday/publish-counts
-  // Or just count server-side and publish a collection of counts
-  //shipments_subscription = Meteor.subscribe('Shipments');
 });
 
 Template.main.helpers({
   is_loaded () {
     if (
+      ! Session.get('loading') &&
       ! Meteor.loggingIn() &&
       users_subscription.ready() &&
       lanes_subscription.ready()

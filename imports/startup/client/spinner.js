@@ -6,7 +6,7 @@ Meteor.Spinner.options = {
   corners: 1, // Corner roundness (0..1)
   rotate: 18, // The rotation offset
   direction: 1, // 1: clockwise, -1: counterclockwise
-  color: '#0af', // #rgb or #rrggbb
+  color: '#ffae00', // #rgb or #rrggbb
   speed: 1, // Rounds per second
   trail: 25, // Afterglow percentage
   shadow: false, // Whether to render a shadow
@@ -17,3 +17,4 @@ Meteor.Spinner.options = {
   left: '50%' // Left position relative to parent in px
 };
 
+Loading.configure(Meteor.Spinner.options);
