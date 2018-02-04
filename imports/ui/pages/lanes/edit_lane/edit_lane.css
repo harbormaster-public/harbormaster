@@ -43,3 +43,15 @@ li {
 .stop[data-stop-index="0"] .remove-stop {
   display: none;
 }
+
+fieldset.followup {
+  background: #0af;
+}
+
+fieldset.followup label {
+  color: white;
+}
+
+fieldset.salvage-plan {
+  background: #ffae00;
+}
