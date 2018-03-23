@@ -59,7 +59,7 @@ Meteor.methods({
   'Shipments#get_latest_date': function (shipment) {
     if (Shipments.findOne(shipment)) return Shipments.findOne(shipment);
 
-    let latest_shipment = Shipments.findOne({}, { sort: { _id: -1 } });
+    let latest_shipment = Shipments.findOne({}, { sort: { finished: -1 } });
     if (latest_shipment) {
       return {
         lane: latest_shipment.lane,
