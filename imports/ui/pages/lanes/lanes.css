@@ -78,6 +78,10 @@ td.error {
   color: red;
 }
 
+.loading-text {
+  background: #ffae00;
+}
+
 @media all and (max-width: 1200px) {
   .total-shipments-column,
   .salvage-runs-column,

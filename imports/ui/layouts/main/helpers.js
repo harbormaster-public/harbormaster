@@ -15,10 +15,8 @@ Template.main.onCreated(function () {
 Template.main.helpers({
   is_loaded () {
     if (
-      ! Session.get('loading') &&
-      ! Meteor.loggingIn() &&
-      users_subscription.ready() &&
-      lanes_subscription.ready()
+      ! Session.get('loading')
+      && ! Meteor.loggingIn()
     ) return true;
 
     return false;
