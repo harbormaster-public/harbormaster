@@ -7,21 +7,13 @@ Template.root.helpers({
   latest_shipment: function () {
     let latest_shipment = Session.get('latest_shipment') || false;
 
-    if (! latest_shipment) {
-      Meteor.call('Shipments#get_latest_date', function (err, res) {
-        if (err) throw err;
+    Meteor.call('Shipments#get_latest_date', function (err, res) {
+      if (err) throw err;
 
-        Session.set('latest_shipment', res);
-      });
+      Session.set('latest_shipment', res);
+    });
 
-      return { locale: 'loading...' };
-    }
-
-    if (latest_shipment.lane && ! latest_shipment.name) {
-      latest_shipment.name = Lanes.findOne(latest_shipment.lane).name;
-
-      Session.set('latest_shipment', latest_shipment);
-    }
+    if (! latest_shipment) return { locale: 'loading...' };
 
     return Session.get('latest_shipment');
   },

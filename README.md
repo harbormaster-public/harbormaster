@@ -142,11 +142,13 @@ Harbormaster also exposes a global variable, `$H`, with methods for starting and
 
 #### #start_shipment
 ```
-$H.call('Lanes#start_shipment', lane_id, manifest, start_date);
+$H.start_shipment(lane_id, manifest, start_date);
 ```
 Starts a shipment for a Lane matching the `lane_id` string, with a `manfiest` object containing relevant data, and a canonical `start_date` string to use as reference.  Typically called from a client.
 
-Triggers a call the `work` method exposed by the Harbor associated with the Lane being shipped.
+The `start_date` is optional, but if passed, must adhere to the format used by `$H.start_date()`.
+
+Triggers a call to the `work` method exposed by the Harbor associated with the Lane being shipped.
 
 #### #end_shipment
 ```
