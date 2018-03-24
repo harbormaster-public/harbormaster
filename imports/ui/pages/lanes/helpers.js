@@ -9,6 +9,12 @@ Template.lanes.onRendered(() => {
     limit: 1,
   };
 
+  Meteor.call('Lanes#get_total', (err, res) => {
+    if (err) throw err;
+
+    Session.set('total_lanes', res);
+  });
+
   Lanes.find().forEach((lane) => {
     Meteor.subscribe('Shipments', lane, options);
     Meteor.subscribe('Shipments#check_state', lane);
@@ -16,6 +22,15 @@ Template.lanes.onRendered(() => {
 });
 
 Template.lanes.helpers({
+  loading_lanes () {
+    let total = Session.get('total_lanes');
+    let current = Lanes.find().count();
+
+    if (! total || current < total) return true;
+
+    return false;
+  },
+
   lanes () {
     let lanes;
     let sort_by = Session.get('lanes_table_sort_by');

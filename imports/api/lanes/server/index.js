@@ -10,6 +10,10 @@ Meteor.publish('Lanes', function () {
 });
 
 Meteor.methods({
+  'Lanes#get_total': () => {
+    return Lanes.find().count();
+  },
+
   'Lanes#update_webhook_token': function (lane_id, user_id, remove) {
     let lane = Lanes.findOne(lane_id);
     let token = uuid.v4();

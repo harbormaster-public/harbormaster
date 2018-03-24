@@ -16,6 +16,20 @@
       </tr>
     </thead>
     <tbody>
+      {{#if loading_lanes}}
+        <tr class="loading-text">
+          <td>Loading...</td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+        </tr>
+      {{/if}}
+
       {{#each lanes}}
         <tr>
           <td class="name-column">

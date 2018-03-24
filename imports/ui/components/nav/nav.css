@@ -1,0 +1,8 @@
+.nav-item.active {
+  background: #777;
+  color: #fff;
+}
+
+.nav-item.active:hover {
+  color: #ffae00;
+}
