@@ -1,3 +1,7 @@
+form p {
+  margin-bottom: 15px;
+}
+
 li {
   list-style-type: circle;
   margin: 5px;

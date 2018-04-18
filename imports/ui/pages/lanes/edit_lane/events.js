@@ -12,10 +12,10 @@ let update_harbor = function (template) {
     let checked = element.checked;
     let name = element.name;
 
-    if (! values[element.name]) {
+    if (! values[name]) {
       values[name] = type == 'checkbox' || type == 'radio' ?
         (checked && (value || checked)) || values[name] :
-        element.value
+        value
       ;
     }
   });
