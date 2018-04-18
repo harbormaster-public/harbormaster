@@ -3,6 +3,6 @@
   color: #fff;
 }
 
-.nav-item.active:hover {
+a:hover, .nav-item:hover {
   color: #ffae00;
 }
