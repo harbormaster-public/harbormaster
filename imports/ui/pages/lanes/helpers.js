@@ -53,7 +53,7 @@ Template.lanes.helpers({
             let lane1_shipments = Shipments.find({ lane: lane1._id }).fetch();
             let lane2_shipments = Shipments.find({ lane: lane2._id }).fetch();
 
-            let lane1_date = lane1_shipments.length ? 
+            let lane1_date = lane1_shipments.length ?
               lane1_shipments[lane1_shipments.length - 1].actual :
               0
             ;
@@ -68,7 +68,7 @@ Template.lanes.helpers({
 
             if (reverse == -1) { sort_order = -sort_order; }
             return sort_order;
-          }
+          },
         });
         break;
       case 'shipments':
@@ -87,7 +87,7 @@ Template.lanes.helpers({
 
             if (reverse == -1) { sort_order = -sort_order; }
             return sort_order;
-          }
+          },
         });
         break;
       case 'salvage-runs':
@@ -95,11 +95,11 @@ Template.lanes.helpers({
           sort: function (lane1, lane2) {
             let lane1_shipments = Shipments.find({
               lane: lane1._id,
-              exit_code: { $ne: 0 }
+              exit_code: { $ne: 0 },
             }).fetch();
             let lane2_shipments = Shipments.find({
               lane: lane2._id,
-              exit_code: { $ne: 0 }
+              exit_code: { $ne: 0 },
             }).fetch();
             let sort_order = 0;
 
@@ -112,7 +112,7 @@ Template.lanes.helpers({
 
             if (reverse == -1) { sort_order = -sort_order; }
             return sort_order;
-          }
+          },
         });
         break;
       default:
@@ -174,7 +174,7 @@ Template.lanes.helpers({
   last_salvaged () {
     let salvage_runs = Shipments.find({
       lane: this._id,
-      exit_code: { $ne: 0 }
+      exit_code: { $ne: 0 },
     }).fetch();
     if (! salvage_runs.length) return 'never';
 
@@ -196,7 +196,7 @@ Template.lanes.helpers({
   total_salvage_runs () {
     return Shipments.find({
       lane: this._id,
-      exit_code: { $ne: 0 }
+      exit_code: { $ne: 0 },
     }).fetch().length;
   },
 
@@ -218,6 +218,9 @@ Template.lanes.helpers({
   },
 
   current_state () {
+    const text_na = 'N/A';
+    const text_error = 'error';
+    const text_ready = 'ready';
     let active_shipments = Shipments.find({
       lane: this._id,
       active: true,
@@ -231,11 +234,13 @@ Template.lanes.helpers({
       sort: { actual: -1 },
     });
 
-    if (! latest_shipment) return 'N/A';
+    if (! latest_shipment) return text_na;
 
-    if (latest_shipment.exit_code) return 'error';
+    if (latest_shipment.exit_code) return text_error;
 
-    if (latest_shipment.exit_code == 0) return 'ready';
+    if (latest_shipment.exit_code == 0) return text_ready;
+
+    return text_na;
   },
 
   followup_name () {

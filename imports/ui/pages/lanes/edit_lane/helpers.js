@@ -48,15 +48,13 @@ Template.edit_lane.helpers({
 
   lane (sort_order) {
     let name = FlowRouter.getParam('name');
-    let lane = Lanes.findOne({ name: name });
-    let has_shipments = lane && lane.shipments && lane.shipments.length ?
-      true :
-      false
-    ;
+    let { _id: lane } = Lanes.findOne({ name });
+    let has_shipments = Shipments.find({ lane }).count;
 
     if (sort_order == 'history' && has_shipments) {
-      return Shipments.find({ lane: lane._id }, options).fetch();
-    } else if (sort_order) return [];
+      return Shipments.find({ lane }, options).fetch();
+    }
+    else if (sort_order) return [];
 
     return lane;
   },

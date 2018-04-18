@@ -1,5 +1,4 @@
 import { Shipments } from '..';
-import { Lanes } from '../../lanes';
 
 Shipments.rawCollection().createIndex(
   { _id: 1, active: 1 }, { background: true }
@@ -49,8 +48,8 @@ Meteor.methods({
     var yesterday = new Date(now - interval);
     var total_shipments = Shipments.find({
       actual: {
-        $gte: yesterday
-      }
+        $gte: yesterday,
+      },
     }).count();
 
     return total_shipments;
@@ -64,15 +63,15 @@ Meteor.methods({
       return {
         lane: latest_shipment.lane,
         date: latest_shipment.start,
-        locale: latest_shipment.finished.toLocaleString()
+        locale: latest_shipment.finished.toLocaleString(),
       };
     }
 
     return {
       lane: '',
       date: '',
-      locale: 'never'
+      locale: 'never',
     };
 
-  }
+  },
 });
