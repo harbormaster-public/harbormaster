@@ -22,15 +22,15 @@ Template.ship_lane.helpers({
 
   lane (sort_order) {
     let name = FlowRouter.getParam('name');
-    let { _id: lane } = Lanes.findOne({ name });
-    let has_shipments = Shipments.find({ lane }).count;
+    let lane = Lanes.findOne({ name }) || false;
+    let has_shipments = Shipments.find({ lane: lane._id }).count;
 
     if (sort_order == 'history' && has_shipments) {
-      return Shipments.find({ lane }, options).fetch();
+      return Shipments.find({ lane: lane._id }, options).fetch();
     }
     else if (sort_order) return [];
 
-    return lane ? lane : false;
+    return lane || false;
   },
 
   working () {
@@ -126,7 +126,7 @@ Template.ship_lane.helpers({
 
   active () {
     let name = FlowRouter.getParam('name');
-    let lane = Lanes.findOne({ name: name });
+    let lane = Lanes.findOne({ name: name }) || false;
     let date = FlowRouter.getParam('date');
     let shipment = Shipments.findOne({ start: date, lane: lane._id });
 
@@ -137,7 +137,7 @@ Template.ship_lane.helpers({
 
   any_active () {
     let name = FlowRouter.getParam('name');
-    let lane = Lanes.findOne({ name: name });
+    let lane = Lanes.findOne({ name: name }) || false;
     let shipments = Shipments.find({ lane: lane._id, active: true });
 
     if (shipments.count()) return true;

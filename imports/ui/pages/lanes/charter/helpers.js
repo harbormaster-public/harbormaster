@@ -138,8 +138,10 @@ Template.charter.onRendered(function () {
       return stroke_color;
     })
     .attr('fill', (d) => {
-      let latest_shipment_id = d.data.shipments[d.data.shipments.length - 1];
-      let latest_shipment = Shipments.findOne(latest_shipment_id);
+      let latest_shipment = Shipments.findOne(
+        { lane: d.data._id },
+        { $sort: { finished: -1 }, limit: 1 }
+      );
       let fill_color;
 
       if (! latest_shipment) return fill_color = 'transparent';
@@ -192,6 +194,8 @@ Template.charter.helpers({
   build_graph () {
     let name = FlowRouter.getParam('name');
     let lane = Lanes.findOne({ name: name });
+    if (! lane) return false;
+
     let assign_children = (target) => {
       if (target.followup && ! target.recursive) {
         let followup = Lanes.findOne(target.followup);
