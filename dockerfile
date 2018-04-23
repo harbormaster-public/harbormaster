@@ -10,7 +10,6 @@ RUN meteor --allow-superuser build /harbormaster --directory
 RUN ln -s /opt/harbormaster/start.sh /start.sh
 
 WORKDIR /harbormaster/bundle/programs/server
-RUN rm npm-shrinkwrap.json
 RUN npm install
 
 VOLUME /root/.ssh
