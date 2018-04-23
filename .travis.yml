@@ -6,6 +6,7 @@ node_js:
 env:
   global:
     - "CXX=g++-4.8"
+    - "CC_TEST_REPORTER_ID=48dc78fdf71b05b113f5821ca2f344b2de4705d6c8465c04253dabec1fdc74ff"
 addons:
   apt:
     sources:
@@ -32,7 +33,15 @@ install:
   - meteor build .build --directory --debug
   - cd .build/bundle/programs/server && npm install && cd ../../../..
 
+before_script:
+  - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+  - chmod +x ./cc-test-reporter
+  - ./cc-test-reporter before-build
+
 script:
   - npm run test
   - MONGO_URL=mongodb://127.0.0.1 ROOT_URL=http://localhost:3000 PORT=3000 node /home/travis/build/StrictlySkyler/harbormaster/.build/bundle/main.js &
   - npm run test:e2e
+
+after_script:
+  - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
