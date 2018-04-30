@@ -2,8 +2,17 @@ import { Lanes } from '..';
 import { Shipments } from '../../shipments';
 import { Harbors } from '../../harbors';
 import uuid from 'uuid';
+import _ from 'lodash';
 
 Lanes.rawCollection().createIndex({ name: 1 }, { background: true });
+
+const trim_manifest = (manifest) => {
+  let trimmed = _.cloneDeep(manifest);
+
+  if (manifest.prior_manifest) delete manifest.prior_manifest;
+
+  return trimmed;
+};
 
 Meteor.publish('Lanes', function () {
   return Lanes.find();
@@ -143,7 +152,7 @@ Meteor.methods({
         .lanes[salvage_lane._id]
         .manifest
       ;
-      salvage_manifest.prior_manifest = manifest;
+      salvage_manifest.prior_manifest = trim_manifest(manifest);
       Lanes.update(lane._id, lane);
 
       return Meteor.call(
@@ -159,8 +168,9 @@ Meteor.methods({
         .lanes[followup_lane._id]
         .manifest
       ;
-      followup_manifest.prior_manifest = manifest;
+      followup_manifest.prior_manifest = trim_manifest(manifest);
       Lanes.update(lane._id, lane);
+      console.log(followup_manifest);
 
       return Meteor.call(
         'Lanes#start_shipment',
