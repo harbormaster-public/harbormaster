@@ -126,8 +126,8 @@ Template.edit_lane.helpers({
   },
 
   captain_list () {
-    var users = Users.find().fetch();
-
+    var users = Users.find({}, { sort: { _id: 1 } })
+    
     return users;
   },
 
