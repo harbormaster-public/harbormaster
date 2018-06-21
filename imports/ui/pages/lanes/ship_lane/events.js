@@ -10,7 +10,7 @@ Template.ship_lane.events({
     let lane = Lanes.findOne({ name: name });
     let harbor = Harbors.findOne(lane.type);
     let manifest = harbor.lanes[lane._id].manifest;
-    let shipment_start_date = $H.start_date();
+    let shipment_start_date = H.start_date();
     let shipment = Shipments.findOne({
       start: shipment_start_date,
       lane: lane._id,
@@ -46,7 +46,7 @@ Template.ship_lane.events({
     let name = FlowRouter.getParam('name');
     let date = FlowRouter.getParam('date');
 
-    $H.call('Lanes#reset_shipment', name, date, function (err, res) {
+    H.call('Lanes#reset_shipment', name, date, function (err, res) {
       if (err) throw err;
       console.log('Reset shipment response:', res);
     });
@@ -55,7 +55,7 @@ Template.ship_lane.events({
   'click .reset-all-active': function () {
     let name = FlowRouter.getParam('name');
 
-    $H.call('Lanes#reset_all_active_shipments', name, function (err, res) {
+    H.call('Lanes#reset_all_active_shipments', name, function (err, res) {
       if (err) throw err;
       console.log('Reset all active shipments response:', res);
     });

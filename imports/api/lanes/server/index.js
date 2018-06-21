@@ -74,7 +74,7 @@ Meteor.methods({
 
     console.log('Starting shipment for lane:', lane.name);
     try {
-      new_manifest = $H.harbors[lane.type].work(lane, manifest);
+      new_manifest = H.harbors[lane.type].work(lane, manifest);
 
     } catch (err) {
       console.error(
@@ -124,7 +124,7 @@ Meteor.methods({
 
     let shipment_id = manifest.shipment_id;
     let finished = new Date();
-    let next_shipment_start_date = $H.start_date();
+    let next_shipment_start_date = H.start_date();
 
     Shipments.update(shipment_id, {
       $set: {

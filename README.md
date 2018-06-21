@@ -138,21 +138,21 @@ Harbormaster provides an API for starting and ending Shipments from within a Har
 
 It passes a reference to the Collections it uses to each Harbor as a part of its Registration: `Lanes, Users, Harbors, Shipments` are arguments passed to each Harbor's `register` method.  These can be referenced later, perhaps during a Harbor's `work` method, for arbitrary updates.
 
-Harbormaster also exposes a global variable, `$H`, with methods for starting and stopping shipments:
+Harbormaster also exposes a global variable, `H`, with methods for starting and stopping shipments:
 
 #### #start_shipment
 ```
-$H.start_shipment(lane_id, manifest, start_date);
+H.start_shipment(lane_id, manifest, start_date);
 ```
 Starts a shipment for a Lane matching the `lane_id` string, with a `manfiest` object containing relevant data, and a canonical `start_date` string to use as reference.  Typically called from a client.
 
-The `start_date` is optional, but if passed, must adhere to the format used by `$H.start_date()`.
+The `start_date` is optional, but if passed, must adhere to the format used by `H.start_date()`.
 
 Triggers a call to the `work` method exposed by the Harbor associated with the Lane being shipped.
 
 #### #end_shipment
 ```
-$H.call('Lanes#end_shipment', lane_id, exit_code, manifest);
+H.call('Lanes#end_shipment', lane_id, exit_code, manifest);
 ```
 Ends a Shipment for a Lane matching the `lane_id` string when its `work` is done.  Expects a number, `exit_code`, representing the success or failure of the work, with `0` as success and anything else as failure.  Accepts any updated `manifest` object representing state to be tracked.  Typically called at the end of a Harbor's `work` method.
 

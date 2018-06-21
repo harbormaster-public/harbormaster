@@ -7,7 +7,7 @@ import { Shipments } from '../../../../api/shipments';
 import { count, history } from '../lib/util';
 import { moment } from 'meteor/momentjs:moment';
 
-const options = { sort: { actual: -1 }, limit: $H.AMOUNT_SHOWN };
+const options = { sort: { actual: -1 }, limit: H.AMOUNT_SHOWN };
 
 Template.edit_lane.onCreated(function () {
   const name = FlowRouter.getParam('name');
@@ -61,7 +61,7 @@ Template.edit_lane.helpers({
   },
 
   shipping_log_amount_shown () {
-    return $H.AMOUNT_SHOWN;
+    return H.AMOUNT_SHOWN;
   },
 
   validate_done () {
