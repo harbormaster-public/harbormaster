@@ -12,9 +12,9 @@ Template.edit_lane.onCreated(function () {
   const name = FlowRouter.getParam('name');
   const lane = Lanes.findOne({ name: name });
 
-  if (! Session.get('lane')) Session.set('lane', lane);
+  //if (! Session.get('lane')) Session.set('lane', lane);
 
-  if (lane) Meteor.subscribe('Shipments', lane, options);
+  if (lane) this.subscribe('Shipments', lane, options);
 });
 
 Template.edit_lane.helpers({
@@ -46,17 +46,24 @@ Template.edit_lane.helpers({
     return Lanes.find({}, { sort: { name: 1 } });
   },
 
-  lane (sort_order) {
+  lane () {
     let name = FlowRouter.getParam('name');
     let lane = Lanes.findOne({ name });
-    let has_shipments = Shipments.find({ lane: lane._id }).count;
 
-    if (sort_order == 'history' && has_shipments) {
-      return Shipments.find({ lane: lane._id }, options).fetch();
-    }
-    else if (sort_order) return [];
+    return lane;
+  },
 
-    return lane || false;
+  count () {
+    let name = FlowRouter.getParam('name');
+    let lane = Lanes.findOne({ name }) || false;
+    return Shipments.find({ lane: lane._id }).count();
+  },
+
+  history () {
+    let name = FlowRouter.getParam('name');
+    let lane = Lanes.findOne({ name }) || false;
+    let shipments = Shipments.find({ lane: lane._id });
+    return shipments;
   },
 
   shipping_log_amount_shown () {

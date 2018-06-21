@@ -11,26 +11,29 @@ Template.ship_lane.onCreated(function () {
   const name = FlowRouter.getParam('name');
   const lane = Lanes.findOne({ name: name });
 
-  Meteor.subscribe('Shipments', lane, options);
-  Meteor.subscribe('Shipments#check_state', lane);
+  this.subscribe('Shipments', lane, options);
+  this.subscribe('Shipments#check_state', lane);
 });
 
 Template.ship_lane.helpers({
-  no_history () {
-    return Shipments.find().fetch().length === 0;
-  },
-
-  lane (sort_order) {
+  count () {
     let name = FlowRouter.getParam('name');
     let lane = Lanes.findOne({ name }) || false;
-    let has_shipments = Shipments.find({ lane: lane._id }).count;
+    return Shipments.find({ lane: lane._id }).count();
+  },
 
-    if (sort_order == 'history' && has_shipments) {
-      return Shipments.find({ lane: lane._id }, options).fetch();
-    }
-    else if (sort_order) return [];
+  lane () {
+    let name = FlowRouter.getParam('name');
+    let lane = Lanes.findOne({ name }) || false;
 
-    return lane || false;
+    return lane;
+  },
+
+  history () {
+    let name = FlowRouter.getParam('name');
+    let lane = Lanes.findOne({ name }) || false;
+    let shipments = Shipments.find({ lane: lane._id });
+    return shipments;
   },
 
   working () {
