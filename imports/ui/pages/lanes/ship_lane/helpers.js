@@ -3,6 +3,7 @@ import { Lanes } from '../../../../api/lanes';
 import { Session } from 'meteor/session';
 import { Harbors } from '../../../../api/harbors';
 import { Shipments } from '../../../../api/shipments';
+import { count, history } from '../lib/util';
 import { moment } from 'meteor/momentjs:moment';
 
 const options = { sort: { actual: -1 }, limit: $H.AMOUNT_SHOWN };
@@ -17,9 +18,7 @@ Template.ship_lane.onCreated(function () {
 
 Template.ship_lane.helpers({
   count () {
-    let name = FlowRouter.getParam('name');
-    let lane = Lanes.findOne({ name }) || false;
-    return Shipments.find({ lane: lane._id }).count();
+    return count(Lanes.findOne({ name: FlowRouter.getParam('name') }));
   },
 
   lane () {
@@ -30,10 +29,7 @@ Template.ship_lane.helpers({
   },
 
   history () {
-    let name = FlowRouter.getParam('name');
-    let lane = Lanes.findOne({ name }) || false;
-    let shipments = Shipments.find({ lane: lane._id });
-    return shipments;
+    return history(Lanes.findOne({ name: FlowRouter.getParam('name') }));
   },
 
   working () {

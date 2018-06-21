@@ -4,6 +4,7 @@ import { Session } from 'meteor/session';
 import { Users } from '../../../../api/users';
 import { Harbors } from '../../../../api/harbors';
 import { Shipments } from '../../../../api/shipments';
+import { count, history } from '../lib/util';
 import { moment } from 'meteor/momentjs:moment';
 
 const options = { sort: { actual: -1 }, limit: $H.AMOUNT_SHOWN };
@@ -54,16 +55,11 @@ Template.edit_lane.helpers({
   },
 
   count () {
-    let name = FlowRouter.getParam('name');
-    let lane = Lanes.findOne({ name }) || false;
-    return Shipments.find({ lane: lane._id }).count();
+    return count(Lanes.findOne({ name: FlowRouter.getParam('name') }));
   },
 
   history () {
-    let name = FlowRouter.getParam('name');
-    let lane = Lanes.findOne({ name }) || false;
-    let shipments = Shipments.find({ lane: lane._id });
-    return shipments;
+    return history(Lanes.findOne({ name: FlowRouter.getParam('name') }));
   },
 
   shipping_log_amount_shown () {
