@@ -43,7 +43,7 @@ fs.readdirSync(harbors_dir).forEach(function (file) {
       Harbors.findOne(harbor_name) && Harbors.findOne(harbor_name).lanes
     );
 
-    $H.harbors[harbor_name] = entrypoint;
+    H.harbors[harbor_name] = entrypoint;
 
     Harbors.upsert(harbor_name, {
       lanes: lanes_exist ?
@@ -53,7 +53,7 @@ fs.readdirSync(harbors_dir).forEach(function (file) {
 
     let harbor = Harbors.findOne(harbor_name);
 
-    harbor.rendered_input = $H.harbors[harbor_name].render_input();
+    harbor.rendered_input = H.harbors[harbor_name].render_input();
 
     Harbors.update({ _id: harbor._id }, harbor);
 

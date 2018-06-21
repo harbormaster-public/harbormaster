@@ -4,17 +4,16 @@ import { Session } from 'meteor/session';
 import { Users } from '../../../../api/users';
 import { Harbors } from '../../../../api/harbors';
 import { Shipments } from '../../../../api/shipments';
+import { count, history } from '../lib/util';
 import { moment } from 'meteor/momentjs:moment';
 
-const options = { sort: { actual: -1 }, limit: $H.AMOUNT_SHOWN };
+const options = { sort: { actual: -1 }, limit: H.AMOUNT_SHOWN };
 
 Template.edit_lane.onCreated(function () {
   const name = FlowRouter.getParam('name');
   const lane = Lanes.findOne({ name: name });
 
-  if (! Session.get('lane')) Session.set('lane', lane);
-
-  if (lane) Meteor.subscribe('Shipments', lane, options);
+  if (lane) this.subscribe('Shipments', lane, options);
 });
 
 Template.edit_lane.helpers({
@@ -46,21 +45,23 @@ Template.edit_lane.helpers({
     return Lanes.find({}, { sort: { name: 1 } });
   },
 
-  lane (sort_order) {
+  lane () {
     let name = FlowRouter.getParam('name');
     let lane = Lanes.findOne({ name });
-    let has_shipments = Shipments.find({ lane: lane._id }).count;
 
-    if (sort_order == 'history' && has_shipments) {
-      return Shipments.find({ lane: lane._id }, options).fetch();
-    }
-    else if (sort_order) return [];
+    return lane;
+  },
 
-    return lane || false;
+  count () {
+    return count(Lanes.findOne({ name: FlowRouter.getParam('name') }));
+  },
+
+  history () {
+    return history(Lanes.findOne({ name: FlowRouter.getParam('name') }));
   },
 
   shipping_log_amount_shown () {
-    return $H.AMOUNT_SHOWN;
+    return H.AMOUNT_SHOWN;
   },
 
   validate_done () {

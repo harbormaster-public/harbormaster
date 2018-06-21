@@ -1,3 +1,3 @@
 // Accessible constants
 
-$H.AMOUNT_SHOWN = 20;
+H.AMOUNT_SHOWN = 20;

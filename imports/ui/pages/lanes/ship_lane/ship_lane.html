@@ -36,7 +36,7 @@
       <section>
         {{#if has_work_output}}
           {{#each work_output}}
-            {{date}}: {{result}}<br>
+            {{date}}: {{{result}}}<br>
           {{/each}}
         {{/if}}
       </section>
@@ -53,16 +53,20 @@
 
   <h2>Shipping Log: Last {{shipping_log_amount_shown}} shipments</h2>
   <ul>
-    {{#if no_history}}
-      <li>N/A</li>
+    {{#unless Template.subscriptionsReady}}
+      <li>Loading...</li>
     {{else}}
-      {{#each lane "history"}}
-        <li>
-          <a href="/lanes/{{lane.name}}/ship/{{this.start}}" class="button tiny hollow {{shipment_active}} exit-code code-{{exit_code}}">
-            Shipped {{pretty_date this.actual}}, finished {{pretty_date this.finished}}, {{duration}} duration
-          </a>
-        </li>
-      {{/each}}
-    {{/if}}
+      {{#if count}}
+        {{#each history}}
+          <li>
+            <a href="/lanes/{{lane.name}}/ship/{{this.start}}" class="button tiny hollow {{shipment_active}} exit-code code-{{exit_code}}">
+              Shipped {{pretty_date this.actual}}, finished {{pretty_date this.finished}}, {{duration}} duration
+            </a>
+          </li>
+        {{/each}}
+      {{else}}
+        <li>None yet.</li>
+      {{/if}}
+    {{/unless}}
   </ul>
 </template>

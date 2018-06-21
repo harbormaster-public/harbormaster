@@ -3,34 +3,33 @@ import { Lanes } from '../../../../api/lanes';
 import { Session } from 'meteor/session';
 import { Harbors } from '../../../../api/harbors';
 import { Shipments } from '../../../../api/shipments';
+import { count, history } from '../lib/util';
 import { moment } from 'meteor/momentjs:moment';
 
-const options = { sort: { actual: -1 }, limit: $H.AMOUNT_SHOWN };
+const options = { sort: { actual: -1 }, limit: H.AMOUNT_SHOWN };
 
 Template.ship_lane.onCreated(function () {
   const name = FlowRouter.getParam('name');
   const lane = Lanes.findOne({ name: name });
 
-  Meteor.subscribe('Shipments', lane, options);
-  Meteor.subscribe('Shipments#check_state', lane);
+  this.subscribe('Shipments', lane, options);
+  this.subscribe('Shipments#check_state', lane);
 });
 
 Template.ship_lane.helpers({
-  no_history () {
-    return Shipments.find().fetch().length === 0;
+  count () {
+    return count(Lanes.findOne({ name: FlowRouter.getParam('name') }));
   },
 
-  lane (sort_order) {
+  lane () {
     let name = FlowRouter.getParam('name');
     let lane = Lanes.findOne({ name }) || false;
-    let has_shipments = Shipments.find({ lane: lane._id }).count;
 
-    if (sort_order == 'history' && has_shipments) {
-      return Shipments.find({ lane: lane._id }, options).fetch();
-    }
-    else if (sort_order) return [];
+    return lane;
+  },
 
-    return lane || false;
+  history () {
+    return history(Lanes.findOne({ name: FlowRouter.getParam('name') }));
   },
 
   working () {
@@ -49,7 +48,7 @@ Template.ship_lane.helpers({
   },
 
   shipping_log_amount_shown () {
-    return $H.AMOUNT_SHOWN;
+    return H.AMOUNT_SHOWN;
   },
 
   shipment_started () {

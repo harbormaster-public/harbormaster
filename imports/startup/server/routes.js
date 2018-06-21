@@ -46,7 +46,7 @@ post_hooks.route('/lanes/:name/ship', function (params, req, res) {
 
   let harbor = Harbors.findOne(lane.type);
   let manifest = harbor.lanes[lane._id].manifest;
-  let shipment_start_date = $H.start_date();
+  let shipment_start_date = H.start_date();
   let shipment = Shipments.findOne({
     start: shipment_start_date,
     lane: lane._id
