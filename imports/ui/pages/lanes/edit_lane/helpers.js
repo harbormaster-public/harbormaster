@@ -13,8 +13,6 @@ Template.edit_lane.onCreated(function () {
   const name = FlowRouter.getParam('name');
   const lane = Lanes.findOne({ name: name });
 
-  //if (! Session.get('lane')) Session.set('lane', lane);
-
   if (lane) this.subscribe('Shipments', lane, options);
 });
 
