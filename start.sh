@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 ip_address=$(awk 'END{print $1}' /etc/hosts)
 
