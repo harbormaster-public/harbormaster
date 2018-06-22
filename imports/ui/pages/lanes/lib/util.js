@@ -5,7 +5,7 @@ const count = (lane) => {
 };
 
 const history = (lane) => {
-  return Shipments.find({ lane: lane._id });
+  return Shipments.find({ lane: lane._id }, { sort: { actual: -1 } });
 };
 
 export { count, history };
