@@ -126,6 +126,9 @@ Meteor.methods({
     let finished = new Date();
     let next_shipment_start_date = H.start_date();
 
+    manifest.lane_id = lane._id;
+    manifest.lane_name = lane.name;
+
     Shipments.update(shipment_id, {
       $set: {
         finished: finished,
