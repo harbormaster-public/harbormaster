@@ -30,6 +30,12 @@
         </tr>
       {{/if}}
 
+      {{#if empty}}
+        <tr class="empty">
+          <td colspan=9>No lanes found.  <a href="/lanes/new/edit">Create the first.</a></td>
+        </tr>
+      {{/if}}
+
       {{#each lanes}}
         <tr>
           <td class="name-column">

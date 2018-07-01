@@ -26,10 +26,12 @@ Template.lanes.helpers({
     let total = Session.get('total_lanes');
     let current = Lanes.find().count();
 
-    if (! total || current < total) return true;
+    if (total !== 0 && ! total || current < total) return true;
 
     return false;
   },
+
+  empty () { return Session.get('total_lanes') === 0; },
 
   lanes () {
     let lanes;
