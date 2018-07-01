@@ -1,6 +1,6 @@
 import { Shipments } from '../../../../api/shipments';
 
-const count = (lane) => {
+const count = (lane = { _id: false }) => {
   return Shipments.find({ lane: lane._id }).count();
 };
 
