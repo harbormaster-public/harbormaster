@@ -15,9 +15,9 @@ FlowRouter.route('/', {
     document.title = 'H/';
     BlazeLayout.render('main', {
       header: 'nav',
-      main: 'root'
+      main: 'root',
     });
-  }
+  },
 });
 
 FlowRouter.route('/lanes', {
@@ -26,9 +26,9 @@ FlowRouter.route('/lanes', {
     document.title = 'H/lanes';
     BlazeLayout.render('main', {
       header: 'nav',
-      main: 'lanes'
+      main: 'lanes',
     });
-  }
+  },
 });
 
 FlowRouter.route('/lanes/:name/edit', {
@@ -37,9 +37,9 @@ FlowRouter.route('/lanes/:name/edit', {
     document.title = `H/lanes/${params.name}/edit`;
     BlazeLayout.render('main', {
       header: 'nav',
-      main: 'edit_lane'
+      main: 'edit_lane',
     });
-  }
+  },
 });
 
 FlowRouter.route('/lanes/:name/ship', {
@@ -48,9 +48,9 @@ FlowRouter.route('/lanes/:name/ship', {
     document.title = `H/lanes/${params.name}/ship`;
     BlazeLayout.render('main', {
       header: 'nav',
-      main: 'ship_lane'
+      main: 'ship_lane',
     });
-  }
+  },
 });
 
 FlowRouter.route('/lanes/:name/ship/:date', {
@@ -59,16 +59,21 @@ FlowRouter.route('/lanes/:name/ship/:date', {
     document.title = `H/lanes/${params.name}/ship/${params.date}`;
     BlazeLayout.render('main', {
       header: 'nav',
-      main: 'ship_lane'
+      main: 'ship_lane',
     });
-  }
+  },
+});
+
+FlowRouter.route('/lanes/:name', {
+  name: 'redirect_to_shipping',
+  action: (params) => FlowRouter.go(`/lanes/${params.name}/ship`),
 });
 
 FlowRouter.route('/lanes//ship', {
   name: 'redirect_to_lanes',
   action: function () {
     FlowRouter.go('/lanes');
-  }
+  },
 });
 
 FlowRouter.route('/lanes/:name/charter', {
@@ -77,9 +82,9 @@ FlowRouter.route('/lanes/:name/charter', {
     document.title = `H/lanes/${params.name}/charter`;
     BlazeLayout.render('main', {
       header: 'nav',
-      main: 'charter'
+      main: 'charter',
     });
-  }
+  },
 });
 
 FlowRouter.route('/users', {
@@ -88,9 +93,9 @@ FlowRouter.route('/users', {
     document.title = `H/users`;
     BlazeLayout.render('main', {
       header: 'nav',
-      main: 'users'
+      main: 'users',
     });
-  }
+  },
 });
 
 FlowRouter.route('/users/add-user', {
@@ -99,9 +104,9 @@ FlowRouter.route('/users/add-user', {
     document.title = `H/users/add-user`;
     BlazeLayout.render('main', {
       header: 'nav',
-      main: 'add_user'
+      main: 'add_user',
     });
-  }
+  },
 });
 
 FlowRouter.route('/profile', {
@@ -110,9 +115,9 @@ FlowRouter.route('/profile', {
     document.title = `H/profile`;
     BlazeLayout.render('main', {
       header: 'nav',
-      main: 'profile'
+      main: 'profile',
     });
-  }
+  },
 });
 
 FlowRouter.route('/profile/:user_id', {
@@ -121,8 +126,8 @@ FlowRouter.route('/profile/:user_id', {
     document.title = `H/profile/${params.user_id}`;
     BlazeLayout.render('main', {
       header: 'nav',
-      main: 'profile'
+      main: 'profile',
     });
-  }
+  },
 });
 

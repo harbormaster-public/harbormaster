@@ -1,6 +1,7 @@
 import { Lanes } from '../../api/lanes';
 import { Harbors } from '../../api/harbors';
 import { Shipments } from '../../api/shipments';
+import { get_lane } from '../../ui/pages/lanes/lib/util';
 
 import bodyParser from 'body-parser';
 import url from 'url';
@@ -12,21 +13,24 @@ let post_hooks = Picker.filter(function (req) {
   return req.method == 'POST';
 });
 
-function respondNotAllowed (res) {
+const respondNotAllowed = (res) => {
   console.log('Request not allowed.  Responding with 401.');
   res.statusCode = 401;
   return res.end();
-}
+};
 
-function setCorsHeaders (res) {
+const setCorsHeaders = (res) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader('Access-Control-Allow-Methods', 'GET,HEAD,OPTIONS,POST,PUT');
-  res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'Origin, X-Requested-With, Content-Type, Accept, Authorization'
+  );
 
   return res;
-}
+};
 
-WebApp.rawConnectHandlers.use(function(req, res, next) {
+WebApp.rawConnectHandlers.use(function (req, res, next) {
   setCorsHeaders(res);
 
   return next();
@@ -37,11 +41,10 @@ post_hooks.route('/lanes/:name/ship', function (params, req, res) {
   let results;
   let query = require('url').parse(req.url, true).query;
   let lane_name = decodeURI(params.name);
-  let auth = url.parse(req.url).auth;
   let user_id = query ? query.user_id : false;
   let token = query ? query.token : false;
 
-  let lane = Lanes.findOne({ name: lane_name });
+  let lane = get_lane(lane_name);
   if (! lane) return respondNotAllowed(res);
 
   let harbor = Harbors.findOne(lane.type);
@@ -49,7 +52,7 @@ post_hooks.route('/lanes/:name/ship', function (params, req, res) {
   let shipment_start_date = H.start_date();
   let shipment = Shipments.findOne({
     start: shipment_start_date,
-    lane: lane._id
+    lane: lane._id,
   });
   let prior_manifest = req.body;
 

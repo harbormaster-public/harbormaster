@@ -208,5 +208,16 @@ Meteor.methods({
       { multi: true }
     );
   },
+
+  'Lanes#update_slug': (lane) => {
+    Lanes.update(
+      { _id: lane._id },
+      { $set: {
+        slug: lane.slug,
+      }}
+    );
+
+    return true;
+  },
 });
 

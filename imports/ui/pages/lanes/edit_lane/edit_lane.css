@@ -59,3 +59,13 @@ fieldset.followup label {
 fieldset.salvage-plan {
   background: #ffae00;
 }
+
+.url {
+  margin: 15px 0;
+}
+
+@media all and (max-width: 1200px) {
+  .url {
+    margin: 35px 0;
+  }
+}
