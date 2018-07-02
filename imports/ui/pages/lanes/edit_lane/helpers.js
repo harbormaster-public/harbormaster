@@ -102,37 +102,31 @@ Template.edit_lane.helpers({
   no_followup () {
     let lane = get_lane(FlowRouter.getParam('name'));
 
-    if (
-      Lanes.find().fetch().length < 2 ||
-      (lane && lane.followup) ||
-      Session.get('choose_followup')
-    ) return true;
-
-    return false;
+    return Lanes.find().count() < 2 ||
+      lane.followup ||
+      Session.get('choose_followup') ||
+      false;
   },
 
   no_salvage () {
     let lane = get_lane(FlowRouter.getParam('name'));
 
-    if (
-      Lanes.find().fetch().length < 2 ||
-      (lane && lane.salvage_plan) ||
-      Session.get('choose_salvage_plan')
-    ) return true;
-
-    return false;
+    return Lanes.find().count() < 2 ||
+      lane.salvage_plan ||
+      Session.get('choose_salvage_plan') ||
+      false;
   },
 
   choose_followup () {
     let lane = get_lane(FlowRouter.getParam('name'));
 
-    return Session.get('choose_followup') || lane && lane.followup;
+    return Session.get('choose_followup') || lane.followup;
   },
 
   choose_salvage_plan () {
     let lane = get_lane(FlowRouter.getParam('name'));
 
-    return Session.get('choose_salvage_plan') || lane && lane.salvage_plan;
+    return Session.get('choose_salvage_plan') || lane.salvage_plan;
   },
 
   chosen_followup () {
@@ -154,19 +148,13 @@ Template.edit_lane.helpers({
   },
 
   can_ply () {
-    var lane = Session.get('lane') || {};
+    let lane = Session.get('lane') || {};
+    let user = this;
 
-    if (this.harbormaster) { return true; }
+    if (user.harbormaster) { return true; }
 
     if (lane.captains && lane.captains.length) {
-      let user = this._id;
-
-      return _.find(lane.captains, function (captain) {
-        return user == captain;
-      }) ?
-        true :
-        false
-      ;
+      return _.find(lane.captains, (captain) => user._id == captain);
     }
 
     return false;
