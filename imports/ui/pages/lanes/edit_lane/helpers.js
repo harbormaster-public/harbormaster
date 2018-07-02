@@ -61,8 +61,7 @@ Template.edit_lane.helpers({
   },
 
   followup_lane () {
-    let name = FlowRouter.getParam('name');
-    let lane = get_lane(name);
+    let lane = get_lane(FlowRouter.getParam('name'));
     let followup_lane = Lanes.findOne(lane.followup);
 
     if (followup_lane) return followup_lane.name;
@@ -75,8 +74,7 @@ Template.edit_lane.helpers({
   },
 
   lane () {
-    let name = FlowRouter.getParam('name');
-    let lane = get_lane(name);
+    let lane = get_lane(FlowRouter.getParam('name'));
 
     return lane;
   },
@@ -102,8 +100,7 @@ Template.edit_lane.helpers({
   },
 
   no_followup () {
-    let name = FlowRouter.getParam('name');
-    let lane = get_lane(name);
+    let lane = get_lane(FlowRouter.getParam('name'));
 
     if (
       Lanes.find().fetch().length < 2 ||
@@ -115,8 +112,7 @@ Template.edit_lane.helpers({
   },
 
   no_salvage () {
-    let name = FlowRouter.getParam('name');
-    let lane = get_lane(name);
+    let lane = get_lane(FlowRouter.getParam('name'));
 
     if (
       Lanes.find().fetch().length < 2 ||
@@ -130,17 +126,13 @@ Template.edit_lane.helpers({
   choose_followup () {
     let lane = get_lane(FlowRouter.getParam('name'));
 
-    if (! lane) return false;
-
-    return Session.get('choose_followup') || lane.followup;
+    return Session.get('choose_followup') || lane && lane.followup;
   },
 
   choose_salvage_plan () {
     let lane = get_lane(FlowRouter.getParam('name'));
 
-    if (! lane) return false;
-
-    return Session.get('choose_salvage_plan') || lane.salvage_plan;
+    return Session.get('choose_salvage_plan') || lane && lane.salvage_plan;
   },
 
   chosen_followup () {
