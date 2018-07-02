@@ -70,6 +70,10 @@ td.error {
     display: none;
   }
 
+  .captained-column {
+    padding: 0;
+  }
+
   .users-table td {
     font-size: 1.5625rem;
     position: relative;
@@ -89,12 +93,12 @@ td.error {
   }
 
   .users-table .admin .profile {
-    top: 64px;
+    top: 65px;
     left: 0;
   }
 
   .admin .expire-user {
-    top: 24px;
+    top: 25px;
     right: 0;
   }
 }

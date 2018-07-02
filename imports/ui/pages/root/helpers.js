@@ -21,7 +21,7 @@ Template.root.helpers({
   shipments_last_24_hours: function () {
     let total = Session.get('total_shipments') || 0;
 
-    if (! total) {
+    if (! total && total !== 0) {
       Meteor.call('Shipments#get_total', (err, res) => {
         if (err) throw err;
 
