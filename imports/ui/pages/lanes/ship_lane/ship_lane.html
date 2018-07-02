@@ -2,8 +2,8 @@
   {{#if lane}}
     <h1>Ship to lane: {{lane.name}}</h1>
     <h2>Let's review.  Ready to ship?</h2>
-    <a href="/lanes/{{lane.name}}/edit" class="button secondary hollow edit-lane">Edit this lane</a>
-    <a href="/lanes/{{lane.name}}/charter" class="button success hollow lane-charter">Lane Charter</a>
+    <a href="/lanes/{{lane.slug}}/edit" class="button secondary hollow edit-lane">Edit this lane</a>
+    <a href="/lanes/{{lane.slug}}/charter" class="button success hollow lane-charter">Lane Charter</a>
   {{else}}
     <h1>That lane doesn't exist.</h1>
   {{/if}}
@@ -59,7 +59,7 @@
       {{#if count}}
         {{#each history}}
           <li>
-            <a href="/lanes/{{lane.name}}/ship/{{this.start}}" class="button tiny hollow {{shipment_active}} exit-code code-{{exit_code}}">
+            <a href="/lanes/{{lane.slug}}/ship/{{this.start}}" class="button tiny hollow {{shipment_active}} exit-code code-{{exit_code}}">
               Shipped {{pretty_date this.actual}}, finished {{pretty_date this.finished}}, {{duration}} duration
             </a>
           </li>

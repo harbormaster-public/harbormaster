@@ -3,15 +3,14 @@ import { Lanes } from '../../../../api/lanes';
 import { Session } from 'meteor/session';
 import { Users } from '../../../../api/users';
 import { Harbors } from '../../../../api/harbors';
-import { Shipments } from '../../../../api/shipments';
-import { count, history } from '../lib/util';
+import { count, history, get_lane } from '../lib/util';
 import { moment } from 'meteor/momentjs:moment';
 
 const options = { sort: { actual: -1 }, limit: H.AMOUNT_SHOWN };
 
 Template.edit_lane.onCreated(function () {
   const name = FlowRouter.getParam('name');
-  const lane = Lanes.findOne({ name: name });
+  const lane = get_lane(name);
 
   if (lane) this.subscribe('Shipments', lane, options);
 });
@@ -19,7 +18,7 @@ Template.edit_lane.onCreated(function () {
 Template.edit_lane.helpers({
   lane_name () {
     var name = FlowRouter.getParam('name');
-    var lane = Lanes.findOne({ name: name }) ||
+    var lane = get_lane(name) ||
       Session.get('lane') ||
       {}
     ;
@@ -31,9 +30,38 @@ Template.edit_lane.helpers({
     return lane.name == 'New' ? '' : lane.name;
   },
 
+  slug () {
+    const lane = get_lane(FlowRouter.getParam('name'));
+    const a = 'àáäâãåèéëêìíïîòóöôùúüûñçßÿœæŕśńṕẃǵǹḿǘẍźḧ·/_,:;';
+    const b = 'aaaaaaeeeeiiiioooouuuuncsyoarsnpwgnmuxzh------';
+    const p = new RegExp(a.split('').join('|'), 'g');
+
+    if (lane) {
+      const slug = lane.name.toLowerCase()
+      // https://gist.github.com/matthagemann/382adfc57adbd5af078dc93feef01fe1
+        .replace(/\s+/g, '-') // Replace spaces with -
+        .replace(p, c => b.charAt(a.indexOf(c))) // Replace special characters
+        .replace(/&/g, '-and-') // Replace & with 'and'
+        .replace(/[^\w\-]+/g, '') // Remove all non-word characters
+        .replace(/\-\-+/g, '-') // Replace multiple - with single -
+        .replace(/^-+/, '') // Trim - from start of text
+        .replace(/-+$/, '') // Trim - from end of text
+      ;
+
+      lane.slug = slug;
+      H.call('Lanes#update_slug', lane, (err, res) => {
+        if (err) throw err;
+        console.log(`Lane slug ${lane.slug} updated: ${res}`);
+      });
+
+      return `${window.location.host}/lanes/${slug}/ship`;
+    }
+
+    return '';
+  },
+
   followup_lane () {
-    let name = FlowRouter.getParam('name');
-    let lane = Lanes.findOne({ name: name });
+    let lane = get_lane(FlowRouter.getParam('name'));
     let followup_lane = Lanes.findOne(lane.followup);
 
     if (followup_lane) return followup_lane.name;
@@ -46,18 +74,17 @@ Template.edit_lane.helpers({
   },
 
   lane () {
-    let name = FlowRouter.getParam('name');
-    let lane = Lanes.findOne({ name });
+    let lane = get_lane(FlowRouter.getParam('name'));
 
     return lane;
   },
 
   count () {
-    return count(Lanes.findOne({ name: FlowRouter.getParam('name') }));
+    return count(get_lane(FlowRouter.getParam('name')));
   },
 
   history () {
-    return history(Lanes.findOne({ name: FlowRouter.getParam('name') }));
+    return history(get_lane(FlowRouter.getParam('name')));
   },
 
   shipping_log_amount_shown () {
@@ -73,55 +100,43 @@ Template.edit_lane.helpers({
   },
 
   no_followup () {
-    let name = FlowRouter.getParam('name');
-    let lane = Lanes.findOne({ name: name });
+    let lane = get_lane(FlowRouter.getParam('name'));
 
-    if (
-      Lanes.find().fetch().length < 2 ||
-      (lane && lane.followup) ||
-      Session.get('choose_followup')
-    ) return true;
-
-    return false;
+    return Lanes.find().count() < 2 ||
+      lane.followup ||
+      Session.get('choose_followup') ||
+      false;
   },
 
   no_salvage () {
-    let name = FlowRouter.getParam('name');
-    let lane = Lanes.findOne({ name: name });
+    let lane = get_lane(FlowRouter.getParam('name'));
 
-    if (
-      Lanes.find().fetch().length < 2 ||
-      (lane && lane.salvage_plan) ||
-      Session.get('choose_salvage_plan')
-    ) return true;
-
-    return false;
+    return Lanes.find().count() < 2 ||
+      lane.salvage_plan ||
+      Session.get('choose_salvage_plan') ||
+      false;
   },
 
   choose_followup () {
-    let lane = Lanes.findOne({ name: FlowRouter.getParam('name') });
-
-    if (! lane) return false;
+    let lane = get_lane(FlowRouter.getParam('name'));
 
     return Session.get('choose_followup') || lane.followup;
   },
 
   choose_salvage_plan () {
-    let lane = Lanes.findOne({ name: FlowRouter.getParam('name') });
-
-    if (! lane) return false;
+    let lane = get_lane(FlowRouter.getParam('name'));
 
     return Session.get('choose_salvage_plan') || lane.salvage_plan;
   },
 
   chosen_followup () {
-    let lane = Lanes.findOne({ name: FlowRouter.getParam('name') });
+    let lane = get_lane(FlowRouter.getParam('name'));
 
     return this._id == lane.followup;
   },
 
   chosen_salvage_plan () {
-    let lane = Lanes.findOne({ name: FlowRouter.getParam('name') });
+    let lane = get_lane(FlowRouter.getParam('name'));
 
     return this._id == lane.salvage_plan;
   },
@@ -133,19 +148,13 @@ Template.edit_lane.helpers({
   },
 
   can_ply () {
-    var lane = Session.get('lane') || {};
+    let lane = Session.get('lane') || {};
+    let user = this;
 
-    if (this.harbormaster) { return true; }
+    if (user.harbormaster) { return true; }
 
     if (lane.captains && lane.captains.length) {
-      let user = this._id;
-
-      return _.find(lane.captains, function (captain) {
-        return user == captain;
-      }) ?
-        true :
-        false
-      ;
+      return _.find(lane.captains, (captain) => user._id == captain);
     }
 
     return false;
@@ -198,21 +207,21 @@ Template.edit_lane.helpers({
 
   current_lane () {
     let name = FlowRouter.getParam('name');
-    let lane = Session.get('lane') || Lanes.findOne({ name: name });
+    let lane = Session.get('lane') || get_lane(name);
 
     return lane;
   },
 
   lane_type () {
     let name = FlowRouter.getParam('name');
-    let lane = Session.get('lane') || Lanes.findOne({ name: name });
+    let lane = Session.get('lane') || get_lane(name);
 
     return lane.type;
   },
 
   render_harbor () {
     let name = FlowRouter.getParam('name');
-    let lane = Session.get('lane') || Lanes.findOne({ name: name });
+    let lane = Session.get('lane') || get_lane(name);
 
     let harbor = Harbors.findOne(lane.type) || {};
     let harbor_lane_reference = harbor.lanes ? harbor.lanes[lane._id] : false;

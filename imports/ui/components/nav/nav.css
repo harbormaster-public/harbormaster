@@ -6,3 +6,8 @@
 a:hover, .nav-item:hover {
   color: #ffae00;
 }
+
+a:active, .nav-item:active, .button.hollow:active, .admin .button:active { 
+  border-color: #aa7a00;
+  color: #aa7a00
+}

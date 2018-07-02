@@ -3,14 +3,14 @@ import { Lanes } from '../../../../api/lanes';
 import { Session } from 'meteor/session';
 import { Harbors } from '../../../../api/harbors';
 import { Shipments } from '../../../../api/shipments';
-import { count, history } from '../lib/util';
+import { count, history, get_lane } from '../lib/util';
 import { moment } from 'meteor/momentjs:moment';
 
 const options = { sort: { actual: -1 }, limit: H.AMOUNT_SHOWN };
 
 Template.ship_lane.onCreated(function () {
   const name = FlowRouter.getParam('name');
-  const lane = Lanes.findOne({ name: name });
+  const lane = get_lane(name);
 
   this.subscribe('Shipments', lane, options);
   this.subscribe('Shipments#check_state', lane);
@@ -18,23 +18,23 @@ Template.ship_lane.onCreated(function () {
 
 Template.ship_lane.helpers({
   count () {
-    return count(Lanes.findOne({ name: FlowRouter.getParam('name') }));
+    return count(get_lane(FlowRouter.getParam('name')));
   },
 
   lane () {
     let name = FlowRouter.getParam('name');
-    let lane = Lanes.findOne({ name }) || false;
+    let lane = get_lane(name) || false;
 
     return lane;
   },
 
   history () {
-    return history(Lanes.findOne({ name: FlowRouter.getParam('name') }));
+    return history(get_lane(FlowRouter.getParam('name')));
   },
 
   working () {
     let name = FlowRouter.getParam('name');
-    let lane = Lanes.findOne({ name: name });
+    let lane = get_lane(name);
     return Session.get('working_lanes') && lane ?
       Session.get('working_lanes')[lane._id] :
       false
@@ -72,16 +72,17 @@ Template.ship_lane.helpers({
         results.push({
           result: result.stdout,
           address: result.address,
-          command: result.command
+          command: result.command,
         });
       });
-    } else if (date && (stderr && stderr.length)) {
+    }
+    else if (date && (stderr && stderr.length)) {
       _.each(stderr, function (result) {
         results.push({
           result: result.stderr,
           address: result.address,
-          command: result.command
-        })
+          command: result.command,
+        });
       });
     }
 
@@ -111,7 +112,7 @@ Template.ship_lane.helpers({
   exit_code () {
     let name = FlowRouter.getParam('name');
     let date = this.start || FlowRouter.getParam('date');
-    let lane = Lanes.findOne({ name: name });
+    let lane = get_lane(name);
     let shipment = lane ?
       Shipments.findOne({ start: date, lane: lane._id }) :
       false
@@ -125,7 +126,7 @@ Template.ship_lane.helpers({
 
   active () {
     let name = FlowRouter.getParam('name');
-    let lane = Lanes.findOne({ name: name }) || false;
+    let lane = get_lane(name) || false;
     let date = FlowRouter.getParam('date');
     let shipment = Shipments.findOne({ start: date, lane: lane._id });
 
@@ -136,7 +137,7 @@ Template.ship_lane.helpers({
 
   any_active () {
     let name = FlowRouter.getParam('name');
-    let lane = Lanes.findOne({ name: name }) || false;
+    let lane = get_lane(name) || false;
     let shipments = Shipments.find({ lane: lane._id, active: true });
 
     if (shipments.count()) return true;
@@ -145,7 +146,7 @@ Template.ship_lane.helpers({
 
   work_preview () {
     let name = FlowRouter.getParam('name');
-    let lane = Lanes.findOne({ name: name });
+    let lane = get_lane(name);
 
     if (lane) {
       let harbor = Harbors.findOne(lane.type);
@@ -174,7 +175,7 @@ Template.ship_lane.helpers({
 
   has_work_output () {
     let name = FlowRouter.getParam('name');
-    let lane = Lanes.findOne({ name: name });
+    let lane = get_lane(name);
     let date = FlowRouter.getParam('date');
     let shipment;
 
@@ -191,7 +192,7 @@ Template.ship_lane.helpers({
 
   work_output () {
     let name = FlowRouter.getParam('name');
-    let lane = Lanes.findOne({ name: name });
+    let lane = get_lane(name);
     let date = FlowRouter.getParam('date');
     let shipment;
 
@@ -224,6 +225,6 @@ Template.ship_lane.helpers({
     if (this.active) return 'warning';
 
     return '';
-  }
+  },
 
 });

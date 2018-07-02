@@ -112,22 +112,31 @@ td.error {
   }
 
   .lanes-table .admin:after {
-    content: '...';
+    content: '⚙';
     position: absolute;
-    left: 40px;
-    color: grey;
-    font-size: 3rem;
-    top: -130px;
-    bottom: initial;
+    left: 0;
+    font-size: 1rem;
+    color: #ffae00;
+    top: -93px;
+    line-height: 1;
+    height: 93px;
+    width: 100%;
+    cursor: pointer;
+  }
+
+  .lanes-table .admin:hover:after {
+    color: #aa7a00;
   }
 
   .lanes-table .admin.collapsed:after {
-    bottom: -60px;
-    top: initial;
-    width: 100px;
-    height: 100px;
-    line-height: 50px;
-    text-align: center;
+    color: #2199e8;
+    height: 130px;
+    line-height: 220px;
+    text-align: left;
+  }
+
+  .lanes-table .admin.collapsed:hover:after {
+    color: #1766c3;
   }
 
   .lanes-table .admin.collapsed .button {
