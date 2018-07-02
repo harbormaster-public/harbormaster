@@ -1,13 +1,13 @@
 import { Template } from 'meteor/templating';
-import { Lanes } from '../../../../api/lanes';
 import { Harbors } from '../../../../api/harbors';
 import { Shipments } from '../../../../api/shipments';
+import { get_lane } from '../lib/util';
 
 Template.ship_lane.events({
   'click .start-shipment': function () {
     let working_lanes = Session.get('working_lanes') || {};
     let name = FlowRouter.getParam('name');
-    let lane = Lanes.findOne({ name: name });
+    let lane = get_lane(name);
     let harbor = Harbors.findOne(lane.type);
     let manifest = harbor.lanes[lane._id].manifest;
     let shipment_start_date = H.start_date();
@@ -32,7 +32,7 @@ Template.ship_lane.events({
           working_lanes[lane._id] = false;
           Session.set('working_lanes', working_lanes);
           console.log('Shipment started for lane:', lane.name);
-          FlowRouter.go('/lanes/' + name + '/ship/' + shipment_start_date);
+          FlowRouter.go('/lanes/' + lane.slug + '/ship/' + shipment_start_date);
 
           return res;
         }

@@ -5,9 +5,12 @@
       <label>Lane Name
         <input type=text required class="lane-name" value={{lane_name}}>
       </label>
+      <label class="url">Slug
+        <input type=text disabled value="{{slug}}">
+      </label>
       <button class="button hollow secondary back-to-lanes">Back to Lanes</button>
       {{#unless validate_done}}
-        <a href=/lanes/{{lane_name}}/ship class="button success ship-lane hollow">Ship to this Lane</a>
+        <a href=/lanes/{{lane.slug}}/ship class="button success ship-lane hollow">Ship to this Lane</a>
       {{else}}
         <button disabled class="button hollow alert lane-done">Not Ready</button>
       {{/unless}}
@@ -96,7 +99,7 @@
       {{#if count}}
         {{#each history}}
           <li>
-            <a href="/lanes/{{lane.name}}/ship/{{this.start}}" class="button tiny hollow {{shipment_active}} exit-code code-{{exit_code}}">
+            <a href="/lanes/{{lane.slug}}/ship/{{this.start}}" class="button tiny hollow {{shipment_active}} exit-code code-{{exit_code}}">
               Shipped on {{pretty_date this.actual}}, finished on {{pretty_date this.finished}}, {{duration}} duration
             </a>
           </li>
