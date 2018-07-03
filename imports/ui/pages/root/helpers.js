@@ -1,7 +1,20 @@
 import { Template } from 'meteor/templating';
+import { ReactiveVar } from 'meteor/reactive-var';
 import { Lanes } from '../../../api/lanes';
 import { Users } from '../../../api/users';
 import { Shipments } from '../../../api/shipments';
+
+let total_shipments = new ReactiveVar('Loading');
+
+Template.root.onCreated(function () {
+  this.autorun(() => {
+    Meteor.call('Shipments#get_total', (err, res) => {
+      if (err) throw err;
+
+      total_shipments.set(res);
+    });
+  });
+});
 
 Template.root.helpers({
   latest_shipment: function () {
@@ -19,19 +32,7 @@ Template.root.helpers({
   },
 
   shipments_last_24_hours: function () {
-    let total = Session.get('total_shipments') || 0;
-
-    if (! total && total !== 0) {
-      Meteor.call('Shipments#get_total', (err, res) => {
-        if (err) throw err;
-
-        Session.set('total_shipments', res);
-      });
-
-      return 'Loading';
-    }
-
-    return total;
+    return total_shipments.get();
   },
 
   total_lanes: function () {

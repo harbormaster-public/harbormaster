@@ -187,7 +187,7 @@ Meteor.methods({
   },
 
   'Lanes#reset_shipment': function (name, date) {
-    let lane = Lanes.findOne({ name });
+    let lane = Lanes.findOne({ $or: [{ name }, { slug: name }] });
     let shipment = Shipments.findOne({ start: date, lane: lane._id });
 
     return Shipments.update(shipment._id, { $set: {

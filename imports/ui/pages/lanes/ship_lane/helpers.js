@@ -1,25 +1,31 @@
 import { Template } from 'meteor/templating';
-import { Lanes } from '../../../../api/lanes';
 import { Session } from 'meteor/session';
+import { ReactiveVar } from 'meteor/reactive-var';
+import { Lanes } from '../../../../api/lanes';
 import { Harbors } from '../../../../api/harbors';
 import { Shipments } from '../../../../api/shipments';
 import { count, history, get_lane } from '../lib/util';
 import { moment } from 'meteor/momentjs:moment';
 
 const options = { sort: { actual: -1 }, limit: H.AMOUNT_SHOWN };
+const shipment_count = new ReactiveVar();
 
 Template.ship_lane.onCreated(function () {
-  const name = FlowRouter.getParam('name');
-  const lane = get_lane(name);
+  this.autorun(() => {
+    const name = FlowRouter.getParam('name');
+    const lane = get_lane(name);
 
-  this.subscribe('Shipments', lane, options);
-  this.subscribe('Shipments#check_state', lane);
+    if (lane) {
+      this.subscribe('Shipments', lane, options);
+      this.subscribe('Shipments#check_state', lane);
+
+      shipment_count.set(count(get_lane(FlowRouter.getParam('name'))));
+    }
+  });
 });
 
 Template.ship_lane.helpers({
-  count () {
-    return count(get_lane(FlowRouter.getParam('name')));
-  },
+  count () { return shipment_count.get(); },
 
   lane () {
     let name = FlowRouter.getParam('name');

@@ -10,7 +10,7 @@ const history = (lane) => {
 };
 
 const get_lane = (string) => {
-  return Lanes.findOne({ $or: [{ name: string }, { slug: string }] }) || false;
+  return Lanes.findOne({ $or: [{ name: string }, { slug: string }] });
 };
 
 export { count, history, get_lane };

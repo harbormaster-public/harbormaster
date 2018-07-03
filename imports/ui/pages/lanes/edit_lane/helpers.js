@@ -9,10 +9,12 @@ import { moment } from 'meteor/momentjs:moment';
 const options = { sort: { actual: -1 }, limit: H.AMOUNT_SHOWN };
 
 Template.edit_lane.onCreated(function () {
-  const name = FlowRouter.getParam('name');
-  const lane = get_lane(name);
+  this.autorun(() => {
+    const name = FlowRouter.getParam('name');
+    const lane = get_lane(name);
 
-  if (lane) this.subscribe('Shipments', lane, options);
+    if (lane) this.subscribe('Shipments', lane, options);
+  })
 });
 
 Template.edit_lane.helpers({
