@@ -1,4 +1,5 @@
 import { Shipments } from '..';
+import { Lanes } from '../../lanes';
 
 Shipments.rawCollection().createIndex(
   { _id: 1, active: 1 }, { background: true }
@@ -74,14 +75,14 @@ Meteor.methods({
     }).count();
   },
 
-  'Shipments#get_latest_date': function (shipment) {
+  'Shipments#get_latest_date': function () {
     this.unblock();
-    if (Shipments.findOne(shipment)) return Shipments.findOne(shipment);
 
     let latest_shipment = Shipments.findOne({}, { sort: { finished: -1 } });
     if (latest_shipment) {
+      let lane = Lanes.findOne(latest_shipment.lane);
       return {
-        lane: latest_shipment.lane,
+        lane: lane.slug || lane.name,
         date: latest_shipment.start,
         locale: latest_shipment.finished.toLocaleString(),
       };
