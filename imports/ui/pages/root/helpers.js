@@ -2,7 +2,6 @@ import { Template } from 'meteor/templating';
 import { ReactiveVar } from 'meteor/reactive-var';
 import { Lanes } from '../../../api/lanes';
 import { Users } from '../../../api/users';
-import { Shipments } from '../../../api/shipments';
 
 let total_shipments = new ReactiveVar('Loading');
 
@@ -23,6 +22,7 @@ Template.root.helpers({
     Meteor.call('Shipments#get_latest_date', function (err, res) {
       if (err) throw err;
 
+      res.locale = new Date(res.locale).toLocaleString();
       Session.set('latest_shipment', res);
     });
 
