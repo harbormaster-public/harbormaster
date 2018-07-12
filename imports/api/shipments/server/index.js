@@ -30,23 +30,13 @@ Meteor.publish('Shipments', function (lane, options) {
   return shipments;
 });
 
-Meteor.publish('Shipments#check_state', (lane, options) => {
-  options = options || {};
-  let query = { active: true };
-
-  if (lane) query.lane = lane._id;
-
-  let active_shipments = Shipments.find(query, options);
-
-  return active_shipments;
-});
-
 Meteor.methods({
   'Shipments#get_total': function () {
+    this.unblock();
     let now = Date.now();
     let interval = 86400000; // 24 hours
-    var yesterday = new Date(now - interval);
-    var total_shipments = Shipments.find({
+    let yesterday = new Date(now - interval);
+    let total_shipments = Shipments.find({
       actual: {
         $gte: yesterday,
       },
@@ -55,7 +45,37 @@ Meteor.methods({
     return total_shipments;
   },
 
+  'Shipments#total_shipments': function (lane = { _id: null }) {
+    this.unblock();
+    return Shipments.find({ lane: lane._id }).count();
+  },
+
+  'Shipments#last_shipped': function (lane = { _id: null }) {
+    this.unblock();
+    return Shipments.findOne({ lane: lane._id }, {
+      sort: { actual: -1 },
+      limit: 1,
+    });
+  },
+
+  'Shipments#total_completed_shipments': function (lane = { _id: null }) {
+    this.unblock();
+    return Shipments.find({
+      lane: lane._id,
+      exit_code: 0,
+    }).count();
+  },
+
+  'Shipments#total_salvage_runs': function (lane = { _id: null }) {
+    this.unblock();
+    return Shipments.find({
+      lane: lane._id,
+      exit_code: { $ne: 0 },
+    }).count();
+  },
+
   'Shipments#get_latest_date': function (shipment) {
+    this.unblock();
     if (Shipments.findOne(shipment)) return Shipments.findOne(shipment);
 
     let latest_shipment = Shipments.findOne({}, { sort: { finished: -1 } });

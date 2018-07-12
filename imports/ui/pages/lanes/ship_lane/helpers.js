@@ -17,7 +17,6 @@ Template.ship_lane.onCreated(function () {
 
     if (lane) {
       this.subscribe('Shipments', lane, options);
-      this.subscribe('Shipments#check_state', lane);
 
       shipment_count.set(count(get_lane(FlowRouter.getParam('name'))));
     }
