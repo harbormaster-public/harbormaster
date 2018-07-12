@@ -14,7 +14,7 @@ Template.edit_lane.onCreated(function () {
     const lane = get_lane(name);
 
     if (lane) this.subscribe('Shipments', lane, options);
-  })
+  });
 });
 
 Template.edit_lane.helpers({
@@ -122,13 +122,13 @@ Template.edit_lane.helpers({
   choose_followup () {
     let lane = get_lane(FlowRouter.getParam('name'));
 
-    return Session.get('choose_followup') || lane.followup;
+    return Session.get('choose_followup') || lane && lane.followup;
   },
 
   choose_salvage_plan () {
     let lane = get_lane(FlowRouter.getParam('name'));
 
-    return Session.get('choose_salvage_plan') || lane.salvage_plan;
+    return Session.get('choose_salvage_plan') || lane && lane.salvage_plan;
   },
 
   chosen_followup () {

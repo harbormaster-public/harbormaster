@@ -8,7 +8,7 @@
         <th class="captains-column captains-header {{active 'captains'}}" data-value=captains>Captains</th>
         <th class="type-header type-column {{active 'type'}}" data-value=type>Type</th>
         <th class="last-shipped-header last-shipped-column {{active 'shipped'}}" data-value=shipped>Last Shipped</th>
-        <th class="total-shipments-column total-shipments-header {{active 'shipments'}}" data-value=shipments>Total Shipments</th>
+        <th class="total-shipments-column total-shipments-header {{active 'shipments'}}" data-value=shipments>Total Completed Shipments</th>
         <th class="salvage-runs-column total-salvage-runs-header {{active 'salvage-runs'}}" data-value=salvage-runs>Total Salvage Runs</th>
         <th class="current-state-header current-state-column" disabled>Current State</th>
         <th class="followup-header followup-column" disabled>Followup</th>
@@ -51,7 +51,7 @@
           </td>
           <td class="captains-column">{{total_captains}}</td>
           <td class="type-column">{{type}}</td>
-          <td class="last-shipped-column" width=125><a href="/lanes/{{this.name}}/ship/{{latest_shipment}}">{{last_shipped}}</a></td>
+          <td class="last-shipped-column" width=125><a href="/lanes/{{this.slug}}/ship/{{latest_shipment}}">{{last_shipped}}</a></td>
           <td class="total-shipments-column">{{total_shipments}}</td>
           <td class="salvage-runs-column">{{total_salvage_runs}}</td>
           <td class="current-state-column {{current_state}}">{{current_state}}</td>
