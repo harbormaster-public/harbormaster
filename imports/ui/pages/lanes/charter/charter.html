@@ -1,7 +1,7 @@
 <template name="charter">
   <h1>Lane Charter</h1>
   <figure class="charter">
-    <figcaption>Starting with lane: {{lane.name}}</figcaption>
+    <figcaption>Starting with lane: <a href="/lanes/{{lane.slug}}/ship">{{lane.name}}</a></figcaption>
     <div id="graph"></div>
     {{build_graph}}
   </figure>
