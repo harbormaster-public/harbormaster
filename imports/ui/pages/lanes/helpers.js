@@ -3,6 +3,8 @@ import { Lanes } from '../../../api/lanes';
 import { Users } from '../../../api/users';
 import { Shipments } from '../../../api/shipments';
 
+const Counts = new Mongo.Collection('counts');
+
 Template.lanes.onCreated(function () {
   let options = {
     sort: { actual: -1 },
@@ -19,7 +21,9 @@ Template.lanes.onCreated(function () {
   this.autorun(() => {
     Lanes.find().forEach((lane) => {
       Meteor.subscribe('Shipments', lane, options);
-      //Meteor.subscribe('Shipments#check_state', lane);
+      Meteor.subscribe('ShipmentCount', lane);
+      let shipments = Counts.findOne(lane._id);
+      console.log(`${lane.name}: ${shipments && shipments.count}`);
     });
   });
 });

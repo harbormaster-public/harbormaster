@@ -31,6 +31,28 @@ Meteor.publish('Shipments', function (lane, options) {
   return shipments;
 });
 
+Meteor.publish('ShipmentCount', function (lane) {
+  let count = 0;
+  let initializing = true;
+
+  const handle = Shipments.find({ lane: lane._id }).observeChanges({
+    added: () => {
+      count += 1;
+      if (! initializing) this.changed('counts', lane._id, { count });
+    },
+
+    removed: () => {
+      count -= 1;
+      this.changed('counts', lane._id, { count });
+    },
+  });
+
+  initializing = false;
+  this.added('counts', lane._id, { count });
+  this.ready();
+  this.onStop(() => handle.stop());
+});
+
 Meteor.methods({
   'Shipments#get_total': function () {
     this.unblock();
