@@ -27,9 +27,11 @@ Template.charter.onCreated(function () {
   };
 
   this.autorun(() => {
-    Meteor.subscribe('Lanes');
-    Lanes.find().forEach((lane) => {
-      Meteor.subscribe('Shipments', lane, options);
+    let list = node_list.get();
+
+    list.forEach((node) => {
+      H.subscribe('Lanes', node.data.lane);
+      H.subscribe('Shipments', node.data.lane, options);
     });
   });
 });
@@ -68,8 +70,8 @@ Template.charter.onRendered(function () {
   cy.on('mouseover', 'node', () => document.body.style.cursor = 'pointer');
   cy.on('tap', 'node', (e) => {
     let data = e.target.data();
-    let start = data.shipment ? data.shipment.start : '';
-    let url = `/lanes/${data.lane.slug}/ship/${start}`;
+    let start = data.shipment ? `/ship/${data.shipment.start}` : '/charter';
+    let url = `/lanes/${data.lane.slug}${start}`;
     document.body.style.cursor = '';
     FlowRouter.go(url);
   });
@@ -102,10 +104,11 @@ Template.charter.helpers({
     let list = [];
     if (! lane) return false;
 
-    let assign_children = (target) => {
+    let assign_children = (target, parent) => {
       let followup = Lanes.findOne(target.followup);
       let plan = Lanes.findOne(target.salvage_plan);
-      if (followup && ! target.recursive) {
+
+      if (followup && ! target.recursive && followup._id != parent) {
         let last_shipment = Shipments.findOne({ lane: followup._id });
         let color = FOLLOWUP_COLOR;
 
@@ -138,7 +141,7 @@ Template.charter.helpers({
         });
       }
 
-      if (plan && ! target.recursive) {
+      if (plan && ! target.recursive && plan._id != parent) {
         let last_shipment = Shipments.findOne({ lane: followup._id });
         let color = SALVAGE_COLOR;
 
@@ -173,7 +176,7 @@ Template.charter.helpers({
 
       target.children.forEach((child) => {
         child.children = [];
-        if (! child.recursive) assign_children(child);
+        if (! child.recursive) assign_children(child, target._id);
       });
 
       return target;
@@ -182,10 +185,11 @@ Template.charter.helpers({
     lane.children = [];
     lane.role = ROOT;
     let last_shipment = Shipments.findOne({ lane: lane._id });
-    let color;
-    if (! last_shipment) color = ROOT_COLOR;
-    else if (last_shipment.exit_code) color = FAIL_COLOR;
-    else if (last_shipment.exit_code == 0) color = SUCCESS_COLOR;
+    let color = ROOT_COLOR;
+    if (last_shipment && last_shipment.exit_code) color = FAIL_COLOR;
+    else if (
+      last_shipment && last_shipment.exit_code == 0
+    ) color = SUCCESS_COLOR;
 
     list.push({
       group: 'nodes',

@@ -1,6 +1,6 @@
 <template name="ship_lane">
   {{#if lane}}
-    <h1>Ship to lane: {{lane.name}}</h1>
+    <h1><em>Ship to lane:</em><br><strong>{{lane.name}}</strong></h1>
     <h2>Let's review.  Ready to ship?</h2>
     <a href="/lanes/{{lane.slug}}/edit" class="button secondary hollow edit-lane">Edit this lane</a>
     <a href="/lanes/{{lane.slug}}/charter" class="button success hollow lane-charter">Lane Charter</a>

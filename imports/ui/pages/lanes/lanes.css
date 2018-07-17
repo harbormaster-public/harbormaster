@@ -1,3 +1,6 @@
+table tbody tr:nth-child(even) {
+  background-color: #dfdfdf;
+}
 
 .last-shipped-header {
   width: 210px;
@@ -107,7 +110,9 @@ td.error {
   .lanes-table .admin {
     position: absolute;
     left: 0;
+    top: 0;
     width: 100%;
+    height: 100%;
     bottom: 37px;
   }
 
@@ -115,13 +120,14 @@ td.error {
     content: '⚙';
     position: absolute;
     left: 0;
+    top: 0;
     font-size: 1rem;
     color: #ffae00;
-    top: -93px;
     line-height: 1;
-    height: 93px;
+    height: 50px;
     width: 100%;
     cursor: pointer;
+    padding: 10px;
   }
 
   .lanes-table .admin:hover:after {
@@ -130,9 +136,10 @@ td.error {
 
   .lanes-table .admin.collapsed:after {
     color: #2199e8;
-    height: 130px;
-    line-height: 220px;
     text-align: left;
+    bottom: 0;
+    top: initial;
+    content: '☰';
   }
 
   .lanes-table .admin.collapsed:hover:after {
@@ -147,7 +154,8 @@ td.error {
     margin: 0;
     width: 25%;
     font-size: 1rem;
-    padding: 0 20px;
+    padding: 20px 0;
+    bottom: 0;
   }
 
   .admin .charter {

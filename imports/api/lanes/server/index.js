@@ -14,8 +14,8 @@ const trim_manifest = (manifest) => {
   return trimmed;
 };
 
-Meteor.publish('Lanes', function () {
-  return Lanes.find();
+Meteor.publish('Lanes', function (lane = {}) {
+  return Lanes.find(lane);
 });
 
 Meteor.methods({
