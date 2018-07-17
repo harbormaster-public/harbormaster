@@ -1,8 +1,13 @@
 import { Template } from 'meteor/templating';
+import { ReactiveVar } from 'meteor/reactive-var';
 import { Lanes } from '../../../../api/lanes';
 import { Shipments } from '../../../../api/shipments';
+import { get_lane } from '../lib/util';
 
-import * as d3 from 'd3';
+import cytoscape from 'cytoscape';
+import dagre from 'cytoscape-dagre';
+
+cytoscape.use(dagre);
 
 const ROOT = 'ROOT';
 const FOLLOWUP = 'FOLLOWUP';
@@ -10,6 +15,10 @@ const SALVAGE = 'SALVAGE';
 const TOP_PADDING = 185;
 const FOLLOWUP_COLOR = '#0af';
 const SALVAGE_COLOR = '#fa0';
+const ROOT_COLOR = '#f0a';
+const SUCCESS_COLOR = '#3adb76';
+const FAIL_COLOR = 'red';
+const node_list = new ReactiveVar([]);
 
 Template.charter.onCreated(function () {
   let options = {
@@ -17,198 +26,149 @@ Template.charter.onCreated(function () {
     limit: 1,
   };
 
-  Lanes.find().forEach((lane) => {
-    Meteor.subscribe('Shipments', lane, options);
+  this.autorun(() => {
+    Meteor.subscribe('Lanes');
+    Lanes.find().forEach((lane) => {
+      Meteor.subscribe('Shipments', lane, options);
+    });
   });
 });
 
 Template.charter.onRendered(function () {
-  this.autorun(() => {
-    let shipments = Shipments.find().fetch(); // Triggers autorun
-
-    d3.selectAll('circle')
-      .attr('fill', (d) => {
-        let latest_shipment = Shipments.findOne({ lane: d.data._id });
-        let fill_color;
-
-        if (
-          ! latest_shipment ||
-          (! latest_shipment.exit_code && latest_shipment.exit_code != 0)
-        ) {
-          fill_color = 'transparent';
-          return fill_color;
-        }
-
-        if (latest_shipment.exit_code == 0) {
-          fill_color = 'rgba(0, 255, 0, 0.25)';
-        }
-
-        if (latest_shipment.exit_code > 0) {
-          fill_color = 'rgba(255, 0, 0, 0.25)';
-        }
-
-        return fill_color;
-      })
-    ;
-    d3.selectAll('.charter-link')
-      .attr('xlink:href', (d) => {
-        let latest_shipment = Shipments.findOne({ lane: d.data._id });
-        let start = latest_shipment && latest_shipment.start ?
-          latest_shipment.start :
-          ''
-        ;
-        let url = `/lanes/${d.data.name}/ship/${start}`;
-        return url;
-      })
-    ;
-  });
 
   let draw_height = $('body').height();
   $('#graph').height(draw_height - TOP_PADDING);
 
-  let lane = Session.get('charter_tree') || {};
+  let cy = cytoscape({
+    container: $('#graph'),
+    style: [
+      {
+        selector: 'node',
+        style: {
+          'content': 'data(name)',
+          'background-color': 'data(color)',
+          'border-width': '3px',
+          'border-color': 'data(border)',
+        },
+      },
+      {
+        selector: 'edge',
+        style: {
+          'mid-target-arrow-color': 'data(color)',
+          'mid-target-arrow-shape': 'triangle',
+          'mid-target-arrow-fill': 'filled',
+          'arrow-scale': 2,
+        },
+      },
+    ],
+  });
 
-  let width = $('#graph').outerWidth();
-  let height = $('#graph').outerHeight();
+  $('#graph').on('mouseout', () => document.body.style.cursor = '');
+  cy.on('mouseout', 'node', () => document.body.style.cursor = '');
+  cy.on('mouseover', 'node', () => document.body.style.cursor = 'pointer');
+  cy.on('tap', 'node', (e) => {
+    let data = e.target.data();
+    let start = data.shipment ? data.shipment.start : '';
+    let url = `/lanes/${data.lane.slug}/ship/${start}`;
+    document.body.style.cursor = '';
+    FlowRouter.go(url);
+  });
 
-  let treemap = d3.tree().size([width, height]);
-  let nodes = treemap(d3.hierarchy(lane));
-
-  let svg = d3.select('#graph').append('svg')
-    .attr('width', width)
-    .attr('height', height);
-  let g = svg.append('g')
-    .attr('transform', 'translate(0, 50)');
-  let link = g.selectAll('.link')
-    .data(nodes.descendants().slice(1))
-    .enter().append('path')
-    .attr('d', (d) => {
-      return "M" + d.x + "," + d.y / 4
-        + "C" + d.x + "," + (d.y + d.parent.y) / 8
-        + " " + d.parent.x + "," + (d.y + d.parent.y) / 8
-        + " " + d.parent.x + "," + d.parent.y / 4;
-    })
-    .attr('fill', 'none')
-    .attr('stroke', (d) => {
-      let stroke_color;
-      switch (d.data.role) {
-        case 'FOLLOWUP':
-          stroke_color = FOLLOWUP_COLOR;
-          break;
-        case 'SALVAGE':
-          stroke_color = SALVAGE_COLOR;
-          break;
-        default:
-          stroke_color = '#f09';
-          break;
-      }
-
-      return stroke_color;
-    })
-  ;
-  let node = g.selectAll('.node')
-    .data(nodes.descendants())
-    .enter().append('g')
-    .attr("class", (d) => {
-      return "node" + (d.children ? " node-internal" : " node-leaf");
-    })
-    .attr("transform", (d) => {
-      return "translate(" + d.x + "," + d.y / 4 + ")";
-    })
-    .append('a')
-    .attr('class', 'charter-link')
-  ;
-
-  node.append('circle')
-    .attr('r', 15)
-    .attr('stroke', (d) => {
-      let stroke_color;
-      switch (d.data.role) {
-        case 'FOLLOWUP':
-          stroke_color = FOLLOWUP_COLOR;
-          break;
-        case 'SALVAGE':
-          stroke_color = SALVAGE_COLOR;
-          break;
-        default:
-          stroke_color = '#f09';
-          break;
-      }
-
-      return stroke_color;
-    })
-    .attr('fill', (d) => {
-      let latest_shipment = Shipments.findOne(
-        { lane: d.data._id },
-        { $sort: { finished: -1 }, limit: 1 }
-      );
-      let fill_color;
-
-      if (! latest_shipment) return fill_color = 'transparent';
-
-      if (latest_shipment.exit_code == 0) {
-        fill_color = 'rgba(0, 255, 0, 0.25)';
-      }
-
-      if (latest_shipment.exit_code > 0) {
-        fill_color = 'rgba(255, 0, 0, 0.25)';
-      }
-
-      return fill_color;
-    })
-  ;
-  node.append('text')
-    .attr('y', (d) => { return d.children ? -20 : 40; })
-    .style('text-anchor', 'middle')
-    .text((d) => { return d.data.name; })
-    .attr('stroke', 'none')
-    .attr('fill', (d) => {
-      let fill_color;
-      switch (d.data.role) {
-        case 'FOLLOWUP':
-          fill_color = FOLLOWUP_COLOR;
-          break;
-        case 'SALVAGE':
-          fill_color = SALVAGE_COLOR;
-          break;
-        default:
-          fill_color = '#f09';
-          break;
-      }
-
-      return fill_color;
-    })
-  ;
-
+  this.autorun(() => {
+    let graph = node_list.get();
+    cy.remove('node');
+    cy.add(graph);
+    cy.layout({
+      name: 'dagre',
+      fit: true,
+      rankDir: 'LR',
+      nodeDimensionsIncludeLabels: true,
+    }).run();
+  });
 });
 
 Template.charter.helpers({
 
   lane () {
     let name = FlowRouter.getParam('name');
-    let lane = Lanes.findOne({ name: name });
+    let lane = get_lane(name);
 
     return lane;
   },
 
   build_graph () {
     let name = FlowRouter.getParam('name');
-    let lane = Lanes.findOne({ name: name });
+    let lane = get_lane(name);
+    let list = [];
     if (! lane) return false;
 
     let assign_children = (target) => {
-      if (target.followup && ! target.recursive) {
-        let followup = Lanes.findOne(target.followup);
+      let followup = Lanes.findOne(target.followup);
+      let plan = Lanes.findOne(target.salvage_plan);
+      if (followup && ! target.recursive) {
+        let last_shipment = Shipments.findOne({ lane: followup._id });
+        let color = FOLLOWUP_COLOR;
+
+        if (last_shipment && last_shipment.exit_code) color = FAIL_COLOR;
+        else if (
+          last_shipment && last_shipment.exit_code == 0
+        ) color = SUCCESS_COLOR;
+
         followup.role = FOLLOWUP;
+        followup.parent = target._id;
         followup.recursive = followup._id == target._id ? true : false;
         target.children.push(followup);
+        list.push({
+          group: 'nodes',
+          data: {
+            id: followup._id,
+            name: followup.name,
+            color,
+            border: FOLLOWUP_COLOR,
+            lane: followup,
+            shipment: Shipments.findOne({ lane: followup._id }),
+          },
+        }, {
+          group: 'edges',
+          data: {
+            source: target._id,
+            target: followup._id,
+            color: FOLLOWUP_COLOR,
+          },
+        });
       }
 
-      if (target.salvage_plan && ! target.recursive) {
-        let plan = Lanes.findOne(target.salvage_plan);
+      if (plan && ! target.recursive) {
+        let last_shipment = Shipments.findOne({ lane: followup._id });
+        let color = SALVAGE_COLOR;
+
+        if (
+          last_shipment && last_shipment.exit_code == 0
+        ) color = SUCCESS_COLOR;
+        else if (last_shipment && last_shipment.exit_code) color = FAIL_COLOR;
+
         plan.role = SALVAGE;
+        plan.parent = target._id;
         plan.recursive = plan._id == target._id ? true : false;
         target.children.push(plan);
+        list.push({
+          group: 'nodes',
+          data: {
+            id: plan._id,
+            name: plan.name,
+            color,
+            border: SALVAGE_COLOR,
+            lane: plan,
+            shipment: Shipments.findOne({ lane: plan._id }),
+          },
+        }, {
+          group: 'edges',
+          data: {
+            source: target._id,
+            target: plan._id,
+            color: SALVAGE_COLOR,
+          },
+        });
       }
 
       target.children.forEach((child) => {
@@ -221,12 +181,28 @@ Template.charter.helpers({
 
     lane.children = [];
     lane.role = ROOT;
+    let last_shipment = Shipments.findOne({ lane: lane._id });
+    let color;
+    if (! last_shipment) color = ROOT_COLOR;
+    else if (last_shipment.exit_code) color = FAIL_COLOR;
+    else if (last_shipment.exit_code == 0) color = SUCCESS_COLOR;
 
+    list.push({
+      group: 'nodes',
+      data: {
+        id: lane._id,
+        name: lane.name,
+        color,
+        border: ROOT_COLOR,
+        lane: lane,
+        shipment: last_shipment,
+      },
+    });
     lane = assign_children(lane);
 
-    Session.set('charter_tree', lane);
+    node_list.set(list);
 
-    return;
+    return '';
   },
 
 });

@@ -1,10 +1,8 @@
-import { Lanes } from '../../api/lanes';
 import { Harbors } from '../../api/harbors';
 import { Shipments } from '../../api/shipments';
 import { get_lane } from '../../ui/pages/lanes/lib/util';
 
 import bodyParser from 'body-parser';
-import url from 'url';
 
 Picker.middleware(bodyParser.json());
 Picker.middleware(bodyParser.urlencoded({ extended: false }));
@@ -30,6 +28,7 @@ const setCorsHeaders = (res) => {
   return res;
 };
 
+// eslint-disable-next-line
 WebApp.rawConnectHandlers.use(function (req, res, next) {
   setCorsHeaders(res);
 
@@ -52,7 +51,7 @@ post_hooks.route('/lanes/:name/ship', function (params, req, res) {
   let shipment_start_date = H.start_date();
   let shipment = Shipments.findOne({
     start: shipment_start_date,
-    lane: lane._id,
+    lane: lane._id
   });
   let prior_manifest = req.body;
 
@@ -98,6 +97,7 @@ post_hooks.route('/lanes/:name/ship', function (params, req, res) {
   );
 
   res.statusCode = 200;
+  res.setHeader("Content-Type", "application/json");
   return res.end(JSON.stringify(results));
 
 });

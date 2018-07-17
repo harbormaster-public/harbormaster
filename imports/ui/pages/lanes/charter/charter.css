@@ -60,3 +60,12 @@ figure.charter {
   height: 100%;
   position: absolute;
 }
+
+#graph canvas {
+  left: 0;
+  border: 1px solid #ccc;
+}
+
+.root {
+  color: #f0a;
+}
