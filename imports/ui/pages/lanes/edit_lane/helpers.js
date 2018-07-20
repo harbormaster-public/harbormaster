@@ -9,6 +9,13 @@ import { moment } from 'meteor/momentjs:moment';
 
 const options = { sort: { actual: -1 }, limit: H.AMOUNT_SHOWN };
 const not_found = new ReactiveVar(false);
+const not_found_text = `
+  <p><strong>The harbor you're viewing hasn't been installed for this
+    Harbormaster instance.</strong></p>
+  <p>Editing it has been disabled.  To enable it, the harbor will need to
+    be installed in the Harbormaster harbor directory
+    (<code>~/.harbormaster/harbors</code> by default).</p>
+`;
 
 Template.edit_lane.onCreated(function () {
   this.autorun(() => {
@@ -245,13 +252,7 @@ Template.edit_lane.helpers({
         return Session.set('lane', active_lane);
     });
 
-    if (not_found.get()) return `
-      <p><strong>The harbor you're viewing hasn't been installed for this
-        Harbormaster instance.</strong></p>
-      <p>Editing it has been disabled.  To enable it, the harbor will need to
-        be installed in the Harbormaster harbor directory
-        (<code>~/.harbormaster/harbors</code> by default).</p>
-    `;
+    if (not_found.get()) return not_found_text;
     if (lane.rendered_input) return lane.rendered_input;
 
     return harbor.rendered_input;

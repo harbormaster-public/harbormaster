@@ -10,6 +10,13 @@ import { moment } from 'meteor/momentjs:moment';
 const options = { sort: { actual: -1 }, limit: H.AMOUNT_SHOWN };
 const shipment_count = new ReactiveVar();
 const not_found = new ReactiveVar(false);
+const not_found_text = `
+  <p><strong>The harbor you're viewing hasn't been installed for this
+    Harbormaster instance.</strong></p>
+  <p>Shipping to it has been disabled.  To enable it, the harbor needs to
+    be installed in the Harbormaster harbor directory
+    (<code>~/.harbormaster/harbors</code> by default).</p>
+`;
 
 Template.ship_lane.onCreated(function () {
   this.autorun(() => {
@@ -135,13 +142,7 @@ Template.ship_lane.helpers({
     let name = FlowRouter.getParam('name');
     let lane = get_lane(name);
 
-    if (not_found.get()) return `
-      <p><strong>The harbor you're viewing hasn't been installed for this
-        Harbormaster instance.</strong></p>
-      <p>Shipping to it has been disabled.  To enable it, the harbor needs to
-        be installed in the Harbormaster harbor directory
-        (<code>~/.harbormaster/harbors</code> by default).</p>
-    `;
+    if (not_found.get()) return not_found_text;
 
     if (lane) {
       let harbor = Harbors.findOne(lane.type);

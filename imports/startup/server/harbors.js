@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import expandTilde from 'expand-tilde';
+import mkdirp from 'mkdirp';
 import { execSync } from 'child_process';
 import { Lanes } from '../../api/lanes';
 import { Users } from '../../api/users';
@@ -12,7 +13,7 @@ const reload_exit_code = 10;
 
 if (! fs.existsSync(harbors_dir)) {
   console.log(`No harbors directory found at: ${harbors_dir}`);
-  fs.mkdirSync(harbors_dir);
+  mkdirp.sync(harbors_dir);
   console.log('Harbors directory created.');
 }
 

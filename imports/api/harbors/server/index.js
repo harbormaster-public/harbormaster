@@ -5,6 +5,11 @@ Meteor.publish('Harbors', function () {
   return Harbors.find();
 });
 
+const not_found = (err) => {
+  console.error(err);
+  return 404;
+};
+
 Meteor.methods({
   'Harbors#update': function update_harbor (lane, values) {
     try {
@@ -31,14 +36,13 @@ Meteor.methods({
   },
 
   'Harbors#render_input': function render_input (lane, manifest) {
-    if (! H.harbors[lane.type]) return 404;
     try {
       lane.rendered_input = H.harbors[lane.type].render_input(manifest, lane);
 
       return lane;
 
     }
-    catch (err) { throw err; }
+    catch (err) { return not_found(err); }
   },
 
   'Harbors#render_work_preview': function render_work_preview (lane, manifest) {
@@ -52,7 +56,7 @@ Meteor.methods({
 
       return lane;
     }
-    catch (err) { throw err; }
+    catch (err) { return not_found(err); }
 
   },
 });
