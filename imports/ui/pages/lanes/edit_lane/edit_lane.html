@@ -47,7 +47,7 @@
           {{#if validating_fields}}
             <button class="button secondary" disabled>Working...</button>
           {{else}}
-            <button class="button hollow save">Save</button>
+            <button class="button hollow save" {{can_save}}>Save</button>
           {{/if}}
         {{/if}}
       </fieldset>

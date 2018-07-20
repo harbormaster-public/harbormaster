@@ -15,7 +15,7 @@
     {{#if working}}
       <button class="button secondary disabled" disabled>Working...</button>
     {{else}}
-      <button class="button success start-shipment">Start Shipment</button>
+      <button class="button success start-shipment" {{can_ship}}>Start Shipment</button>
     {{/if}}
   {{/if}}
   {{#if any_active}}

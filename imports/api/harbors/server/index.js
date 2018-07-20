@@ -26,19 +26,23 @@ Meteor.methods({
 
       return { lane, success };
 
-    } catch (err) { throw err; }
+    }
+    catch (err) { throw err; }
   },
 
   'Harbors#render_input': function render_input (lane, manifest) {
+    if (! H.harbors[lane.type]) return 404;
     try {
       lane.rendered_input = H.harbors[lane.type].render_input(manifest, lane);
 
       return lane;
 
-    } catch (err) { throw err; }
+    }
+    catch (err) { throw err; }
   },
 
   'Harbors#render_work_preview': function render_work_preview (lane, manifest) {
+    if (! H.harbors[lane.type]) return 404;
     try {
       lane.rendered_work_preview = H
         .harbors
@@ -47,7 +51,8 @@ Meteor.methods({
       ;
 
       return lane;
-    } catch (err) { throw err; }
+    }
+    catch (err) { throw err; }
 
   },
 });

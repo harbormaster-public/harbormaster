@@ -1,4 +1,5 @@
 import { Template } from 'meteor/templating';
+import { ReactiveVar } from 'meteor/reactive-var';
 import { Lanes } from '../../../../api/lanes';
 import { Session } from 'meteor/session';
 import { Users } from '../../../../api/users';
@@ -7,6 +8,7 @@ import { count, history, get_lane } from '../lib/util';
 import { moment } from 'meteor/momentjs:moment';
 
 const options = { sort: { actual: -1 }, limit: H.AMOUNT_SHOWN };
+const not_found = new ReactiveVar(false);
 
 Template.edit_lane.onCreated(function () {
   this.autorun(() => {
@@ -238,10 +240,18 @@ Template.edit_lane.helpers({
       manifest,
       function (err, active_lane) {
         if (err) throw err;
+        if (active_lane == 404) return not_found.set(true);
 
-        Session.set('lane', active_lane);
+        return Session.set('lane', active_lane);
     });
 
+    if (not_found.get()) return `
+      <p><strong>The harbor you're viewing hasn't been installed for this
+        Harbormaster instance.</strong></p>
+      <p>Editing it has been disabled.  To enable it, the harbor will need to
+        be installed in the Harbormaster harbor directory
+        (<code>~/.harbormaster/harbors</code> by default).</p>
+    `;
     if (lane.rendered_input) return lane.rendered_input;
 
     return harbor.rendered_input;
@@ -249,6 +259,10 @@ Template.edit_lane.helpers({
 
   validating_fields () {
     return Session.get('validating_fields');
+  },
+
+  can_save () {
+    return not_found.get() ? 'disabled' : '';
   },
 
 });

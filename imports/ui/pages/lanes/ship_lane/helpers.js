@@ -9,6 +9,7 @@ import { moment } from 'meteor/momentjs:moment';
 
 const options = { sort: { actual: -1 }, limit: H.AMOUNT_SHOWN };
 const shipment_count = new ReactiveVar();
+const not_found = new ReactiveVar(false);
 
 Template.ship_lane.onCreated(function () {
   this.autorun(() => {
@@ -95,25 +96,6 @@ Template.ship_lane.helpers({
     return false;
   },
 
-  filter_results_by_address (results, address, command) {
-    var matching_command = _.where(results, {
-      address: address,
-      command: command
-    });
-    var results = '';
-
-    if (matching_command.length) {
-      _.each(matching_command, function (command) {
-        results += command.result;
-      });
-
-      return results;
-    }
-
-    return '';
-
-  },
-
   exit_code () {
     let name = FlowRouter.getParam('name');
     let date = this.start || FlowRouter.getParam('date');
@@ -153,6 +135,14 @@ Template.ship_lane.helpers({
     let name = FlowRouter.getParam('name');
     let lane = get_lane(name);
 
+    if (not_found.get()) return `
+      <p><strong>The harbor you're viewing hasn't been installed for this
+        Harbormaster instance.</strong></p>
+      <p>Shipping to it has been disabled.  To enable it, the harbor needs to
+        be installed in the Harbormaster harbor directory
+        (<code>~/.harbormaster/harbors</code> by default).</p>
+    `;
+
     if (lane) {
       let harbor = Harbors.findOne(lane.type);
       let manifest = harbor && harbor.lanes[lane._id] ?
@@ -164,11 +154,12 @@ Template.ship_lane.helpers({
         'Harbors#render_work_preview',
         lane,
         manifest,
-        function (err, lane) {
+        function (err, res) {
           if (err) throw err;
+          if (res == 404) return not_found.set(true);
 
-          Lanes.update(lane._id, lane);
-          Session.set('lane', lane);
+          Lanes.update(lane._id, res);
+          return Session.set('lane', res);
         }
       );
 
@@ -176,6 +167,10 @@ Template.ship_lane.helpers({
     }
 
     return lane;
+  },
+
+  can_ship () {
+    return not_found.get() ? 'disabled' : '';
   },
 
   has_work_output () {
