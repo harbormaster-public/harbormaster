@@ -18,4 +18,6 @@ H.end_shipment = function (lane, exit_code, manifest) {
   return Meteor.call('Lanes#end_shipment', lane, exit_code, manifest);
 };
 
-H.bind = H.bindEnvironment = Meteor.bindEnvironment;
+H.bind = H.bindEnvironment;
+
+export default H;

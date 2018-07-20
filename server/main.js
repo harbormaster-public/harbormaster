@@ -7,12 +7,12 @@ import '../imports/api/harbors/server';
 import '../imports/api/shipments/server';
 
 import { Meteor } from 'meteor/meteor';
-import { Captains } from '../imports/api/captains';
-import { Harbormasters } from '../imports/api/harbormasters';
-import { Lanes } from '../imports/api/lanes';
-import { Shipments } from '../imports/api/shipments';
-import { Users } from '../imports/api/users';
-import { Harbors } from '../imports/api/harbors';
+import '../imports/api/captains';
+import '../imports/api/harbormasters';
+import '../imports/api/lanes';
+import '../imports/api/shipments';
+import '../imports/api/users';
+import '../imports/api/harbors';
 
 console.log('Modules loaded.');
 Meteor.startup(() => {
