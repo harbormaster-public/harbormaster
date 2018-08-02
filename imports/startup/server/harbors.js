@@ -48,12 +48,16 @@ fs.readdirSync(harbors_dir).forEach(function (file) {
       `Unable to register harbor name: ${harbor_name}`
     );
 
+    console.log(`Registering packages for "${harbor_name}"...`);
     if (register.pkgs instanceof Array) {
       register.pkgs.forEach((pkg) => {
         try {
-          require.resolve(pkg);
+          console.log(`Checking for: ${pkg}...`);
+          require(pkg);
+          console.log(`Found: ${pkg}`);
         }
         catch (e) {
+          console.log(`Missing: ${pkg}`);
           packages.push(pkg);
         }
       });
@@ -65,14 +69,11 @@ fs.readdirSync(harbors_dir).forEach(function (file) {
       execSync(`npm i -S ${packages}`);
     }
 
-    let harbor = Harbors.findOne(harbor_name);
-
+    let harbor = Harbors.findOne(harbor_name) || {};
     H.harbors[harbor_name] = entrypoint;
-
-    Harbors.update({ _id: harbor._id }, harbor);
-
     entrypoint.next && entrypoint.next();
     harbor.rendered_input = entrypoint.render_input();
+    Harbors.upsert({ _id: harbor_name }, harbor);
     console.log(`Harbor registered: ${file}`);
   }
   catch (err) {
