@@ -34,7 +34,11 @@ Template.lanes.helpers({
     return false;
   },
 
-  empty () { return Session.get('total_lanes') === 0; },
+  empty () {
+    return (
+      Session.get('total_lanes') === 0 && ! Lanes.find().count()
+    );
+  },
 
   lanes () {
     let lanes;

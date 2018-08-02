@@ -17,6 +17,7 @@ Meteor.methods({
       let success = H.harbors[lane.type].update(lane, values);
 
       if (success) {
+        harbor.lanes = harbor.lanes || {};
         harbor.lanes[lane._id] = {
           manifest: values,
         };
@@ -32,7 +33,10 @@ Meteor.methods({
       return { lane, success };
 
     }
-    catch (err) { throw err; }
+    catch (err) {
+      console.error(err);
+      throw err;
+    }
   },
 
   'Harbors#render_input': function render_input (lane, manifest) {
