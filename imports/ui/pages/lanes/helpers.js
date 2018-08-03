@@ -19,7 +19,6 @@ Template.lanes.onCreated(function () {
   this.autorun(() => {
     Lanes.find().forEach((lane) => {
       Meteor.subscribe('Shipments', lane, options);
-      //Meteor.subscribe('Shipments#check_state', lane);
     });
   });
 });

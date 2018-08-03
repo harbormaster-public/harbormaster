@@ -10,11 +10,11 @@
       </label>
       <button class="button hollow secondary back-to-lanes">Back to Lanes</button>
       <a href="/lanes/new/edit" class="hollow button" id="new-lane">New Lane</a>
-      {{#unless validate_done}}
+      {{#if validate_done}}
         <a href=/lanes/{{lane.slug}}/ship class="button success ship-lane hollow">Ship to this Lane</a>
       {{else}}
         <button disabled class="button hollow alert lane-done">Not Ready</button>
-      {{/unless}}
+      {{/if}}
       <fieldset class="fieldset captains">
         <legend>Captain(s)</legend>
         <ul>

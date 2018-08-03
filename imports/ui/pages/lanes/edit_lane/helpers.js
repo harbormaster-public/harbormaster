@@ -103,18 +103,16 @@ Template.edit_lane.helpers({
   },
 
   validate_done () {
-    if (! Session.get('lane') || ! Session.get('lane').minimum_complete) {
-      return true;
-    }
+    let lane = get_lane(FlowRouter.getParam('name'));
 
-    return false;
+    return lane && lane.minimum_complete;
   },
 
   no_followup () {
     let lane = get_lane(FlowRouter.getParam('name'));
 
     return Lanes.find().count() < 2 ||
-      lane.followup ||
+      lane && lane.followup ||
       Session.get('choose_followup') ||
       false;
   },
@@ -123,7 +121,7 @@ Template.edit_lane.helpers({
     let lane = get_lane(FlowRouter.getParam('name'));
 
     return Lanes.find().count() < 2 ||
-      lane.salvage_plan ||
+      lane && lane.salvage_plan ||
       Session.get('choose_salvage_plan') ||
       false;
   },
