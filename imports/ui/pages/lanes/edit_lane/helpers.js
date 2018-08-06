@@ -73,9 +73,22 @@ Template.edit_lane.helpers({
 
   followup_lane () {
     let lane = get_lane(FlowRouter.getParam('name'));
+    if (! lane) return false;
+
     let followup_lane = Lanes.findOne(lane.followup);
 
     if (followup_lane) return followup_lane.name;
+
+    return '';
+  },
+
+  salvage_plan_lane () {
+    let lane = get_lane(FlowRouter.getParam('name'));
+    if (! lane) return false;
+
+    let salvage_plan = Lanes.findOne(lane.salvage_plan);
+
+    if (salvage_plan) return salvage_plan.name;
 
     return '';
   },

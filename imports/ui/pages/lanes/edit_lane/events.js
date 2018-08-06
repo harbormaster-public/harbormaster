@@ -108,7 +108,8 @@ Template.edit_lane.events({
 
     if (event.target.checked) {
       captains.push(user);
-    } else {
+    }
+    else {
       captains = _.reject(captains, function remove_captain (captain) {
         return captain == user;
       });
@@ -147,12 +148,18 @@ Template.edit_lane.events({
     });
   },
 
-  'click .add-followup': function add_followup_lane () {
+  'click .add-followup': function add_followup_lane (e) {
+    e.preventDefault();
     return Session.set('choose_followup', true);
   },
 
-  'click .add-salvage-plan': function add_salvage_plan () {
+  'click .add-salvage-plan': function add_salvage_plan (e) {
+    e.preventDefault();
     return Session.set('choose_salvage_plan', true);
+  },
+
+  'click .new-lane': function new_lane () {
+    Session.set('lane', {});
   },
 
 });

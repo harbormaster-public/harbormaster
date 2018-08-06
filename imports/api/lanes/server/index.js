@@ -128,14 +128,15 @@ Meteor.methods({
 
     manifest.lane_id = lane._id;
     manifest.lane_name = lane.name;
+    manifest.lane_slug = lane.slug;
 
     Shipments.update(shipment_id, {
       $set: {
         finished: finished,
         exit_code: exit_code,
         manifest: manifest,
-        active: false
-      }
+        active: false,
+      },
     });
 
     console.log(

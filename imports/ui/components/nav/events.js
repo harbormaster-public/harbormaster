@@ -2,7 +2,9 @@ import { Template } from 'meteor/templating';
 
 Template.nav.events({
   'click .logout' () {
-    Accounts.logout();
+    Accounts.logout((err) => {
+      if (err) throw err;
+    });
   },
 
   'click .nav-item' (e) {
@@ -12,5 +14,5 @@ Template.nav.events({
     Session.set('loading', true);
     FlowRouter.go(path);
     Session.set('loading', false);
-  }
+  },
 });
