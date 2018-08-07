@@ -60,4 +60,8 @@ Template.ship_lane.events({
       console.log('Reset all active shipments response:', res);
     });
   },
+
+  'click .new-lane': function () {
+    Session.set('lane', {});
+  },
 });

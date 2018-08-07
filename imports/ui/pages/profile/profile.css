@@ -1,0 +1,8 @@
+.lane-list li {
+  border: 1px solid transparent;
+}
+
+.lane-list li:nth-child(even) {
+  background-color: #dfdfdf;
+  border-color: #d1d1d1;
+}

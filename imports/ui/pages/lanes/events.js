@@ -6,15 +6,17 @@ Template.lanes.events({
     Session.set('lane', null);
   },
 
-  'click .delete-lane' () {
+  'click .delete-lane' (e) {
     let confirm_message = `Delete lane?\n${this.name}`;
+    let $row = $(e.target).parents('tr');
 
-    if (window.confirm(confirm_message)) Lanes.remove(this._id);
-    Meteor.call('Lanes#get_total', (err, res) => {
-      if (err) throw err;
-
-      Session.set('total_lanes', res);
-    });
+    if (window.confirm(confirm_message)) {
+      $row.addClass('deleting');
+      H.call('Lanes#delete', this, (err, res) => {
+        if (err) throw err;
+        Session.set('total_lanes', res);
+      });
+    }
   },
 
   'click .edit-lane' (event) {

@@ -85,6 +85,15 @@ td.error {
   background: #ffae00;
 }
 
+tr.deleting {
+  background: #f0a;
+  opacity: 0.5;
+}
+
+tr.deleting .admin {
+  display: none;
+}
+
 @media all and (max-width: 1200px) {
   .total-shipments-column,
   .salvage-runs-column,

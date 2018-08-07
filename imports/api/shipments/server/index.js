@@ -5,7 +5,13 @@ Shipments.rawCollection().createIndex(
   { _id: 1, active: 1 }, { background: true }
 );
 Shipments.rawCollection().createIndex(
+  { lane: 1 }, { background: true }
+);
+Shipments.rawCollection().createIndex(
   { lane: 1, active: 1 }, { background: true }
+);
+Shipments.rawCollection().createIndex(
+  { lane: 1, exit_code: 1 }, { background: true }
 );
 Shipments.rawCollection().createIndex(
   { active: 1, exit_code: 1 }, { background: true }

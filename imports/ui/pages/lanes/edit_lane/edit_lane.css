@@ -60,6 +60,10 @@ fieldset.salvage-plan {
   background: #ffae00;
 }
 
+fieldset.captains ul li {
+  display: inline-block;
+}
+
 .url {
   margin: 15px 0;
 }

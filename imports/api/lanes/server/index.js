@@ -73,10 +73,8 @@ Meteor.methods({
     Lanes.update(lane._id, lane);
 
     console.log('Starting shipment for lane:', lane.name);
-    try {
-      new_manifest = H.harbors[lane.type].work(lane, manifest);
-
-    } catch (err) {
+    try { new_manifest = H.harbors[lane.type].work(lane, manifest); }
+    catch (err) {
       console.error(
         'Shipment failed with error:\n',
         err + '\n',
@@ -86,7 +84,8 @@ Meteor.methods({
       manifest.error = err;
       new_manifest = manifest;
 
-    } finally {
+    }
+    finally {
 
       if (new_manifest && new_manifest.error) {
         let exit_code = 1;
@@ -94,7 +93,7 @@ Meteor.methods({
 
         shipment.stderr.push({
           date: new Date(),
-          result: new_manifest.error.toString()
+          result: new_manifest.error.toString(),
         });
 
         Shipments.update(shipment_id, shipment);
@@ -219,6 +218,11 @@ Meteor.methods({
     );
 
     return true;
+  },
+
+  'Lanes#delete': function (lane) {
+    Lanes.remove(lane);
+    return H.call('Lanes#get_total');
   },
 });
 
