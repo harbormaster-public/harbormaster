@@ -1,4 +1,5 @@
 import { Shipments } from '..';
+import { LatestShipment } from '..';
 import { Lanes } from '../../lanes';
 
 Shipments.rawCollection().createIndex(
@@ -59,7 +60,8 @@ Meteor.methods({
 
   'Shipments#last_shipped': function (lane = { _id: null }) {
     this.unblock();
-    return Shipments.findOne({ lane: lane._id }, {
+    const latest = LatestShipment.findOne(lane._id);
+    return latest ? latest.shipment : Shipments.findOne({ lane: lane._id }, {
       sort: { actual: -1 },
       limit: 1,
     });

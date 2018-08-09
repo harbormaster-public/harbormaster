@@ -1,5 +1,6 @@
 import { Lanes } from '..';
 import { Shipments } from '../../shipments';
+import { LatestShipment } from '../../shipments';
 import { Harbors } from '../../harbors';
 import uuid from 'uuid';
 import _ from 'lodash';
@@ -97,6 +98,7 @@ Meteor.methods({
         });
 
         Shipments.update(shipment_id, shipment);
+        LatestShipment.upsert(shipment.lane, { shipment });
 
         return Meteor.call('Lanes#end_shipment', lane, exit_code, new_manifest);
       }
@@ -137,6 +139,8 @@ Meteor.methods({
         active: false,
       },
     });
+    let shipment = Shipments.findOne(shipment_id);
+    LatestShipment.upsert(shipment.lane, { shipment });
 
     console.log(
       'Shipping completed for lane:',
