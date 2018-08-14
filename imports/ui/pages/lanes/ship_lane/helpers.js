@@ -155,12 +155,15 @@ Template.ship_lane.helpers({
         'Harbors#render_work_preview',
         lane,
         manifest,
-        function (err, res) {
-          if (err) throw err;
-          if (res == 404) return not_found.set(true);
+        function (err_preview, res_lane) {
+          if (err_preview) throw err;
+          if (res_lane == 404) return not_found.set(true);
 
-          Lanes.update(lane._id, res);
-          return Session.set('lane', res);
+          return H.call('Lanes#upsert', lane, (err_update, res_success) => {
+            if (err_update) throw err_update;
+            console.log(`Lane "${lane.name}" updated: ${res_success}`);
+            return Session.set('lane', res_lane);
+          });
         }
       );
 

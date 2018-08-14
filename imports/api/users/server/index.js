@@ -32,5 +32,10 @@ Meteor.methods({
     Accounts.setPassword(user._id, expired_password);
 
     return email;
-  }
+  },
+
+  'Users#update' (email, user) {
+    Users.update(email, user);
+    return true;
+  },
 });

@@ -11,7 +11,10 @@ Template.profile.events({
 
     user.harbormaster = event.target.checked;
 
-    Users.update(user_id, user);
+    return H.call('Users#update', user_id, user, (err, res) => {
+      console.log(`User ${user_id} updated: ${res}`);
+      return res;
+    });
   },
 
   'change .can-ply-lane' (event) {
@@ -23,14 +26,17 @@ Template.profile.events({
 
     if (event.target.checked) {
       lane.captains.push(user_id);
-    } else {
+    }
+    else {
 
       lane.captains = _.reject(lane.captains, function (captain) {
         return captain == user_id;
       });
     }
 
-    Lanes.update(lane_id, lane);
+    H.call('Lanes#upsert', lane, (err, res) => {
+      console.log(`Lane "${lane.name}" updated: ${res}`);
+    });
   },
 
   'change .from-webhook' (event) {
@@ -42,7 +48,8 @@ Template.profile.events({
 
     if (event.target.checked) {
       remove_token = false;
-    } else {
+    }
+    else {
       remove_token = true;
     }
 

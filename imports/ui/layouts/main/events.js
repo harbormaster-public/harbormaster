@@ -8,6 +8,9 @@ Template.main.events({
 
     user.harbormaster = true;
 
-    Users.update(user_id, user);
-  }
-})
+    Meteor.call('Users#update', user_id, user, (err, res) => {
+      if (err) throw err;
+      console.log(`User ${user_id} updated: ${res}`);
+    });
+  },
+});

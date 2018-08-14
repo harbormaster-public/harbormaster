@@ -262,5 +262,10 @@ Meteor.methods({
     Lanes.remove(lane);
     return H.call('Lanes#get_total');
   },
+
+  'Lanes#upsert': function (lane) {
+    Lanes.upsert({ _id: lane._id }, lane);
+    return true;
+  },
 });
 

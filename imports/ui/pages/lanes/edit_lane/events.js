@@ -1,5 +1,6 @@
 import { Template } from 'meteor/templating';
 import { Lanes } from '../../../../api/lanes';
+import { get_lane } from '../lib/util';
 
 let update_harbor = function (template) {
   let inputs = template.$('.harbor').find('input, textarea');
@@ -40,11 +41,20 @@ let update_harbor = function (template) {
   );
 };
 
+const update_lane = (lane) => {
+  return H.call('Lanes#upsert', lane, (err, res) => {
+    if (err) throw err;
+    console.log(`Lane "${lane.name}" updated: ${res}`);
+    Session.set('lane', lane);
+    return res;
+  });
+};
+
 Template.edit_lane.events({
   'submit form': function submit_form (event, template) {
     event.preventDefault();
 
-    let lane = Session.get('lane');
+    let lane = get_lane(FlowRouter.getParam('name')) || Session.get('lane');
 
     if (
       lane.name &&
@@ -60,7 +70,7 @@ Template.edit_lane.events({
   },
 
   'change .followup': function change_followup_lane (event) {
-    let lane = Session.get('lane');
+    let lane = get_lane(FlowRouter.getParam('name'));
     let followup_lane = Lanes.findOne(event.target.value);
 
     if (
@@ -69,13 +79,13 @@ Template.edit_lane.events({
       lane.type
     ) {
       lane.followup = followup_lane ? followup_lane._id : null;
-      Lanes.update(lane._id, lane);
-      Session.set('lane', lane);
+      return update_lane(lane);
     }
+    return lane;
   },
 
   'change .salvage-plan': function change_salvage_plan (event) {
-    let lane = Session.get('lane');
+    let lane = get_lane(FlowRouter.getParam('name'));
     let salvage_plan_lane = Lanes.findOne(event.target.value);
 
     if (
@@ -84,16 +94,15 @@ Template.edit_lane.events({
       lane.type
     ) {
       lane.salvage_plan = salvage_plan_lane ? salvage_plan_lane._id : null;
-      Lanes.update(lane._id, lane);
-      Session.set('lane', lane);
+      return update_lane(lane);
     }
   },
 
   'change .lane-name': function change_lane_name (event) {
     let lane = Session.get('lane') || {};
     lane.name = event.target.value;
-    Session.set('lane', lane);
-    if (Lanes.findOne(lane._id)) { Lanes.update(lane._id, lane); }
+    if (Lanes.findOne(lane._id)) update_lane(lane);
+    else Session.set('lane', lane);
     FlowRouter.go('/lanes/' + lane.name + '/edit');
   },
 
@@ -102,7 +111,7 @@ Template.edit_lane.events({
   },
 
   'change .captains': function change_captains (event) {
-    let lane = Session.get('lane');
+    let lane = get_lane(FlowRouter.getParam('lane'));
     let captains = lane.captains || [];
     let user = event.target.value;
 
@@ -116,8 +125,7 @@ Template.edit_lane.events({
     }
     lane.captains = captains;
 
-    Session.set('lane', lane);
-    if (Lanes.findOne(lane._id)) { Lanes.update(lane._id, lane); }
+    if (Lanes.findOne(lane._id)) update_lane(lane);
   },
 
   'click .add-harbor': function add_destination (event) {
@@ -133,18 +141,18 @@ Template.edit_lane.events({
     return FlowRouter.go('/lanes');
   },
 
-  'click .choose-harbor-type': function choose_harbor_type (event, template) {
+  'click .choose-harbor-type': function choose_harbor_type (event) {
     event.preventDefault();
 
     let type = $(event.target).attr('data-type');
     let lane = Session.get('lane');
 
     lane.type = type;
-    Session.set('lane', lane);
-    return Lanes.upsert({ _id: lane._id }, lane, function (err, count) {
-      if (err || count < 1) throw (err || new Error('No Lanes modified!'));
-
-      return update_harbor(template);
+    return H.call('Lanes#upsert', lane, (err, res) => {
+      if (err) throw err;
+      console.log(`Lane ${lane.name} added: ${res}`);
+      Session.set('lane', lane);
+      return res;
     });
   },
 
