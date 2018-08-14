@@ -1,6 +1,10 @@
 import { Lanes } from '..';
-import { Shipments } from '../../shipments';
-import { LatestShipment } from '../../shipments';
+import {
+  Shipments,
+  LatestShipment,
+  ShipmentCount,
+  SalvageCount,
+} from '../../shipments';
 import { Harbors } from '../../harbors';
 import uuid from 'uuid';
 import _ from 'lodash';
@@ -19,15 +23,19 @@ Meteor.publish('Lanes', function (lane = {}) {
   return Lanes.find(lane);
 });
 
+console.log('Collecting latest shipments...');
+Lanes.find().forEach((lane) => {
+  console.log(`Finding latest shipment for ${lane.name}...`);
+  if (! LatestShipment.findOne(lane._id)) {
+    let shipment = Shipments.findOne({
+      lane: lane._id }, { sort: { actual: -1 },
+    }) || { actual: 'Never', start: '' };
+    LatestShipment.upsert(lane._id, { shipment });
+  }
+});
+console.log('Done collecting latest shipments.');
+
 H.publish('LatestShipment', function () {
-  Lanes.find().forEach((lane) => {
-    if (! LatestShipment.findOne(lane._id)) {
-      let shipment = Shipments.findOne({
-        lane: lane._id }, { sort: { actual: -1 },
-      }) || { actual: 'Never', start: '' };
-      LatestShipment.upsert(lane._id, { shipment });
-    }
-  });
   return LatestShipment.find();
 });
 
@@ -79,10 +87,15 @@ Meteor.methods({
       stderr: [],
       active: true,
     });
+    let count = ShipmentCount.findOne(lane._id) ?
+      ShipmentCount.findOne(lane._id).count :
+      0;
 
+    count += 1;
     manifest.shipment_start_date = shipment_start_date;
     manifest.shipment_id = shipment_id;
 
+    ShipmentCount.upsert(lane._id, { count });
     Lanes.update(lane._id, lane);
 
     console.log('Starting shipment for lane:', lane.name);
@@ -96,7 +109,6 @@ Meteor.methods({
       );
       manifest.error = err;
       new_manifest = manifest;
-
     }
     finally {
 
@@ -133,6 +145,14 @@ Meteor.methods({
         'The third argument, if present, must be an object;' +
           'The (modified) manifest object originally passed to the Harbor.'
       );
+    }
+
+    if (exit_code && exit_code != 0) {
+      let count = SalvageCount.findOne(lane._id) ?
+        SalvageCount.findOne(lane._id).count :
+        0;
+      count += 1;
+      SalvageCount.upsert(lane._id, { count });
     }
 
     let shipment_id = manifest.shipment_id;

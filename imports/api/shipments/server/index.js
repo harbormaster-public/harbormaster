@@ -1,7 +1,9 @@
-import { Shipments } from '..';
-import { LatestShipment } from '..';
-import { ShipmentCount } from '..';
-import { SalvageCount } from '..';
+import {
+  Shipments,
+  LatestShipment,
+  ShipmentCount,
+  SalvageCount,
+} from '..';
 import { Lanes } from '../../lanes';
 
 Shipments.rawCollection().createIndex(
@@ -43,41 +45,33 @@ Meteor.publish('Shipments', function (lane, options) {
   return shipments;
 });
 
-Meteor.setTimeout(function () {
-  Meteor.publish('ShipmentCount', function () {
-    Lanes.find().forEach((lane) => {
-      const shipments = Shipments.find({ lane: lane._id });
-      let count = shipments.count() || 0;
-      shipments.observe({
-        added: () => {
-          count += 1;
-          ShipmentCount.upsert(lane._id, { count });
-        },
-      });
-
-      ShipmentCount.upsert(lane._id, { count });
-    });
-    return ShipmentCount.find({});
+console.log('Collecting shipment totals for each lane...');
+Lanes.find().forEach((lane) => {
+  console.log(`Counting shipments for ${lane.name}...`);
+  const shipments = Shipments.find({ lane: lane._id });
+  const salvage = Shipments.find({
+    lane: lane._id,
+    exit_code: { $exists: true, $nin: [0, null] },
   });
+  let shipment_count = shipments.count() || 0;
+  let salvage_count = salvage.count() || 0;
 
-  Meteor.publish('SalvageCount', function () {
-    Lanes.find().forEach((lane) => {
-      const shipments = Shipments.find({
-        lane: lane._id,
-        exit_code: { $exists: true, $nin: [0, null] },
-      });
-      let count = shipments.count() || 0;
-      shipments.observe({
-        added: () => {
-          count += 1;
-          SalvageCount.upsert(lane._id, { count });
-        },
-      });
+  ShipmentCount.upsert(lane._id, { count: shipment_count });
+  SalvageCount.upsert(lane._id, { count: salvage_count });
+  console.log(
+    `${lane.name} counted:
+    \tShipments: ${shipment_count}
+    \tSalvage Runs: ${salvage_count}`
+  );
+});
+console.log('Done collecting shipment totals.');
 
-      SalvageCount.upsert(lane._id, { count });
-    });
-    return SalvageCount.find();
-  });
+Meteor.publish('ShipmentCount', function () {
+  return ShipmentCount.find({});
+});
+
+Meteor.publish('SalvageCount', function () {
+  return SalvageCount.find();
 });
 
 Meteor.methods({
