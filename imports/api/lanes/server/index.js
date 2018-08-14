@@ -1,3 +1,4 @@
+import H from '../../../startup/config/namespace';
 import { Lanes } from '..';
 import {
   Shipments,
