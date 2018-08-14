@@ -2,6 +2,9 @@ import { Template } from 'meteor/templating';
 import { Lanes } from '../../../api/lanes';
 import { Users } from '../../../api/users';
 import { Shipments } from '../../../api/shipments';
+import { ShipmentCount } from '../../../api/shipments';
+import { SalvageCount } from '../../../api/shipments';
+import { LatestShipment } from '../../../api/shipments';
 
 Template.lanes.onCreated(function () {
   let options = {
@@ -15,11 +18,14 @@ Template.lanes.onCreated(function () {
     Session.set('total_lanes', res);
   });
 
-
   this.autorun(() => {
     Lanes.find().forEach((lane) => {
       Meteor.subscribe('Shipments', lane, options);
     });
+
+    H.subscribe('ShipmentCount');
+    H.subscribe('SalvageCount');
+    H.subscribe('LatestShipment');
   });
 });
 
@@ -164,53 +170,31 @@ Template.lanes.helpers({
   },
 
   latest_shipment () {
-    let last = Session.get(`last_shipped:${this._id}`);
-    return last ? last.start : '';
+    const latest = LatestShipment.findOne(this._id);
+    const start = latest ? latest.shipment.start : '';
+
+    return start;
   },
 
   last_shipped () {
-    const never = 'Never';
-    let key = `last_shipped:${this._id}`;
-    let last = Session.get(key);
-    let shipment = Shipments.find({ lane: this._id }, {
-      sort: { actual: -1 },
-      limit: 1,
-    }).fetch()[0];
+    const latest = LatestShipment.findOne(this._id);
+    const actual = latest ? latest.shipment.actual : 'Loading...';
 
-    H.call('Shipments#last_shipped', this, (err, last_shipment) => {
-      if (err) throw err;
-      if (! shipment) shipment = never;
-      Session.set(key, last_shipment);
-    });
-
-    if (shipment && shipment != last) Session.set(key, shipment);
-    if (last == never) return never;
-    if (last) return last.actual.toLocaleString();
-    return 'Loading...';
+    return actual.toLocaleString();
   },
 
   total_shipments () {
-    let key = `total_completed_shipments:${this._id}`;
-    let total_shipments = Session.get(key);
+    const count = ShipmentCount.findOne(this._id);
+    const total = count ? count.count : 'Loading...';
 
-    H.call('Shipments#total_completed_shipments', this, (err, total) => {
-      if (err) throw err;
-      if (total_shipments != total) Session.set(key, total);
-    });
-
-    return total_shipments || 'Loading...';
+    return total.toLocaleString();
   },
 
   total_salvage_runs () {
-    let key = `total_salvage_runs:${this._id}`;
-    let total_salvage = Session.get(key);
+    const count = SalvageCount.findOne(this._id);
+    const total = count ? count.count : 'Loading...';
 
-    H.call('Shipments#total_salvage_runs', this, (err, total) => {
-      if (err) throw err;
-      if (total_salvage != total) Session.set(key, total);
-    });
-
-    return total_salvage || 'Loading...';
+    return total.toLocaleString();
   },
 
   can_ply () {
@@ -234,7 +218,7 @@ Template.lanes.helpers({
     const text_na = 'N/A';
     const text_error = 'error';
     const text_ready = 'ready';
-    let latest_shipment = Session.get(`last_shipped:${this._id}`);
+    let latest = LatestShipment.findOne(this._id);
     let active_shipments = Shipments.find({
       lane: this._id,
       active: true,
@@ -242,9 +226,8 @@ Template.lanes.helpers({
 
     if (active_shipments) return 'active';
 
-    if (! latest_shipment) return text_na;
-    if (latest_shipment.exit_code) return text_error;
-    if (latest_shipment.exit_code == 0) return text_ready;
+    if (latest && latest.shipment.exit_code) return text_error;
+    if (latest && latest.shipment.exit_code == 0) return text_ready;
 
     return text_na;
   },
@@ -259,5 +242,5 @@ Template.lanes.helpers({
     let salvage_plan = Lanes.findOne(this.salvage_plan);
 
     return salvage_plan ? salvage_plan.name : '';
-  }
+  },
 });

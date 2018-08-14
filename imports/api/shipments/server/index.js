@@ -15,6 +15,9 @@ Shipments.rawCollection().createIndex(
   { lane: 1, exit_code: 1 }, { background: true }
 );
 Shipments.rawCollection().createIndex(
+  { exit_code: 1 }, { background: true }
+);
+Shipments.rawCollection().createIndex(
   { active: 1, exit_code: 1 }, { background: true }
 );
 Shipments.rawCollection().createIndex(
@@ -36,6 +39,28 @@ Meteor.publish('Shipments', function (lane, options) {
   let shipments = Shipments.find(query, options);
 
   return shipments;
+});
+
+//TODO: Reactivity serverside
+Meteor.publish('ShipmentCount', function () {
+  Lanes.find().forEach((lane) => {
+    const count = Shipments.find({ lane: lane._id }).count() || 0;
+
+    this.added('ShipmentCount', lane._id, { count });
+  });
+  this.ready();
+});
+
+Meteor.publish('SalvageCount', function () {
+  Lanes.find().forEach((lane) => {
+    const count = Shipments.find({
+      lane: lane._id,
+      exit_code: { $exists: true, $nin: [0, null] },
+    }).count() || 0;
+
+    this.added('SalvageCount', lane._id, { count });
+  });
+  this.ready();
 });
 
 Meteor.methods({

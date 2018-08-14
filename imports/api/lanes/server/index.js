@@ -19,6 +19,18 @@ Meteor.publish('Lanes', function (lane = {}) {
   return Lanes.find(lane);
 });
 
+H.publish('LatestShipment', function () {
+  Lanes.find().forEach((lane) => {
+    if (! LatestShipment.findOne(lane._id)) {
+      let shipment = Shipments.findOne({
+        lane: lane._id }, { sort: { actual: -1 },
+      }) || { actual: 'Never', start: '' };
+      LatestShipment.upsert(lane._id, { shipment });
+    }
+  });
+  return LatestShipment.find();
+});
+
 Meteor.methods({
   'Lanes#get_total': () => {
     return Lanes.find().count();

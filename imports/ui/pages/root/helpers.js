@@ -32,15 +32,15 @@ Template.root.helpers({
   },
 
   shipments_last_24_hours: function () {
-    return total_shipments.get();
+    return total_shipments.get().toLocaleString();
   },
 
   total_lanes: function () {
-    return Lanes.find().count();
+    return Lanes.find().count().toLocaleString();
   },
 
   total_users: function () {
-    return Users.find().count();
+    return Users.find().count().toLocaleString();
   },
 
   total_captains: function () {
@@ -52,23 +52,11 @@ Template.root.helpers({
         captains = captains.concat(lane.captains);
       }
     });
-    return _.uniq(captains).length;
+    return _.uniq(captains).length.toLocaleString();
   },
 
   total_harbormasters: function () {
     var harbormasters = Users.find({ harbormaster: true }).fetch();
-    return harbormasters.length;
+    return harbormasters.length.toLocaleString();
   },
-
-  total_destinations: function () {
-    return []
-    var total_destinations = 0;
-    var lanes = Lanes.find().fetch();
-
-    _.each(lanes, function (lane) {
-      total_destinations += lane.destinations.length;
-    });
-
-    return total_destinations;
-  }
 });
