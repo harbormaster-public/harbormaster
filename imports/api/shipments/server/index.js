@@ -1,5 +1,7 @@
 import { Shipments } from '..';
 import { LatestShipment } from '..';
+import { ShipmentCount } from '..';
+import { SalvageCount } from '..';
 import { Lanes } from '../../lanes';
 
 Shipments.rawCollection().createIndex(
@@ -41,26 +43,41 @@ Meteor.publish('Shipments', function (lane, options) {
   return shipments;
 });
 
-//TODO: Reactivity serverside
-Meteor.publish('ShipmentCount', function () {
-  Lanes.find().forEach((lane) => {
-    const count = Shipments.find({ lane: lane._id }).count() || 0;
+Meteor.setTimeout(function () {
+  Meteor.publish('ShipmentCount', function () {
+    Lanes.find().forEach((lane) => {
+      const shipments = Shipments.find({ lane: lane._id });
+      let count = shipments.count() || 0;
+      shipments.observe({
+        added: () => {
+          count += 1;
+          ShipmentCount.upsert(lane._id, { count });
+        },
+      });
 
-    this.added('ShipmentCount', lane._id, { count });
+      ShipmentCount.upsert(lane._id, { count });
+    });
+    return ShipmentCount.find({});
   });
-  this.ready();
-});
 
-Meteor.publish('SalvageCount', function () {
-  Lanes.find().forEach((lane) => {
-    const count = Shipments.find({
-      lane: lane._id,
-      exit_code: { $exists: true, $nin: [0, null] },
-    }).count() || 0;
+  Meteor.publish('SalvageCount', function () {
+    Lanes.find().forEach((lane) => {
+      const shipments = Shipments.find({
+        lane: lane._id,
+        exit_code: { $exists: true, $nin: [0, null] },
+      });
+      let count = shipments.count() || 0;
+      shipments.observe({
+        added: () => {
+          count += 1;
+          SalvageCount.upsert(lane._id, { count });
+        },
+      });
 
-    this.added('SalvageCount', lane._id, { count });
+      SalvageCount.upsert(lane._id, { count });
+    });
+    return SalvageCount.find();
   });
-  this.ready();
 });
 
 Meteor.methods({

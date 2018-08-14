@@ -22,7 +22,10 @@ Template.root.helpers({
     Meteor.call('Shipments#get_latest_date', function (err, res) {
       if (err) throw err;
 
-      res.locale = new Date(res.locale).toLocaleString();
+      res.locale = res.locale != 'never' ?
+        new Date(res.locale).toLocaleString() :
+        res.locale
+      ;
       Session.set('latest_shipment', res);
     });
 
