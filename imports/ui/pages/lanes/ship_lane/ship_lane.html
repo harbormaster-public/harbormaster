@@ -27,19 +27,22 @@
     <h3>Harbor: {{lane.type}}</h3>
     <figure class="work-preview exit-code code-{{exit_code}} {{active}}">
       <figcaption class="work-caption">Work Preview</figcaption>
-      <section>
-        {{{work_preview}}}
+      <section id=work-preview>
+        {{work_preview}}
       </section>
     </figure>
 
     <figure class="work-output">
       <figcaption class="work-caption">Work Output</figcaption>
       <section>
-        {{#if has_work_output}}
-          {{#each work_output}}
-            {{date}}: {{{result}}}<br>
-          {{/each}}
-        {{/if}}
+        <pre>
+          {{#if has_work_output}}
+            {{#each work_output}}
+              {{#if date}}{{date}}: {{/if}}
+              {{#if result}}{{{result}}}{{else}}{{{this}}}{{/if}}<br>
+            {{/each}}
+          {{/if}}
+        </pre>
       </section>
     </figure>
   {{/if}}

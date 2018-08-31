@@ -42,8 +42,8 @@
         {{/unless}}
         {{#if current_lane.type}}
           <legend>Work: {{lane_type}}</legend>
-          <section>
-            {{{render_harbor}}}
+          <section id=rendered-input>
+            {{render_harbor}}
           </section>
           {{#if validating_fields}}
             <button class="button secondary" disabled>Working...</button>
