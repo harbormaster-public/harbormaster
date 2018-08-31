@@ -31,6 +31,12 @@ Template.ship_lane.onCreated(function () {
   });
 });
 
+Template.ship_lane.onRendered(function () {
+  const lane = get_lane(FlowRouter.getParam('name'));
+  // https://github.com/meteor/blaze/issues/205#issuecomment-305156895
+  lane && $('#work-preview').html(lane.rendered_work_preview);
+});
+
 Template.ship_lane.helpers({
   count () { return shipment_count.get(); },
 
@@ -166,11 +172,9 @@ Template.ship_lane.helpers({
           });
         }
       );
-
-      return lane.rendered_work_preview;
+      // https://github.com/meteor/blaze/issues/205#issuecomment-305156895
+      $('#work-preview').html(lane.rendered_work_preview);
     }
-
-    return lane;
   },
 
   can_ship () {

@@ -26,6 +26,14 @@ Template.edit_lane.onCreated(function () {
   });
 });
 
+Template.edit_lane.onRendered(function () {
+  const lane = get_lane(FlowRouter.getParam('name'));
+  const harbor = lane && Harbors.findOne(lane.type) || {};
+  // https://github.com/meteor/blaze/issues/205#issuecomment-305156895
+  if (lane) $('#rendered-input').html(lane.rendered_input);
+  else $('#rendered-input').html(harbor.rendered_input);
+});
+
 Template.edit_lane.helpers({
   lane_name () {
     var name = FlowRouter.getParam('name');
@@ -264,9 +272,9 @@ Template.edit_lane.helpers({
     });
 
     if (not_found.get()) return not_found_text;
-    if (lane.rendered_input) return lane.rendered_input;
-
-    return harbor.rendered_input;
+    // https://github.com/meteor/blaze/issues/205#issuecomment-305156895
+    if (lane.rendered_input) $('#rendered-input').html(lane.rendered_input);
+    else $('#rendered-input').html(harbor.rendered_input);
   },
 
   validating_fields () {

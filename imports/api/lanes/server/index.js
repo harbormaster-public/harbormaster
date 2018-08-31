@@ -174,6 +174,8 @@ Meteor.methods({
     });
     let shipment = Shipments.findOne(shipment_id);
     LatestShipment.upsert(shipment.lane, { shipment });
+    manifest.stdout = shipment.stdout;
+    manifest.stderr = shipment.stderr;
 
     console.log(
       'Shipping completed for lane:',
