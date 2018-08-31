@@ -3,7 +3,7 @@ set -e
 
 depot=~/.harbormaster/depot
 harbors=~/.harbormaster/harbors
-default=(sleep ssh timestamp other-lanes post-to-slack email)
+default=(sleep ssh timestamp other-lanes post-to-slack email javascript)
 github="git@github.com:strictlyskyler"
 
 if [ ! -d $depot ]; then
