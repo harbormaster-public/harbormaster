@@ -56,6 +56,7 @@ Here is a list of Terms used to describe some of Harbormaster's components:
 - **User**, anyone who is able to login via the dashboards, edit their own profiles, and view the status of work
 - **Captain**, a User who can start Shipments to Lanes they Ply
 - **Harbormaster**, an admin User who can invite new Users, Ship to all Lanes, and promote Users to Captains or Harbormasters
+- **Followup**, a Lane to execute when the Shipment at a given Harbor has finished
 - **Salvage Plan**, a Lane to be executed when a Shipment returns a non-zero code
 - **Ply**, the responsibility of Shipping to a Lane
 - **Hook**, allowing remote calls to trigger a Shipment via an RPC interface
@@ -152,18 +153,35 @@ Triggers a call to the `work` method exposed by the Harbor associated with the L
 
 #### #end_shipment
 ```
-H.call('Lanes#end_shipment', lane_id, exit_code, manifest);
+H.end_shipment(lane_id, exit_code, manifest);
 ```
 Ends a Shipment for a Lane matching the `lane_id` string when its `work` is done.  Expects a number, `exit_code`, representing the success or failure of the work, with `0` as success and anything else as failure.  Accepts any updated `manifest` object representing state to be tracked.  Typically called at the end of a Harbor's `work` method.
+
+#### #start_date
+```
+H.start_date();
+```
+Returns a sting matching the format: `YYYY-m-d-HH-mm-ss`.
 
 #### `register`
 ```
 module.exports.register = function (lanes, users, harbors, shipments) {
   // Save a reference to the collections passed here as arguments for later
-  // Return the name of the harbor
+  // Return an object containing the name of the harbor, along with any npm
+  // packages it requires to be available, e.g.:
+  // return { name: 'my harbor', pkgs: ['debug', 'lodash'] }
 };
 ```
 The `register` method of a Harbor is called during Harbormaster's bootstrap.  It is passed a reference to the core collections Harbormaster uses as arguments, should a Harbor optionally need to use them.  This method is expected to return a `String` representing the name of the Harbor.
+
+#### `next`
+```
+module.exports.next = function () {
+  // Called when Harbor registration succeeds, assign deps, e.g.:
+  // fs = require('fs');
+}
+```
+The `next` method of a Harbor is called after Harbormaster has successfully registered that harbor, including installing its dependencies.  This is the expected time to decorate any variables which might be needed for other workflows in the Harbor.
 
 #### `update`
 ```
@@ -191,6 +209,15 @@ module.exports.render_work_preview = function (manifest) {
 }
 ```
 The `render_work_preview` method should return a description of the work to be done at a given Harbor, to be displayed on the "Ship" page for any given Lane.  It is purely informational, and meant to sanity-check work to be done before pushing the "Start Shipment" button.
+
+#### `work`
+```
+module.exports.work = function (lane, manifest) {
+  // A given Harbor's work to be done for a given shipment.
+  // Requires calling H.end_shipment to mark the Shipment as complete.
+}
+```
+The `work` method of a Harbor, where any given custom logic should go.  Any state to report or save should be assigned as a member on the `manifest` argument passed in, and when work has completed, `H.end_shipment` should be called.
 
 ## Contributing
 Contributions welcome.  See the `CONTRIBUTING` file present in this repo for guidelines.
