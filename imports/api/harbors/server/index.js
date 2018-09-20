@@ -61,7 +61,25 @@ Meteor.methods({
       return lane;
     }
     catch (err) { return not_found(err); }
+  },
 
+  'Harbors#get_constraints': (name) => {
+    const key = `constraints.${name}`;
+    const constraints = {
+      global: [],
+      [name]: [],
+    };
+    Harbors.find({ $or: [
+      { 'constraints.global': { $exists: true } },
+      { [key]: { $exists: true } },
+    ] }).forEach((doc) => {
+      if (doc.constraints.global)
+        constraints.global = constraints.global.concat(doc.constraints.global);
+      if (doc.constraints[name])
+        constraints[name] = constraints[name].concat(doc.constraints[name]);
+    });
+
+    return constraints;
   },
 });
 

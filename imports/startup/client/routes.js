@@ -9,6 +9,15 @@ import '../../ui/pages/lanes/ship_lane';
 import '../../ui/pages/users/add_user';
 import '../../ui/pages/lanes/charter';
 
+import { Constraints } from '../../ui/layouts/main/helpers';
+
+FlowRouter.triggers.enter([(context) => {
+  H.call('Harbors#get_constraints', context.route.name, (err, res) => {
+    if (err) throw err;
+    Constraints.set(res);
+  });
+}]);
+
 FlowRouter.route('/', {
   name: 'root',
   action: function () {
