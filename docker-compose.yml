@@ -3,7 +3,7 @@ version: '3.6'
 services:
 
   harbormaster:
-    image: strictlyskyler/harbormaster:1.11.2
+    image: strictlyskyler/harbormaster:1.12.0
     ports:
       - "3000:80"
     container_name: harbormaster
