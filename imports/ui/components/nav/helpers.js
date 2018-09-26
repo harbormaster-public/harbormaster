@@ -7,5 +7,5 @@ Template.nav.helpers({
     if (nav == name) return 'active';
 
     return '';
-  }
-})
+  },
+});

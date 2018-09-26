@@ -1,0 +1,22 @@
+<template name="harbors">
+  <h1>Harbors</h1>
+  <h2>The following Harbors are currently installed:</h2>
+  <ul>
+    {{#each harbor_list}}
+      <li>
+        {{this._id}}
+      </li>
+    {{/each}}
+  </ul>
+  <section class=add-harbor>
+    <h3>Add a new Harbor</h3>
+    <p><strong><em>NOTE:</em></strong> Adding a new Harbor requires Harbormaster to reload.  While reloading, Harbormaster's functionality will be limited until it fully reloads.</p>
+    <form>
+      <label>
+        Path to Harbor's repo:
+        <input type=text class="repo" placeholder="Example: https://github.com/strictlyskyler/harbormaster-timestamp" required>
+      </label>
+      <button class="button hollow add-harbor">Add Harbor</button>
+    </form>
+  </section>
+</template>

@@ -8,6 +8,7 @@ import '../../ui/pages/lanes/edit_lane';
 import '../../ui/pages/lanes/ship_lane';
 import '../../ui/pages/users/add_user';
 import '../../ui/pages/lanes/charter';
+import '../../ui/pages/harbors';
 
 import { Constraints } from '../../ui/layouts/main/helpers';
 
@@ -140,3 +141,13 @@ FlowRouter.route('/profile/:user_id', {
   },
 });
 
+FlowRouter.route('/harbors', {
+  name: 'harbors',
+  action: () => {
+    document.title = `H/harbors`;
+    BlazeLayout.render('main', {
+      header: 'nav',
+      main: 'harbors',
+    });
+  },
+});
