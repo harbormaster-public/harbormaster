@@ -1,3 +1,8 @@
+import URL from 'url';
+import expandTilde from 'expand-tilde';
+import { execSync } from 'child_process';
+import fs from 'fs-extra';
+
 import { Harbors } from '..';
 import { Lanes } from '../../lanes';
 
@@ -80,6 +85,17 @@ Meteor.methods({
     });
 
     return constraints;
+  },
+
+  'Harbors#add': function (repo_url) {
+    this.unblock();
+    const url = URL.parse(repo_url);
+    const name = url.path.split('harbormaster-')[1];
+    const depot = expandTilde('~/.harbormaster/depot');
+    const path = `${depot}/${name}`;
+    const stat = fs.statSync(path);
+    if (stat.isDirectory() || stat.isFile()) fs.removeSync(path);
+    //TODO: install in depot, copy to harbors
   },
 });
 
