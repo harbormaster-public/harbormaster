@@ -11,3 +11,10 @@ a:active, .nav-item:active, .button.hollow:active, .admin .button:active {
   border-color: #aa7a00;
   color: #aa7a00
 }
+
+@media all and (max-width: 1200px) {
+  .menu a.nav-item {
+    padding: 0.7rem 0.5rem;
+    border: 1px solid #aaa;
+  }
+}

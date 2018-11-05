@@ -2,6 +2,7 @@ import URL from 'url';
 import expandTilde from 'expand-tilde';
 import { execSync } from 'child_process';
 import fs from 'fs-extra';
+import path from 'path';
 
 import { Harbors } from '..';
 import { Lanes } from '../../lanes';
@@ -89,13 +90,37 @@ Meteor.methods({
 
   'Harbors#add': function (repo_url) {
     this.unblock();
+    const depot_path = expandTilde('~/.harbormaster/depot');
+    const harbors_path = expandTilde('~/.harbormaster/harbors');
     const url = URL.parse(repo_url);
-    const name = url.path.split('harbormaster-')[1];
-    const depot = expandTilde('~/.harbormaster/depot');
-    const path = `${depot}/${name}`;
-    const stat = fs.statSync(path);
-    if (stat.isDirectory() || stat.isFile()) fs.removeSync(path);
-    //TODO: install in depot, copy to harbors
+    let repo_name = url.path.split('/');
+    repo_name = repo_name[repo_name.length - 1];
+    const repo_path = path.normalize(`${depot_path}/${repo_name}`);
+    const clone_command = 'git clone';
+    const pkg_json = path.normalize(`${repo_path}/package.json`);
+
+    try { fs.statSync(depot_path); }
+    catch (e) { fs.mkdirpSync(depot_path); }
+    try { fs.statSync(harbors_path); }
+    catch (e) { fs.mkdirpSync(harbors_path); }
+    try {
+      fs.statSync(repo_path);
+      fs.removeSync(repo_path);
+    }
+    catch (e) {}
+
+    execSync(`${clone_command} ${repo_url}`, { cwd: depot_path });
+
+    const pkg = require(pkg_json);
+    const harbor_files = [pkg.main];
+    if (pkg.components) harbor_files = harbor_files.concat(components);
+    harbor_files.forEach((file) => {
+      const source_path = path.normalize(`${repo_path}/${file}`);
+      const dest_path = path.normalize(`${harbors_path}/${file}`);
+      fs.copySync(source_path, dest_path);
+    })
+
+    return true;
   },
 });
 

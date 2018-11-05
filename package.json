@@ -18,7 +18,7 @@
     "cytoscape-dagre": "^2.2.2",
     "expand-tilde": "1.2.2",
     "faker": "3.1.0",
-    "fs-extra": "7.0.0",
+    "fs-extra": "^7.0.0",
     "lodash": "4.17.10",
     "meteor-node-stubs": "0.2.4",
     "mkdirp": "^0.5.1",
