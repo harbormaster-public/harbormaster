@@ -9,19 +9,24 @@
     "test:e2e:watch": "SELENIUM_BROWSER=phantomjs chimp --ddp=http://localhost:3000 --watch --mocha --chai --path=.e2e --browser=phantomjs"
   },
   "dependencies": {
-    "@babel/runtime": "7.0.0-beta.44",
+    "@babel/runtime": "^7.13.10",
     "babel-runtime": "6.26.0",
-    "bcrypt": "0.8.7",
-    "body-parser": "1.18.2",
-    "cytoscape": "3.2.14",
-    "cytoscape-dagre": "^2.2.1",
-    "expand-tilde": "1.2.2",
+    "bcrypt": "^5.0.1",
+    "body-parser": "^1.18.2",
+    "cytoscape": "^3.18.1",
+    "cytoscape-dagre": "^2.3.2",
+    "expand-tilde": "^1.2.2",
     "faker": "3.1.0",
-    "lodash": "4.17.10",
+    "foundation-sites": "^6.6.3",
+    "jquery": "^3.6.0",
+    "lodash": "^4.17.21",
     "meteor-node-stubs": "0.2.4",
-    "mkdirp": "^0.5.1",
+    "mkdirp": "^0.5.5",
+    "node-sass": "^5.0.0",
     "slack": "9.0.9",
     "svg.js": "2.6.0",
-    "uuid": "2.0.3"
-  }
+    "uuid": "^2.0.3",
+    "what-input": "^5.2.10"
+  },
+  "devDependencies": {}
 }

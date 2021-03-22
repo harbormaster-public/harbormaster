@@ -1,4 +1,18 @@
-@import '{zurb:foundation-sites}/scss/foundation';
+@import '{}/node_modules/foundation-sites/scss/foundation.scss';
+@import '{}/node_modules/foundation-sites/scss/_global.scss';
+
+@import '{}/node_modules/foundation-sites/scss/xy-grid/_classes.scss';
+@import '{}/node_modules/foundation-sites/scss/xy-grid/_layout.scss';
+@import '{}/node_modules/foundation-sites/scss/xy-grid/_cell.scss';
+@import '{}/node_modules/foundation-sites/scss/xy-grid/_collapse.scss';
+@import '{}/node_modules/foundation-sites/scss/xy-grid/_frame.scss';
+@import '{}/node_modules/foundation-sites/scss/xy-grid/_grid.scss';
+@import '{}/node_modules/foundation-sites/scss/xy-grid/_gutters.scss';
+@import '{}/node_modules/foundation-sites/scss/xy-grid/_layout.scss';
+@import '{}/node_modules/foundation-sites/scss/xy-grid/_position.scss';
+@import '{}/node_modules/foundation-sites/scss/xy-grid/_xy-grid.scss';
+
+
 
 @include foundation-everything;
 

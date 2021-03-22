@@ -1,3 +1,7 @@
+.menu li {
+  list-style-type: none;
+}
+
 .nav-item.active {
   background: #777;
   color: #fff;
