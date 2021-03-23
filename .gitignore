@@ -1,5 +1,7 @@
 node_modules/
 .build
+.cache
+.vscode
 npm-debug.log
 screenshots/*.png
 .DS_Store

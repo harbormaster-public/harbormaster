@@ -26,6 +26,9 @@
     "slack": "9.0.9",
     "svg.js": "2.6.0",
     "uuid": "^2.0.3",
+    "vue": "^2.6.12",
+    "vue-meteor-tracker": "^1.2.3",
+    "vue-router": "^3.5.1",
     "what-input": "^5.2.10"
   },
   "devDependencies": {}

@@ -35,9 +35,9 @@
       },
       "dependencies": {
         "semver": {
-          "version": "7.3.4",
-          "resolved": "https://registry.npmjs.org/semver/-/semver-7.3.4.tgz",
-          "integrity": "sha512-tCfb2WLjqFAtXn4KEdxIhalnRtoKFN7nAwj0B3ZXCbQloV2tq5eDbcTmT68JJD3nRJq24/XgxtQKFIpQdtvmVw==",
+          "version": "7.3.5",
+          "resolved": "https://registry.npmjs.org/semver/-/semver-7.3.5.tgz",
+          "integrity": "sha512-PoeGJYh8HK4BTO/a9Tf6ZG3veo/A7ZVsYrSA6J8ny9nb3B1VrpkuN+z9OE5wfE5p6H4LchYZsegiQgbJD94ZFQ==",
           "requires": {
             "lru-cache": "^6.0.0"
           }
@@ -885,6 +885,11 @@
       "resolved": "https://registry.npmjs.org/lodash.debounce/-/lodash.debounce-4.0.8.tgz",
       "integrity": "sha1-gteb/zCmfEAF/9XiUVMArZyk168="
     },
+    "lodash.omit": {
+      "version": "4.5.0",
+      "resolved": "https://registry.npmjs.org/lodash.omit/-/lodash.omit-4.5.0.tgz",
+      "integrity": "sha1-brGa5aHuHdnfC5aeZs4Lf6MLXmA="
+    },
     "loud-rejection": {
       "version": "1.6.0",
       "resolved": "https://registry.npmjs.org/loud-rejection/-/loud-rejection-1.6.0.tgz",
@@ -1198,7 +1203,8 @@
         },
         "elliptic": {
           "version": "6.3.2",
-          "resolved": "",
+          "resolved": "https://registry.npmjs.org/elliptic/-/elliptic-6.3.2.tgz",
+          "integrity": "sha1-5MgeCCnPCmWrcOmYuCMnI7XBvEg=",
           "requires": {
             "bn.js": "^4.4.0",
             "brorand": "^1.0.1",
@@ -2192,6 +2198,24 @@
         "core-util-is": "1.0.2",
         "extsprintf": "^1.2.0"
       }
+    },
+    "vue": {
+      "version": "2.6.12",
+      "resolved": "https://registry.npmjs.org/vue/-/vue-2.6.12.tgz",
+      "integrity": "sha512-uhmLFETqPPNyuLLbsKz6ioJ4q7AZHzD8ZVFNATNyICSZouqP2Sz0rotWQC8UNBF6VGSCs5abnKJoStA6JbCbfg=="
+    },
+    "vue-meteor-tracker": {
+      "version": "1.2.3",
+      "resolved": "https://registry.npmjs.org/vue-meteor-tracker/-/vue-meteor-tracker-1.2.3.tgz",
+      "integrity": "sha1-7wiuyVbC+mwjFFuufw8oFIDtsFA=",
+      "requires": {
+        "lodash.omit": "^4.5.0"
+      }
+    },
+    "vue-router": {
+      "version": "3.5.1",
+      "resolved": "https://registry.npmjs.org/vue-router/-/vue-router-3.5.1.tgz",
+      "integrity": "sha512-RRQNLT8Mzr8z7eL4p7BtKvRaTSGdCbTy2+Mm5HTJvLGYSSeG9gDzNasJPP/yOYKLy+/cLG/ftrqq5fvkFwBJEw=="
     },
     "what-input": {
       "version": "5.2.10",
