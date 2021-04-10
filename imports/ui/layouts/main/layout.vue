@@ -2,38 +2,43 @@
   <div>
     <div v-if="is_loaded">
       <div v-if="no_users">
-        <add-user fresh=true></add-user>
+        <add-user v-bind:fresh="true"></add-user>
       </div>
       <div v-else>
         <div v-if="logged_in">
           <div v-if="no_harbormasters">
-            <div v-blaze="'new_harbormaster'"></div>
+            <new-harbormaster></new-harbormaster>
+            <!-- <div v-blaze="'new_harbormaster'"></div> -->
           </div>
           <div v-else>
-            <div>
-              <nav></nav>
-            </div>
+            <nav>
+              <navigation></navigation>
+            </nav>
             <div>
               <router-view></router-view>
             </div>
           </div>
         </div>
         <div v-else>
-          <div v-blaze="'welcome'"></div>
+          <welcome></welcome>
         </div>
       </div>
     </div>
-  <div v-else>
-    <div v-blaze="'spinner'"></div>
-  </div>
-    <!-- <div v-blaze="'main'"></div> -->
+    <div v-else>
+      <div v-blaze="'spinner'"></div>
+    </div>
+  <!-- <div v-blaze="'main'"></div> -->
   </div>
 </template>
 
 <script>
 import AddUser from '../../pages/users/add_user';
-import Nav from '../../components/nav';
+import Navigation from '../../components/navigation';
+import NewHarbormaster from '../../components/new_harbormaster';
+import Welcome from '../../components/welcome';
 import { Users } from '../../../api/users';
+
+const Constraints = new ReactiveVar({});
 
 export default {
   meteor: {
@@ -47,10 +52,8 @@ export default {
         ! Session.get('loading')
         && ! Meteor.loggingIn()
       ) {
-        console.log(true);
         return true;
       }
-      console.log(false);
       return false;
     },
 
@@ -59,7 +62,7 @@ export default {
       return false;
     },
 
-    logging_in () {
+    logged_in () {
       return Meteor.user();
     },
 
@@ -69,6 +72,7 @@ export default {
       return ! harbormasters.length ? true : false;
     },
 
+    // Not yet implemented
     constraints () {
       const constraints = Constraints.get();
       for (let [key, value] of Object.entries(constraints)) {
@@ -97,7 +101,9 @@ export default {
 
   components: {
     AddUser,
-    Nav,
+    Navigation,
+    NewHarbormaster,
+    Welcome,
   }
 }
 </script>

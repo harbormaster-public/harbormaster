@@ -1,4 +1,4 @@
-import './ship_lane.html';
-import './events.js';
-import './helpers.js';
-import './ship_lane.css';
+
+import ShipLanePage from './ship_lane.vue';
+
+export default ShipLanePage;

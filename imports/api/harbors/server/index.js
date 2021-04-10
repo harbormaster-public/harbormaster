@@ -15,7 +15,7 @@ Meteor.methods({
     try {
       let harbor = Harbors.findOne(lane.type);
       let success = H.harbors[lane.type].update(lane, values);
-
+      debugger
       if (success) {
         harbor.lanes = harbor.lanes || {};
         harbor.lanes[lane._id] = {
@@ -40,12 +40,17 @@ Meteor.methods({
   },
 
   'Harbors#render_input': function render_input (lane, manifest) {
+    const $newLaneName = 'New';
+    if (lane.name == $newLaneName || !lane.type) return false;
+    
     try {
       lane.rendered_input = H.harbors[lane.type].render_input(manifest, lane);
 
       return lane;
 
     }
+    // Have the harbors been loaded successfully?
+    // The #render_input method is required.
     catch (err) { return not_found(err); }
   },
 

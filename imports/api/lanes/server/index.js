@@ -13,14 +13,14 @@ import _ from 'lodash';
 Lanes.rawCollection().createIndex({ name: 1 }, { background: true });
 
 const trim_manifest = (manifest) => {
-  let trimmed = _.cloneDeep(manifest);
-
   if (manifest.prior_manifest) delete manifest.prior_manifest;
-
+  const trimmed = _.cloneDeep(manifest);
+  
   return trimmed;
 };
 
 Meteor.publish('Lanes', function (lane = {}) {
+  if (lane instanceof Array) return Lanes.find({ _id: { $in: lane }});
   return Lanes.find(lane);
 });
 
@@ -266,7 +266,11 @@ Meteor.methods({
   },
 
   'Lanes#upsert': function (lane) {
-    Lanes.upsert({ _id: lane._id }, lane);
+    const { _id } = lane;
+
+    if (_id && Lanes.findOne(_id)) Lanes.update({ _id }, lane);
+    else Lanes.insert(lane);
+
     return true;
   },
 });

@@ -10,9 +10,8 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.13.10",
-    "babel-runtime": "6.26.0",
     "bcrypt": "^5.0.1",
-    "body-parser": "^1.18.2",
+    "body-parser": "^1.19.0",
     "cytoscape": "^3.18.1",
     "cytoscape-dagre": "^2.3.2",
     "expand-tilde": "^1.2.2",
@@ -27,6 +26,7 @@
     "svg.js": "2.6.0",
     "uuid": "^2.0.3",
     "vue": "^2.6.12",
+    "vue-d3-network": "^0.1.28",
     "vue-meteor-tracker": "^1.2.3",
     "vue-router": "^3.5.1",
     "what-input": "^5.2.10"

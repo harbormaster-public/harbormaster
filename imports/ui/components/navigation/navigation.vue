@@ -1,0 +1,38 @@
+<template>
+  <div>
+    <router-link to="/">Overview</router-link>
+    <router-link to="/lanes">Lanes</router-link>
+    <router-link to="/users">Users</router-link>
+    <router-link to="/profile">My Profile</router-link>
+    <button v-on:click="onClick" class="button logout">Logout</button>
+  </div>
+</template>
+
+<script>
+export default {
+  methods: {
+    onClick () { Accounts.logout(err => { if (err) throw err }) },
+  }
+}
+</script>
+
+<style>
+.menu li {
+  list-style-type: none;
+}
+
+.nav-item.active {
+  background: #777;
+  color: #fff;
+}
+
+a:hover, .nav-item:hover {
+  color: #ffae00;
+}
+
+a:active, .nav-item:active, .button.hollow:active, .admin .button:active { 
+  border-color: #aa7a00;
+  color: #aa7a00
+}
+
+</style>
