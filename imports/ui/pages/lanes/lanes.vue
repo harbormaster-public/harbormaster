@@ -22,11 +22,8 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-if="loading_lanes" class="loading-text">
-          <td colspan=9>Loading...</td>
-        </tr>
 
-        <tr v-else-if="empty" class="empty">
+        <tr v-if="empty" class="empty">
           <td colspan=9>No lanes found.  <router-link to="/lanes/new/edit">Create the first.</router-link></td>
         </tr>
 
@@ -53,6 +50,10 @@
           <td class="followup-column">{{followup_name(lane)}}</td>
           <td class="salvage-plan-column">{{salvage_plan_name(lane)}}</td>
         </tr>
+        <tr v-else class="loading-text">
+        <!-- <tr v-else-if="loading_lanes()" class="loading-text"> -->
+          <td colspan=9>Loading...</td>
+        </tr>
       </tbody>
     </table>
   </div>
@@ -60,21 +61,31 @@
 
 <script>
 import { Lanes } from '../../../api/lanes';
-import { Users } from '../../../api/users';
-import { Shipments } from '../../../api/shipments';
-import { ShipmentCount } from '../../../api/shipments';
-import { SalvageCount } from '../../../api/shipments';
-import { LatestShipment } from '../../../api/shipments';
+import {
+  loading_lanes,
+  sort_by_header,
+  delete_lane,
+  ready,
+  active,
+  can_ply,
+  current_state,
+  followup_name,
+  last_shipped,
+  latest_shipment,
+  salvage_plan_name,
+  total_captains,
+  total_shipments,
+  total_salvage_runs,
+  total_stops,
+  lane_ids,
+  empty,
+  lanes,
+} from './lib';
+import './lanes.css';
 
 let options = {
   sort: { actual: -1 },
 };
-
-let lane_ids = new ReactiveVar([]);
-
-Lanes.find().forEach(lane => {
-  lane_ids.push(lane._id);
-});
 
 export default {
   meteor: {
@@ -84,275 +95,35 @@ export default {
       'LatestShipment': [],
       'Shipments': [lane_ids, options],
     },
-
-    empty () {
-      return (
-        Session.get('total_lanes') === 0 && ! Lanes.find().count()
-      );
-    },
-
-    lanes () {
-      let lanes;
-      let sort_by = Session.get('lanes_table_sort_by');
-      let reverse = Session.get('lanes_table_sort_reverse') ? -1 : 1;
-
-      //TODO: modularize
-      switch (sort_by) {
-        case 'name':
-          lanes = Lanes.find({}, { sort: { name: reverse } });
-          break;
-        case 'captains':
-          lanes = Lanes.find({}, { sort: { captains: -reverse } });
-          break;
-        case 'type':
-          lanes = Lanes.find({}, { sort: { type: reverse } });
-          break;
-        case 'shipped':
-          lanes = Lanes.find({}, {
-            sort: function (lane1, lane2) {
-              let lane1_shipments = Shipments.find({ lane: lane1._id }).fetch();
-              let lane2_shipments = Shipments.find({ lane: lane2._id }).fetch();
-
-              let lane1_date = lane1_shipments.length ?
-                lane1_shipments[lane1_shipments.length - 1].actual :
-                0
-              ;
-              let lane2_date = lane2_shipments.length ?
-                lane2_shipments[lane2_shipments.length - 1].actual :
-                0
-              ;
-              let sort_order = 0;
-
-              if (lane1_date > lane2_date) { sort_order = -1; }
-              else if (lane1_date < lane2_date) { sort_order = 1; }
-
-              if (reverse == -1) { sort_order = -sort_order; }
-              return sort_order;
-            },
-          });
-          break;
-        case 'shipments':
-          lanes = Lanes.find({}, {
-            sort: function (lane1, lane2) {
-              let lane1_shipments = Shipments.find({ lane: lane1._id }).fetch();
-              let lane2_shipments = Shipments.find({ lane: lane2._id }).fetch();
-              let sort_order = 0;
-
-              if (lane1_shipments.length > lane2_shipments.length) {
-                sort_order = -1;
-              }
-              else if (lane1_shipments.length < lane2_shipments.length) {
-              sort_order = 1;
-              }
-
-              if (reverse == -1) { sort_order = -sort_order; }
-              return sort_order;
-            },
-          });
-          break;
-        case 'salvage-runs':
-          lanes = Lanes.find({}, {
-            sort: function (lane1, lane2) {
-              let lane1_shipments = Shipments.find({
-                lane: lane1._id,
-                exit_code: { $ne: 0 },
-              }).fetch();
-              let lane2_shipments = Shipments.find({
-                lane: lane2._id,
-                exit_code: { $ne: 0 },
-              }).fetch();
-              let sort_order = 0;
-
-              if (lane1_shipments.length > lane2_shipments.length) {
-                sort_order = -1;
-              }
-              else if (lane1_shipments.length < lane2_shipments.length) {
-              sort_order = 1;
-              }
-
-              if (reverse == -1) { sort_order = -sort_order; }
-              return sort_order;
-            },
-          });
-          break;
-        default:
-          lanes = Lanes.find();
-          break;
-      }
-      
-      return lanes;
-    },
-
-    loading_lanes () {
-      let total = Session.get('total_lanes');
-      let current = Lanes.find().count();
-
-      if (total !== 0 && ! total || current < total) return true;
-
-      return false;
-    },
-
+    empty,
+    lanes,
   },
 
   methods: {
-    sort_by_header (event) {
-      //TODO: revisit this sorting
-      let sort_value = $(event.target).attr('data-value');
+    loading_lanes,
+    sort_by_header,
+    delete_lane,
+    set_new_lane () { Session.set('lane', null) },
+    ready,
+    active,
+    can_ply,
+    current_state,
+    followup_name,
+    last_shipped,
+    latest_shipment,
+    salvage_plan_name,
+    total_captains,
+    total_shipments,
+    total_salvage_runs,
+    total_stops,
+  },
 
-      $(event.target).siblings('.active')
-        .removeClass('active')
-        .removeClass('reverse')
-      ;
-      $(event.target).addClass('active');
-
-      if (
-        sort_value == Session.get('lanes_table_sort_by') &&
-        !Session.get('lanes_table_sort_reverse')
-      ) {
-        Session.set('lanes_table_sort_reverse', true);
-        $(event.target).addClass('reverse');
-      }
-      else if (Session.get('lanes_table_sort_reverse')) {
-        Session.set('lanes_table_sort_reverse', false);
-        $(event.target).removeClass('reverse');
-      }
-
-      Session.set('lanes_table_sort_by', sort_value);
-    },
-
-    delete_lane (event, lane) {
-      let confirm_message = `Delete lane?\n${lane.name}`;
-      let $row = $(event.target).parents('tr');
-
-      if (window.confirm(confirm_message)) {
-        $row.addClass('deleting');
-        H.call('Lanes#delete', lane, (err, res) => {
-          if (err) throw err;
-          Session.set('total_lanes', res);
-        });
-      }
-    },
-
-    set_new_lane () {
-      Session.set('lane', null);
-    },
-
-    ready () {
-      if (
-        this.$subReady.ShipmentCount && 
-        this.$subReady.LatestShipment &&
-        this.$subReady.SalvageCount &&
-        this.$subReady.Shipments
-      ) return true;
-      return false;
-    },
-
-    active (header) {
-      let active_string = '';
-
-      if (header == Session.get('lanes_table_sort_by')) {
-        active_string += 'active';
-      }
-
-      if (Session.get('lanes_table_sort_reverse')) {
-        active_string += ' reverse';
-      }
-
-      return active_string;
-    },
-
-    can_ply (lane) {
-      var user = Users.findOne(Meteor.user().emails[0].address);
-      if (user && user.harbormaster) {
-        return true;
-      }
-
-      if (lane?.captains && lane?.captains.length) {
-        let captain = _.find(lane.captains, function (email) {
-          return email == Meteor.user().emails[0].address;
-        });
-
-        return captain ? true : false;
-      }
-
-      return false;
-    },
-
-    current_state (lane) {
-      const text_na = 'N/A';
-      const text_error = 'error';
-      const text_ready = 'ready';
-      let latest = LatestShipment.findOne(lane?._id);
-      let active_shipments = Shipments.find({
-        lane: lane?._id,
-        active: true,
-      }).count();
-
-      if (active_shipments) return 'active';
-
-      if (latest && latest.shipment.exit_code) return text_error;
-      if (latest && latest.shipment.exit_code == 0) return text_ready;
-
-      return text_na;
-    },
-
-    followup_name (lane) {
-      let followup = Lanes.findOne(lane?.followup);
-
-      return followup ? followup.name : '';
-    },
-
-    last_shipped (lane) {
-      const latest = LatestShipment.findOne(lane._id);
-      const actual = latest ? latest.shipment.actual : 'Loading...';
-
-      return actual.toLocaleString();
-    },
-
-    latest_shipment (lane) {
-      const latest = LatestShipment.findOne(lane._id);
-      const start = latest ? latest.shipment.start : '';
-
-      return start;
-    },
-
-    salvage_plan_name (lane) {
-      let salvage_plan = Lanes.findOne(lane.salvage_plan);
-
-      return salvage_plan ? salvage_plan.name : '';
-    },
-
-    total_captains (lane) {
-      if (! lane.captains) {
-        return 0;
-      }
-
-      return lane.captains.length;
-    },
-
-    total_shipments (lane) {
-      const count = ShipmentCount.findOne(lane._id);
-      const total = count ? count.count : 'Loading...';
-      // debugger
-      return total.toLocaleString();
-    },
-
-    total_salvage_runs (lane) {
-      const count = SalvageCount.findOne(lane._id);
-      const total = count ? count.count : 'Loading...';
-
-      return total.toLocaleString();
-    },
-
-    total_stops (lane) {
-      var stops = 0;
-
-      _.each(lane.destinations, function (destination) {
-        stops += destination.stops.length;
-      });
-
-      return stops;
-    },
+  created () {
+    Lanes.find().forEach(lane => {
+      let lane_ids_list = lane_ids.get();
+      lane_ids_list.push(lane._id);
+      lane_ids.set(lane_ids_list);
+    });
   },
 
   mounted () {
@@ -367,201 +138,3 @@ export default {
   },
 }
 </script>
-
-<style>
-  th, td {
-    border: 1px solid lightgrey;
-    white-space: nowrap;
-  }
-
-  th {
-    cursor: pointer;
-  }
-
-  /* table tbody tr:nth-child(even) {
-  background-color: #dfdfdf;
-}
-
-.last-shipped-header {
-  width: 210px;
-}
-
-.lanes-table th {
-  cursor: pointer;
-}
-
-.lanes-table th.current-state-header,
-.lanes-table th.followup-header,
-.lanes-table th.salvage-plan-header {
-  cursor: default;
-}
-
-.lanes-table {
-  position: relative;
-  margin-top: 40px
-}
-
-.lanes-table th.active {
-  background: #0af;
-  position: relative;
-  color: #fff;
-}
-
-.lanes-table th.active::after {
-  content: 'v';
-  color: #fff;
-  position: absolute;
-  bottom: -5px;
-  left: 50%;
-  margin-left: -4px;
-}
-
-.lanes-table th.active.reverse:after {
-  content: '^';
-  color: #fff;
-  position: absolute;
-  top: 0;
-  left: 50%;
-  font-size: 18px;
-  margin-left: -4px;
-  margin-top: -2px;
-}
-
-.admin .button {
-  position: absolute;
-}
-
-.admin .charter {
-  left: -108px;
-}
-
-.admin .ship-lane {
-  left: -50px;
-}
-
-.admin .edit-lane {
-  left: 100%;
-  margin-left: 10px;
-}
-
-.admin .delete-lane {
-  left: 100%;
-  margin-left: 55px;
-}
-
-td.active {
-  color: darkgoldenrod;
-}
-
-td.ready {
-  color: green;
-}
-
-td.error {
-  color: red;
-}
-
-.loading-text {
-  background: #ffae00;
-}
-
-tr.deleting {
-  background: #f0a;
-  opacity: 0.5;
-}
-
-tr.deleting .admin {
-  display: none;
-}
-
-@media all and (max-width: 1200px) {
-  .total-shipments-column,
-  .salvage-runs-column,
-  .type-column,
-  .current-state-column,
-  .followup-column,
-  .salvage-plan-column,
-  .captains-column {
-    display: none;
-  }
-
-  .lanes-table {
-    position: absolute;
-    margin: 40px -30px 0;
-  }
-
-  .lanes-table td {
-    font-size: 1.5625rem;
-    padding-bottom: 1rem;
-    position: relative;
-  }
-
-  .lanes-table .admin {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    bottom: 37px;
-  }
-
-  .lanes-table .admin:after {
-    content: '⚙';
-    position: absolute;
-    left: 0;
-    top: 0;
-    font-size: 1rem;
-    color: #ffae00;
-    line-height: 1;
-    height: 50px;
-    width: 100%;
-    cursor: pointer;
-    padding: 10px;
-  }
-
-  .lanes-table .admin:hover:after {
-    color: #aa7a00;
-  }
-
-  .lanes-table .admin.collapsed:after {
-    color: #2199e8;
-    text-align: left;
-    bottom: 0;
-    top: initial;
-    content: '☰';
-  }
-
-  .lanes-table .admin.collapsed:hover:after {
-    color: #1766c3;
-  }
-
-  .lanes-table .admin.collapsed .button {
-    display: none;
-  }
-
-  .lanes-table .admin .button {
-    margin: 0;
-    width: 25%;
-    font-size: 1rem;
-    padding: 20px 0;
-    bottom: 0;
-  }
-
-  .admin .charter {
-    left: 0;
-  }
-
-  .admin .ship-lane {
-    left: 25%;
-  }
-
-  .admin .edit-lane {
-    left: 50%;
-  }
-
-  .lanes-table .admin .delete-lane {
-    left: 75%;
-  }
-} */
-
-</style>

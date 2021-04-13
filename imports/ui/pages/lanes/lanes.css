@@ -1,0 +1,194 @@
+th, td {
+  border: 1px solid lightgrey;
+  white-space: nowrap;
+}
+
+th {
+  cursor: pointer;
+}
+
+/* table tbody tr:nth-child(even) {
+background-color: #dfdfdf;
+}
+
+.last-shipped-header {
+width: 210px;
+}
+
+.lanes-table th {
+cursor: pointer;
+}
+
+.lanes-table th.current-state-header,
+.lanes-table th.followup-header,
+.lanes-table th.salvage-plan-header {
+cursor: default;
+}
+
+.lanes-table {
+position: relative;
+margin-top: 40px
+}
+
+.lanes-table th.active {
+background: #0af;
+position: relative;
+color: #fff;
+}
+
+.lanes-table th.active::after {
+content: 'v';
+color: #fff;
+position: absolute;
+bottom: -5px;
+left: 50%;
+margin-left: -4px;
+}
+
+.lanes-table th.active.reverse:after {
+content: '^';
+color: #fff;
+position: absolute;
+top: 0;
+left: 50%;
+font-size: 18px;
+margin-left: -4px;
+margin-top: -2px;
+}
+
+.admin .button {
+position: absolute;
+}
+
+.admin .charter {
+left: -108px;
+}
+
+.admin .ship-lane {
+left: -50px;
+}
+
+.admin .edit-lane {
+left: 100%;
+margin-left: 10px;
+}
+
+.admin .delete-lane {
+left: 100%;
+margin-left: 55px;
+}
+
+td.active {
+color: darkgoldenrod;
+}
+
+td.ready {
+color: green;
+}
+
+td.error {
+color: red;
+}
+
+.loading-text {
+background: #ffae00;
+}
+
+tr.deleting {
+background: #f0a;
+opacity: 0.5;
+}
+
+tr.deleting .admin {
+display: none;
+}
+
+@media all and (max-width: 1200px) {
+.total-shipments-column,
+.salvage-runs-column,
+.type-column,
+.current-state-column,
+.followup-column,
+.salvage-plan-column,
+.captains-column {
+  display: none;
+}
+
+.lanes-table {
+  position: absolute;
+  margin: 40px -30px 0;
+}
+
+.lanes-table td {
+  font-size: 1.5625rem;
+  padding-bottom: 1rem;
+  position: relative;
+}
+
+.lanes-table .admin {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  bottom: 37px;
+}
+
+.lanes-table .admin:after {
+  content: '⚙';
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-size: 1rem;
+  color: #ffae00;
+  line-height: 1;
+  height: 50px;
+  width: 100%;
+  cursor: pointer;
+  padding: 10px;
+}
+
+.lanes-table .admin:hover:after {
+  color: #aa7a00;
+}
+
+.lanes-table .admin.collapsed:after {
+  color: #2199e8;
+  text-align: left;
+  bottom: 0;
+  top: initial;
+  content: '☰';
+}
+
+.lanes-table .admin.collapsed:hover:after {
+  color: #1766c3;
+}
+
+.lanes-table .admin.collapsed .button {
+  display: none;
+}
+
+.lanes-table .admin .button {
+  margin: 0;
+  width: 25%;
+  font-size: 1rem;
+  padding: 20px 0;
+  bottom: 0;
+}
+
+.admin .charter {
+  left: 0;
+}
+
+.admin .ship-lane {
+  left: 25%;
+}
+
+.admin .edit-lane {
+  left: 50%;
+}
+
+.lanes-table .admin .delete-lane {
+  left: 75%;
+}
+} */

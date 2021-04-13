@@ -4,7 +4,7 @@
       <h1>Welcome to Harbormaster!</h1>
       <h2>You're the first user to sign in.</h2>
       <h3>Please enter your email, and Harbormaster will send you a link to set your password.</h3>
-      <form v-on:submit.prevent="onSubmit()" id="new-instance">
+      <form v-on:submit.prevent="on_submit()" id="new-instance">
         <label>Email:
           <input v-model="invite_email" type=email required class="email-user-invite" placeholder="user@example.com">
         </label>
@@ -15,7 +15,7 @@
       <h1>Invite A User</h1>
       <div v-if="is_harbormaster">
         <h2>Enter a user's email address and password to setup an account for them.</h2>
-        <form v-on:submit.prevent="onSubmit()">
+        <form v-on:submit.prevent="on_submit()">
           <label>Email:
             <input 
             type=email 
@@ -36,44 +36,23 @@
 </template>
 
 <script>
-import { Users } from '../../../../api/users';
+import {
+  is_harbormaster,
+  on_submit,
+} from './lib';
 
 export default {
-  $subscribe: {
-    'Users': [],
-  },
   props: {
     fresh: Boolean,
   },
   meteor: {
-    is_harbormaster () {
-      var user_id = Meteor.user() ? Meteor.user().emails[0].address: '';
-      var user = Users.findOne(user_id);
-
-      if (user && user.harbormaster) { return true; }
-
-      return false;
+    $subscribe: {
+      'Users': [],
     },
+    is_harbormaster,
   },
   methods: {
-    onSubmit () {
-      let { 
-        invite_email,
-        fresh,
-        $route,
-        $router,
-      } = this;
-      
-      H.call('Users#invite_user', invite_email, (err, result) => {
-        const rootPath = "/";
-        
-        if (err) { throw err; }
-
-        if (fresh && $route.path != rootPath) $router.push(rootPath)
-        else $router.push('/users');
-
-      });
-    },
+    on_submit,
   },
 }
 </script>

@@ -1,0 +1,80 @@
+.node:hover,
+.link:hover {
+  cursor: pointer;
+}
+
+.link-label {
+  pointer-events: none;
+}
+
+figure.charter {
+  border: none;
+  text-align: center;
+  position: relative;
+}
+
+.charter figcaption {
+  text-align: left;
+}
+
+.charter div {
+  position: relative;
+}
+
+.svg-path {
+  width: 100%;
+  height: 20px;
+  position: absolute;
+  left: 0;
+  top: -10px;
+}
+
+.svg-path svg {
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+.charter .lane {
+  margin: 10px;
+}
+
+.charter-lane.exit-code.code- {
+  border-color: #f0a;
+  color: #f0a;
+}
+
+.followup-lane.exit-code.code- {
+  border-color: #0af;
+  color: #0af;
+}
+
+.salvage-lane.exit-code.code- {
+  border-color: #fa0;
+  color: #fa0;
+}
+
+.charter .lane.code-0 {
+  color: #000;
+}
+
+.charter .lane.active {
+  background: #ccc;
+  font-weight: bold;
+  border-color: #aaa;
+}
+
+#graph {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+}
+
+#graph canvas {
+  left: 0;
+  border: 1px solid #ccc;
+}
+
+.root {
+  color: #f0a;
+}

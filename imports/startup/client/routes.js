@@ -15,8 +15,6 @@ import EditLanePage from '../../ui/pages/lanes/edit_lane';
 import ShipLanePage from '../../ui/pages/lanes/ship_lane';
 import CharterPage from '../../ui/pages/lanes/charter';
 
-import { Constraints } from '../../ui/layouts/main/helpers';
-
 const routes = [
   {
     path: "/",

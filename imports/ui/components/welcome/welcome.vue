@@ -4,17 +4,6 @@
       <h1>Welcome to Harbormaster!</h1>
       <h2>Please log in.</h2>
       <div v-blaze="'loginButtons'"></div>
-      <!-- {{> loginButtons}} -->
     </div>
   </div>
 </template>
-
-<script>
-export default {
-  
-}
-</script>
-
-<style>
-
-</style>

@@ -37,7 +37,12 @@
 
 <script>
 import { Users } from '../../../api/users';
-import { Lanes } from '../../../api/lanes';
+import {
+  is_harbormaster,
+  captain_lanes,
+  expire_user,
+} from './lib';
+// import './users.css';
 
 export default {
   meteor: {
@@ -47,44 +52,10 @@ export default {
   },
 
   methods: {
-    users () {
-      return Users.find();
-    },
-
-    is_harbormaster (user) {
-      if (!user) user = Users.findOne(H.user()._id);
-      if (user?.harbormaster) { return 'Yes'; }
-
-      return 'No';
-    },
-
-    captain_lanes () {
-      var pliable_lanes = Lanes.find({ captains: { $in: [this._id] } }).fetch();
-      var lane_names = [];
-
-      if (this.harbormaster) { return 'All'; }
-      _.each(pliable_lanes, function (lane) {
-        lane_names.push(lane.name);
-      });
-      return lane_names.length ? lane_names.join(', ') : 'None';
-    },
-
-    expire_user (user) {
-      const confirm_message = `Expire user?\n${user._id}`;
-
-      if (window.confirm(confirm_message)) {
-        H.call('Users#expire_user', user._id, (err, res) => {
-          if (err) throw err;
-          
-          console.log('User expired:', res);
-          alert(`User expired: ${res}`);
-        });
-      }
-    }
+    users () { return Users.find() },
+    is_harbormaster,
+    captain_lanes,
+    expire_user,
   }
 }
 </script>
-
-<style>
-  @import './users.css';
-</style>

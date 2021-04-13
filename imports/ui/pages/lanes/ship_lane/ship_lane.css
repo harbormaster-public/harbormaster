@@ -1,0 +1,67 @@
+pre { 
+  white-space: inherit;
+  overflow-x: auto;
+}
+
+.exit-code {
+  background: rgba(255, 150, 0, 0.75);
+}
+
+.exit-code.code- {
+  background: none;
+}
+
+.exit-code.code-0 {
+  background: rgba(0, 255, 0, 0.25);
+  border-color: rgba(0, 100, 0, 0.25);
+}
+
+.exit-code.code-1 {
+  background-color: #ec5840;
+  color: #fff;
+}
+
+.prompt {
+  color: #666;
+  padding: 0 10px 0 0;
+  display: inline-block;
+}
+
+.results {
+  margin: 0 10px;
+}
+
+figure {
+  border: 1px solid #ccc;
+  padding: 20px 10px;
+}
+
+figcaption {
+  color: #000;
+}
+
+.pre {
+  white-space: pre;
+  font: bold 18px monospace;
+  color: #ccc;
+}
+
+.code- .pre, .code-0 .pre {
+  color: #777;
+}
+
+.work-caption {
+  position: absolute;
+  margin-top: -32.5px;
+  background: #fff;
+  padding: 0 5px;
+}
+
+p {
+  margin: 0;
+}
+
+.work-preview.active {
+  background: #eee;
+}
+
