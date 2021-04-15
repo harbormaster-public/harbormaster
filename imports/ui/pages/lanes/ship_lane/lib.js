@@ -6,7 +6,6 @@ import { Shipments } from '../../../../api/shipments';
 import { history, get_lane } from '../lib/util';
 import { moment } from 'meteor/momentjs:moment';
 
-const shipment_count = new ReactiveVar();
 const not_found = new ReactiveVar(false);
 //TODO: Holdover from Blaze.  Componentize
 const not_found_text = `
@@ -63,7 +62,7 @@ const work_preview = function () {
       false
     ;
 
-    Meteor.call(
+    H.call(
       'Harbors#render_work_preview',
       lane,
       manifest,

@@ -1,8 +1,6 @@
 import {
   Shipments,
   LatestShipment,
-  ShipmentCount,
-  SalvageCount,
 } from '..';
 import { Lanes } from '../../lanes';
 
@@ -57,8 +55,6 @@ Lanes.find().forEach((lane) => {
   let shipment_count = shipments.count() || 0;
   let salvage_count = salvage.count() || 0;
 
-  ShipmentCount.upsert(lane._id, { count: shipment_count });
-  SalvageCount.upsert(lane._id, { count: salvage_count });
   console.log(
     `${lane.name} counted:
     \tShipments: ${shipment_count}
@@ -66,14 +62,6 @@ Lanes.find().forEach((lane) => {
   );
 });
 console.log('Done collecting shipment totals.');
-
-Meteor.publish('ShipmentCount', function () {
-  return ShipmentCount.find({});
-});
-
-Meteor.publish('SalvageCount', function () {
-  return SalvageCount.find();
-});
 
 Meteor.methods({
   'Shipments#get_total': function () {

@@ -71,65 +71,37 @@
     <div v-if="lane && lane.salvage_plan">
       <h4><a class="button warning" :href="'/lanes/'+salvage_plan_name(lane)+'/ship'">Salvage Plan: {{salvage_plan_name(lane)}}</a></h4>
     </div>
-
-    <h2>Shipping Log: Last {{shipping_log_amount_shown}} shipments</h2>
-    <ul>
-      <div v-if="!this.$subReady.Shipments">
-        <li>Loading...</li>
-      </div>
-      <div v-else>
-        <div v-if="has_work_output()">
-          <div v-for="item in shipment_history()" :key="item._id">
-            <li>
-              <a :href="'/lanes/'+lane.slug+'/ship/'+item.start" :class="'button tiny hollow'+(active ?' active':'')+' exit-code code-'+item.exit_code">
-                Shipped {{pretty_date(item.actual)}}; finished {{pretty_date(item.finished)}}; {{duration(item)}} duration
-              </a>
-            </li>
-          </div>
-        </div>
-        <div v-else>
-          <li>None yet.</li>
-        </div>
-      </div>
-    </ul>
+    
+    <shipping-log></shipping-log>
   </div>
 </template>
 
 <script>
+import ShippingLog from '../../../components/shipping_log';
 import { get_lane } from '../lib/util';
 import {
   lane,
   work_preview,
   active,
   exit_code,
-  shipment_history,
   any_active,
   reset_all_active,
   reset_shipment,
   salvage_plan_name,
   followup_name,
-  has_work_output,
   work_output,
   duration,
   pretty_date,
   start_shipment,
+  has_work_output,
 } from './lib';
 import './ship_lane.css';
-
-const options = { sort: { actual: -1 }, limit: H.AMOUNT_SHOWN };
 
 export default {
   meteor: {
     $subscribe: {
-      'Shipments': function () {
-        const name = this.$route.params.name;
-        const lane = get_lane(name);
-
-        return [lane, options];
-      },
       'Lanes': function () { return [get_lane(this.$route.params.name)] },
     },
-
     lane,
     work_preview,
     active,
@@ -137,23 +109,20 @@ export default {
   },
 
   methods: {
-    shipment_history,
     any_active,
     reset_all_active,
     reset_shipment,
     salvage_plan_name,
     followup_name,
-    has_work_output,
     work_output,
     duration,
     pretty_date,
     start_shipment,
+    has_work_output,
   },
 
-  computed: {
-    shipping_log_amount_shown () {
-      return H.AMOUNT_SHOWN;
-    },
-  },
+  components: {
+    ShippingLog
+  }
 }
 </script>

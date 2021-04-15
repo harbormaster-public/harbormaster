@@ -7,6 +7,7 @@ import { Harbors } from '../../../../api/harbors';
 import { count, history, get_lane } from '../lib/util';
 
 const not_found = new ReactiveVar(false);
+//TODO: move to a template?
 const not_found_text = `
   <p><strong>The harbor you're viewing hasn't been installed for this
     Harbormaster instance.</strong></p>
@@ -88,7 +89,7 @@ const slug = function (lane) {
   
   lane = lane && lane.name && lane.name != 'new' ? 
     lane : 
-    get_lane(this.$route.params.name)
+    get_lane(lane)
   ;
   
   if (lane) {
@@ -298,7 +299,7 @@ const submit_form = function () {
     lane.type
   ) {
     
-    slug.bind(this, lane);
+    slug(lane, this.$route.params.name);
     Session.set('validating_fields', true);
     
     return this.update_harbor();

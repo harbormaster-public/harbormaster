@@ -1,5 +1,8 @@
 import { Harbors } from '..';
 import { Lanes } from '../../lanes';
+import { 
+  LatestShipment,
+ } from '../../shipments';
 
 Meteor.publish('Harbors', function () {
   return Harbors.find();
@@ -12,10 +15,10 @@ const not_found = (err) => {
 
 Meteor.methods({
   'Harbors#update': function update_harbor (lane, values) {
+    lane = lane._id ? lane : Lanes.findOne({ name: lane.name });
     try {
       let harbor = Harbors.findOne(lane.type);
       let success = H.harbors[lane.type].update(lane, values);
-      debugger
       if (success) {
         harbor.lanes = harbor.lanes || {};
         harbor.lanes[lane._id] = {
@@ -27,7 +30,16 @@ Meteor.methods({
       }
 
       if (success && lane.rendered_work_preview) {
+        lane.last_shipment = { 
+          shipment: { actual: 'Never', start: '' },
+          shipment_count: 0,
+          salvage_runs: 0,
+        };
         Lanes.update(lane._id, lane);
+        LatestShipment.upsert(
+          lane._id, 
+          lane.last_shipment,
+        );
       }
 
       return { lane, success };

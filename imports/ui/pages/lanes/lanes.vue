@@ -30,7 +30,7 @@
         <tr 
           v-else-if="ready()" 
           v-for="lane in lanes" 
-          :key="lane.id"
+          :key="lane._id"
         >
           <td class="name-column">
               <span v-if="can_ply(lane)" class="admin collapsed">
@@ -43,15 +43,18 @@
           </td>
           <td class="captains-column">{{total_captains(lane)}}</td>
           <td class="type-column">{{lane.type}}</td>
-          <td class="last-shipped-column" width=125><router-link :to="'/lanes/'+lane.slug+'/ship/'+latest_shipment(lane)">{{last_shipped(lane)}}</router-link></td>
-          <td class="total-shipments-column">{{total_shipments(lane)}}</td>
-          <td class="salvage-runs-column">{{total_salvage_runs(lane)}}</td>
+          <td class="last-shipped-column" width=125>
+            <router-link :to="'/lanes/'+lane.slug+'/ship/'+lane.last_shipment.start">
+              {{lane.last_shipment.actual.toLocaleString()}}
+            </router-link>
+          </td>
+          <td class="total-shipments-column">{{lane.shipment_count || '0'}}</td>
+          <td class="salvage-runs-column">{{lane.salvage_runs || '0'}}</td>
           <td :class="'current-state-column '+current_state(lane)">{{current_state(lane)}}</td>
           <td class="followup-column">{{followup_name(lane)}}</td>
           <td class="salvage-plan-column">{{salvage_plan_name(lane)}}</td>
         </tr>
         <tr v-else class="loading-text">
-        <!-- <tr v-else-if="loading_lanes()" class="loading-text"> -->
           <td colspan=9>Loading...</td>
         </tr>
       </tbody>
@@ -74,8 +77,6 @@ import {
   latest_shipment,
   salvage_plan_name,
   total_captains,
-  total_shipments,
-  total_salvage_runs,
   total_stops,
   lane_ids,
   empty,
@@ -90,9 +91,8 @@ let options = {
 export default {
   meteor: {
     $subscribe: {
-      'ShipmentCount': [],
-      'SalvageCount': [],
-      'LatestShipment': [],
+      'Lanes': [],
+      // 'LatestShipment': [],
       'Shipments': [lane_ids, options],
     },
     empty,
@@ -113,8 +113,6 @@ export default {
     latest_shipment,
     salvage_plan_name,
     total_captains,
-    total_shipments,
-    total_salvage_runs,
     total_stops,
   },
 

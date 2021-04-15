@@ -3,8 +3,6 @@ import { Lanes } from '..';
 import {
   Shipments,
   LatestShipment,
-  ShipmentCount,
-  SalvageCount,
 } from '../../shipments';
 import { Harbors } from '../../harbors';
 import uuid from 'uuid';
@@ -25,15 +23,24 @@ Meteor.publish('Lanes', function (lane = {}) {
 });
 
 console.log('Collecting latest shipments...');
+
 Lanes.find().forEach((lane) => {
   console.log(`Finding latest shipment for ${lane.name}...`);
-  if (! LatestShipment.findOne(lane._id)) {
-    let shipment = Shipments.findOne({
-      lane: lane._id }, { sort: { actual: -1 },
-    }) || { actual: 'Never', start: '' };
+
+  if (
+    !lane.last_shipment
+    // !LatestShipment.findOne(lane._id)
+  ) {
+    let shipment = Shipments.findOne(
+      { lane: lane._id }, 
+      { sort: { actual: -1 } }
+    ) || { actual: 'Never', start: '' };
+    lane.last_shipment = shipment;
+    Lanes.update(lane._id, lane);
     LatestShipment.upsert(lane._id, { shipment });
   }
 });
+
 console.log('Done collecting latest shipments.');
 
 H.publish('LatestShipment', function () {
@@ -88,15 +95,13 @@ Meteor.methods({
       stderr: [],
       active: true,
     });
-    let count = ShipmentCount.findOne(lane._id) ?
-      ShipmentCount.findOne(lane._id).count :
-      0;
 
-    count += 1;
+    lane.shipment_count = lane.shipment_count >= 0 ? 
+      lane.shipment_count + 1 
+      : 0
+    ;
     manifest.shipment_start_date = shipment_start_date;
     manifest.shipment_id = shipment_id;
-
-    ShipmentCount.upsert(lane._id, { count });
     Lanes.update(lane._id, lane);
 
     console.log('Starting shipment for lane:', lane.name);
@@ -123,6 +128,8 @@ Meteor.methods({
         });
 
         Shipments.update(shipment_id, shipment);
+        lane.last_shipment = shipment;
+        Lanes.update(lane._id, lane);
         LatestShipment.upsert(shipment.lane, { shipment });
 
         return Meteor.call('Lanes#end_shipment', lane, exit_code, new_manifest);
@@ -149,11 +156,10 @@ Meteor.methods({
     }
 
     if (exit_code && exit_code != 0) {
-      let count = SalvageCount.findOne(lane._id) ?
-        SalvageCount.findOne(lane._id).count :
-        0;
-      count += 1;
-      SalvageCount.upsert(lane._id, { count });
+      lane.salvage_runs = lane.salvage_runs >= 0 ? 
+        lane.salvage_runs + 1 : 
+        0
+      ;
     }
 
     let shipment_id = manifest.shipment_id;
@@ -173,6 +179,8 @@ Meteor.methods({
       },
     });
     let shipment = Shipments.findOne(shipment_id);
+    lane.last_shipment = shipment;
+    Lanes.update(lane._id, lane);
     LatestShipment.upsert(shipment.lane, { shipment });
     manifest.stdout = shipment.stdout;
     manifest.stderr = shipment.stderr;
@@ -228,6 +236,8 @@ Meteor.methods({
   'Lanes#reset_shipment': function (name, date) {
     let lane = Lanes.findOne({ $or: [{ name }, { slug: name }] });
     let shipment = Shipments.findOne({ start: date, lane: lane._id });
+    lane.last_shipment = shipment;
+    Lanes.update(lane._id, lane);
     LatestShipment.upsert(shipment.lane, { shipment });
 
     return Shipments.update(shipment._id, { $set: {

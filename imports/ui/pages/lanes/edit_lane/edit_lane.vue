@@ -3,7 +3,7 @@
     <h1>Edit Lane:</h1>
     <div v-if="plying">
 
-      <form v-on:submit.prevent="submit_form">
+      <form v-on:submit.prevent="submit_form" :key="harbor_refresh">
         <label>Lane Name
           <input 
             v-on:change.prevent="change_lane_name" 
@@ -14,19 +14,19 @@
             class="lane-name" >
         </label>
         <label class="url">Slug
-          <input type=text disabled :value="slug">
+          <input type=text disabled :value="slug(this.$route.params.name)">
         </label>
         <button 
           v-on:click.prevent="back_to_lanes"
           class="button hollow secondary back-to-lanes">Back to Lanes</button>
         <a
-          v-on:click.prevent="new_lane" 
+          v-on:click="new_lane" 
           href="/lanes/new/edit" 
           class="hollow button new-lane" 
           id="new-lane">New Lane</a>
         <div v-if="validate_done()">
           <a 
-            :href="'/lanes/'+lane.slug+'/ship'" 
+            :href="'/lanes/'+lane().slug+'/ship'" 
             class="button success ship-lane hollow">Ship to this Lane</a>
         </div>
         <div v-else>
@@ -141,29 +141,8 @@
         </div>
       </form>
     </div>
-
-    <h2>Shipping Log: Last {{shipping_log_amount_shown}} shipments</h2>
-    <ul>
-      <div v-if="!$subReady.Lanes">
-        <li>Loading...</li>
-      </div>
-      <div v-else>
-        <div v-if="count">
-          <div v-for="shipments in history" :key="shipments.start">
-            <li>
-              <a 
-                :href="'/lanes/'+lane.slug+'/ship/'+shipments.start" 
-                :class="'button tiny hollow'+(shipments.active ?' active':'')+' exit-code code-'+shipments.exit_code">
-                Shipped on {{pretty_date(shipments.actual)}}; finished on {{pretty_date(shipments.finished)}}; {{duration(shipments)}} duration
-              </a>
-            </li>
-          </div>
-        </div>
-        <div v-else>
-          <li>None yet.</li>
-        </div>
-      </div>
-    </ul>
+    
+    <shipping-log></shipping-log>
   </div>
 </template>
 
@@ -205,11 +184,15 @@ import {
   lane_type,
   not_found,
 } from './lib';
+import ShippingLog from '../../../components/shipping_log';
 
 const options = { sort: { actual: -1 }, limit: H.AMOUNT_SHOWN };
-//TODO: move to a template?
 
 export default {
+  components: { 
+    ShippingLog 
+  },
+
   meteor: {
     $subscribe: {
       'Lanes': function () { return [get_lane(this.$route.params.name)] },
@@ -219,11 +202,9 @@ export default {
         return [Harbors.findOne(type)];
       },
     },
-    slug,
     followup_lane,
     salvage_plan_lane,
     lanes,
-    lane,
     lane_count,
     shipment_history,
     shipping_log_amount_shown () { return H.AMOUNT_SHOWN },
@@ -264,6 +245,8 @@ export default {
     change_followup_lane,
     change_salvage_plan,
     change_lane_name,
+    lane,
+    slug,
     prevent_enter_key (event) {
       if (event.key == 'Enter') event.preventDefault();
     },
@@ -273,7 +256,7 @@ export default {
     choose_harbor_type,
     add_followup_lane () { return Session.set('choose_followup', true) },
     add_salvage_plan () { return Session.set('choose_salvage_plan', true) },
-    new_lane () { Session.set('lane', {}) },
+    new_lane () { Session.set('lane', {})},
     get_lane_name,
   },
 
