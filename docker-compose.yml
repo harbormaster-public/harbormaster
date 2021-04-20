@@ -3,7 +3,7 @@ version: '3.6'
 services:
 
   harbormaster:
-    image: strictlyskyler/harbormaster:1.12.0
+    image: strictlyskyler/harbormaster:latest
     ports:
       - "3000:80"
     container_name: harbormaster
@@ -14,9 +14,6 @@ services:
       ROOT_URL: ${ROOT_URL}
       PORT: 80
       # Optional:
-      KADIRA_APP_ID: ${KADIRA_APP_ID}
-      KADIRA_APP_SECRET: ${KADIRA_APP_SECRET}
-      KADIRA_OPTIONS_ENDPOINT: ${KADIRA_OPTIONS_ENDPOINT}
       MAIL_URL: ${MAIL_URL}
       DEBUG: ${DEBUG}
     volumes:

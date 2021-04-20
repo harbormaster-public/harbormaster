@@ -1,5 +1,5 @@
-FROM strictlyskyler/meteor-environment:1.3.0
-MAINTAINER Skyler Brungardt <skyler.brungardt@gmail.com>
+FROM strictlyskyler/meteor-environment:latest
+LABEL maintainer="Skyler Brungardt <skyler.brungardt@gmail.com>"
 
 ADD . /opt/harbormaster
 
