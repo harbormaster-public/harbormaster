@@ -6,12 +6,12 @@
 
 meteor-base@1.4.0             # Packages every Meteor app needs to have
 mobile-experience@1.1.0       # Packages for a great mobile UX
-mongo@1.10.1                   # The database Meteor supports right now
+mongo@1.11.0                   # The database Meteor supports right now
 reactive-var@1.0.11            # Reactive variable for tracker
 tracker@1.2.0                 # Meteor's client-side reactive programming library
 
 es5-shim@4.8.0                # ECMAScript 5 compatibility for older browsers.
-ecmascript@0.15.0              # Enable ECMAScript2015+ syntax in app code
+ecmascript@0.15.1              # Enable ECMAScript2015+ syntax in app code
 
 session@1.2.0
 momentjs:moment
