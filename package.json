@@ -23,6 +23,7 @@
     "slack": "9.0.9",
     "svg.js": "2.6.0",
     "tailwindcss": "^2.1.1",
+    "tiny-json-http": "^7.3.0",
     "uuid": "^2.0.3",
     "vue": "^2.6.12",
     "vue-d3-network": "^0.1.28",
