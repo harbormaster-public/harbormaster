@@ -2,11 +2,11 @@
   "name": "harbormaster",
   "private": true,
   "scripts": {
-    "test": "meteor test --port=4000 --once --driver-package dispatch:mocha-phantomjs",
-    "test:watch": "TEST_WATCH=1 meteor test --port=4000 --driver-package dispatch:mocha-phantomjs",
+    "test": "meteor test --port=4000 --once --driver-package meteortesting:mocha",
+    "test:watch": "TEST_WATCH=1 meteor test --port=4000 --driver-package meteortesting:mocha",
     "start": "meteor run",
-    "test:e2e": "SELENIUM_BROWSER=phantomjs chimp --ddp=http://localhost:3000 --mocha --chai --path=.e2e --browser=phantomjs",
-    "test:e2e:watch": "SELENIUM_BROWSER=phantomjs chimp --ddp=http://localhost:3000 --watch --mocha --chai --path=.e2e --browser=phantomjs"
+    "test:e2e": "TEST_BROWSER_DRIVER=puppeteer npm run test",
+    "test:e2e:watch": "TEST_BROWSER_DRIVER=puppeteer npm run test:watch"
   },
   "dependencies": {
     "@babel/runtime": "^7.13.10",
@@ -36,6 +36,7 @@
     "autoprefixer": "^10.2.5",
     "postcss": "^8.2.10",
     "postcss-import": "^14.0.1",
-    "postcss-load-config": "^3.0.1"
+    "postcss-load-config": "^3.0.1",
+    "puppeteer": "^8.0.0"
   }
 }
