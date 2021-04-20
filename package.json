@@ -12,8 +12,6 @@
     "@babel/runtime": "^7.13.10",
     "bcrypt": "^5.0.1",
     "body-parser": "^1.19.0",
-    "cytoscape": "^3.18.2",
-    "cytoscape-dagre": "^2.3.2",
     "expand-tilde": "^1.2.2",
     "faker": "3.1.0",
     "foundation-sites": "^6.6.3",

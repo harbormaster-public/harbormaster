@@ -1,47 +1,18 @@
-sudo: required
+dist: xenial
+os: linux
 language: node_js
 node_js:
-  - 8
+  - 14
 
-env:
-  global:
-    - "CXX=g++-4.8"
-    - "CC_TEST_REPORTER_ID=48dc78fdf71b05b113f5821ca2f344b2de4705d6c8465c04253dabec1fdc74ff"
-addons:
-  apt:
-    sources:
-      - ubuntu-toolchain-r-test
-    packages:
-      - g++-4.8
 services:
   - mongodb
-# cache:
-#   directories:
-#     - "../travis_phantomjs"
-
-# before_install:
-#   - "export PATH=$PWD/../travis_phantomjs/phantomjs-2.1.1-linux-x86_64/bin:$PATH"
-#   - "if [ $(phantomjs --version) != '2.1.1' ]; then rm -rf $PWD/../travis_phantomjs; mkdir -p $PWD/../travis_phantomjs; fi"
-#   - "if [ $(phantomjs --version) != '2.1.1'  ]; then wget https://bitbucket.org/ariya/phantomjs/downloads/phantomjs-2.1.1-linux-x86_64.tar.bz2 -O $PWD/../travis_phantomjs/phantomjs-2.1.1-linux-x86_64.tar.bz2; fi"
-#   - "if [ $(phantomjs --version) != '2.1.1'  ]; then tar -xvf $PWD/../travis_phantomjs/phantomjs-2.1.1-linux-x86_64.tar.bz2 -C $PWD/../travis_phantomjs; fi"
-#   - "echo `phantomjs --version`"
 
 install:
   - curl https://install.meteor.com | /bin/sh
-  # - npm i -g chimp@0.50.2
   - meteor npm i
   - meteor build .build --directory --debug
   - cd .build/bundle/programs/server && npm install && cd ../../../..
 
-before_script:
-  - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
-  - chmod +x ./cc-test-reporter
-  - ./cc-test-reporter before-build
-
 script:
-  - npm run test
   - MONGO_URL=mongodb://127.0.0.1 ROOT_URL=http://localhost:3000 PORT=3000 node /home/travis/build/StrictlySkyler/harbormaster/.build/bundle/main.js &
   - npm run test:e2e
-
-after_script:
-  - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
