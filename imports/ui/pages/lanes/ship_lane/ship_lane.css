@@ -1,3 +1,8 @@
+pre { 
+  white-space: inherit;
+  overflow-x: auto;
+}
+
 .exit-code {
   background: rgba(255, 150, 0, 0.75);
 }

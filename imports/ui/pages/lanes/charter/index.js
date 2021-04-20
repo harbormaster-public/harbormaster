@@ -1,4 +1,4 @@
-import './charter.html';
-import './helpers';
-import './events';
-import './charter.css';
+
+import CharterPage from './charter.vue';
+
+export default CharterPage;

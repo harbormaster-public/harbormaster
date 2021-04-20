@@ -1,51 +1,23 @@
-form p {
+form input, form textarea {
+  color: #333;
+  padding: 5px 15px;
+}
+
+.lane-name, .slug {
+  width: 100%;
+}
+
+form pre {
   margin-bottom: 15px;
 }
 
-li {
-  list-style-type: circle;
-  margin: 5px;
+fieldset {
+  padding: 5px 15px;
 }
 
-.destination[data-destination-index="0"] .remove-destination {
-  display: none;
-}
-
-.address-field {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  display: inline-block;
-}
-
-.destination-address {
-  padding-right: 15px;
-}
-
-.stop {
-  position: relative;
-}
-
-.stop .close-button,
-.address-field .close-button {
-  right: 0;
-  top: 0;
-  background: #eee;
-  width: 40px;
-  height: 39px;
-  border: 1px solid #ccc;
-}
-
-.stop .close-button {
-  top: 25px;
-}
-
-.destination-address[data-address-index="0"] + .remove-address {
-  display: none;
-}
-
-.stop[data-stop-index="0"] .remove-stop {
-  display: none;
+.followup label,
+.salvage-plan label {
+  margin-left: 10px;
 }
 
 fieldset.followup {
@@ -60,16 +32,88 @@ fieldset.salvage-plan {
   background: #ffae00;
 }
 
-fieldset.captains ul li {
-  display: inline-block;
+fieldset.harbor {
+  background: #333;
 }
 
-.url {
-  margin: 15px 0;
+fieldset.harbor input {
+  margin-left: 10px;
 }
 
-@media all and (max-width: 1200px) {
-  .url {
-    margin: 35px 0;
-  }
+.slug,
+fieldset.captains {
+  background: #7f7f7f;
+}
+
+fieldset.captains label {
+  color: #333;
+}
+
+ul {
+  margin-left: 20px;
+}
+
+li {
+  list-style-type: circle;
+  margin: 5px;
+}
+
+
+legend {
+  color: #fff;
+  background: #666;
+  padding: 2px 5px;
+}
+
+.add-harbor,
+.save,
+#edit-lane-page .ship-lane:hover,
+.new-lane:hover,
+.back-to-lanes:hover {
+  color: #333;
+  border-color: #ffae00;
+  border-right-color: transparent;
+}
+
+.lane-done,
+.choose-harbor-type,
+.add-harbor,
+.save,
+#edit-lane-page .ship-lane,
+.new-lane,
+.back-to-lanes {
+  width: 100%;
+  border-width: 25px;
+  height: 0;
+  padding: 0;
+  line-height: 0;
+  border-color: #333;
+  border-right-color: transparent;
+  text-align: center;
+}
+
+.choose-harbor-type {
+  border-color: #666;
+  border-right-color: transparent;
+}
+
+.lane-done {
+  color: #666;
+  border-color: rgba(50, 50, 50, 0.5);
+  border-right-color: transparent;
+  cursor: not-allowed;
+}
+
+.add-harbor:hover,
+.save {
+  border-color: #0af;
+  border-right-color: transparent;
+}
+
+.choose-harbor-type:hover,
+.add-harbor,
+.save:hover {
+  color: #333;
+  border-color: #ffae00;
+  border-right-color: transparent;
 }

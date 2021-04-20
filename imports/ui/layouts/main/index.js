@@ -1,7 +1,4 @@
-import 'foundation-sites';
+import Layout from './layout.vue';
 
-import './main.html';
-import './main.scss';
-import './helpers';
-import './events';
+export default Layout;
 

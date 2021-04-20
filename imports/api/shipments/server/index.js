@@ -1,8 +1,6 @@
 import {
   Shipments,
   LatestShipment,
-  ShipmentCount,
-  SalvageCount,
 } from '..';
 import { Lanes } from '../../lanes';
 
@@ -34,13 +32,14 @@ Shipments.rawCollection().createIndex(
   { start: 1, lane: 1 }, { background: true }
 );
 
-Meteor.publish('Shipments', function (lane, options) {
+Meteor.publish('Shipments', function (lanes, options) {
   options = options || {};
   let query = {};
-
-  if (lane) query.lane = lane._id;
-
-  let shipments = Shipments.find(query, options);
+  if (lanes && lanes._id) query.lane = lanes._id;
+  else if (lanes && lanes.length > 0 && lanes instanceof Array) {
+    query = { lane: { $in: lanes }};
+  }
+  const shipments = Shipments.find(query, options);
 
   return shipments;
 });
@@ -56,8 +55,6 @@ Lanes.find().forEach((lane) => {
   let shipment_count = shipments.count() || 0;
   let salvage_count = salvage.count() || 0;
 
-  ShipmentCount.upsert(lane._id, { count: shipment_count });
-  SalvageCount.upsert(lane._id, { count: salvage_count });
   console.log(
     `${lane.name} counted:
     \tShipments: ${shipment_count}
@@ -65,14 +62,6 @@ Lanes.find().forEach((lane) => {
   );
 });
 console.log('Done collecting shipment totals.');
-
-Meteor.publish('ShipmentCount', function () {
-  return ShipmentCount.find({});
-});
-
-Meteor.publish('SalvageCount', function () {
-  return SalvageCount.find();
-});
 
 Meteor.methods({
   'Shipments#get_total': function () {
@@ -121,15 +110,23 @@ Meteor.methods({
 
   'Shipments#get_latest_date': function () {
     this.unblock();
-
+    let lane;
+    
     let latest_shipment = Shipments.findOne({}, { sort: { finished: -1 } });
-    if (latest_shipment) {
-      let lane = Lanes.findOne(latest_shipment.lane);
-      return {
-        lane: lane.slug || lane.name,
-        date: latest_shipment.start,
-        locale: latest_shipment.finished.toLocaleString(),
-      };
+    if (latest_shipment) lane = Lanes.findOne(latest_shipment.lane);
+
+    if (latest_shipment && lane) return {
+      lane: lane.slug || lane.name,
+      date: latest_shipment.start,
+      locale: latest_shipment.finished.toLocaleString(),
+    };
+
+    if (latest_shipment) return {
+      lane: '',
+      date: '',
+      locale: `recorded at ${
+        latest_shipment.finished.toLocaleString()
+      }, <b><i>and is orphaned (no lane found to match it).</b></i>`,
     }
 
     return {

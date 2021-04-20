@@ -2,18 +2,17 @@
   "name": "harbormaster",
   "private": true,
   "scripts": {
-    "test": "meteor test --port=4000 --once --driver-package dispatch:mocha-phantomjs",
-    "test:watch": "TEST_WATCH=1 meteor test --port=4000 --driver-package dispatch:mocha-phantomjs",
+    "test": "meteor test --port=4000 --once --driver-package meteortesting:mocha",
+    "test:watch": "TEST_WATCH=1 meteor test --port=4000 --driver-package meteortesting:mocha",
     "start": "meteor run",
-    "test:e2e": "SELENIUM_BROWSER=phantomjs chimp --ddp=http://localhost:3000 --mocha --chai --path=.e2e --browser=phantomjs",
-    "test:e2e:watch": "SELENIUM_BROWSER=phantomjs chimp --ddp=http://localhost:3000 --watch --mocha --chai --path=.e2e --browser=phantomjs"
+    "test:e2e": "TEST_BROWSER_DRIVER=puppeteer npm run test",
+    "test:e2e:watch": "TEST_BROWSER_DRIVER=puppeteer npm run test:watch"
   },
   "dependencies": {
     "@babel/runtime": "^7.13.10",
-    "babel-runtime": "6.26.0",
     "bcrypt": "^5.0.1",
-    "body-parser": "^1.18.2",
-    "cytoscape": "^3.18.1",
+    "body-parser": "^1.19.0",
+    "cytoscape": "^3.18.2",
     "cytoscape-dagre": "^2.3.2",
     "expand-tilde": "^1.2.2",
     "faker": "3.1.0",
@@ -25,8 +24,19 @@
     "node-sass": "^5.0.0",
     "slack": "9.0.9",
     "svg.js": "2.6.0",
+    "tailwindcss": "^2.1.1",
     "uuid": "^2.0.3",
+    "vue": "^2.6.12",
+    "vue-d3-network": "^0.1.28",
+    "vue-meteor-tracker": "^1.2.3",
+    "vue-router": "^3.5.1",
     "what-input": "^5.2.10"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "autoprefixer": "^10.2.5",
+    "postcss": "^8.2.10",
+    "postcss-import": "^14.0.1",
+    "postcss-load-config": "^3.0.1",
+    "puppeteer": "^8.0.0"
+  }
 }

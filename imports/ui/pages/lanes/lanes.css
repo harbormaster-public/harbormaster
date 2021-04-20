@@ -1,5 +1,9 @@
-table tbody tr:nth-child(even) {
-  background-color: #dfdfdf;
+.lanes-table th, td {
+  border: 1px solid lightgrey;
+}
+
+table tbody tr:nth-child(odd) {
+  background-color: #4f4f4f;
 }
 
 .last-shipped-header {
@@ -8,17 +12,38 @@ table tbody tr:nth-child(even) {
 
 .lanes-table th {
   cursor: pointer;
+  padding: 15px 0;
 }
 
-.lanes-table th.current-state-header,
-.lanes-table th.followup-header,
-.lanes-table th.salvage-plan-header {
-  cursor: default;
+.lanes-table th:hover {
+  background: #4f4f4f;
+}
+
+.lanes-table td {
+  text-align: center;
+  position: relative
 }
 
 .lanes-table {
   position: relative;
-  margin-top: 40px
+  width: 100%;
+  border-left-color: #ffae00;
+}
+
+.lanes-table:after,
+.lanes-table:before {
+  content: '';
+  position: absolute;
+  width: 10px;
+  height: 100%;
+  background: #ffae00;
+  left: -10px;
+  top: 0px;
+}
+
+.lanes-table:after {
+  top: initial;
+  bottom: 0px
 }
 
 .lanes-table th.active {
@@ -28,46 +53,108 @@ table tbody tr:nth-child(even) {
 }
 
 .lanes-table th.active::after {
-  content: 'v';
+  content: '⇩';
   color: #fff;
   position: absolute;
   bottom: -5px;
   left: 50%;
-  margin-left: -4px;
+  margin-left: -8px;
 }
 
 .lanes-table th.active.reverse:after {
-  content: '^';
+  content: '⇧';
   color: #fff;
   position: absolute;
   top: 0;
   left: 50%;
   font-size: 18px;
-  margin-left: -4px;
+  margin-left: -8px;
   margin-top: -2px;
 }
 
-.admin .button {
+.name-header {
+  width: 200px;
+}
+
+.admin {
+  font-size: 10px;
   position: absolute;
+  width: 100%;
+  min-width: 185px;
+  height: 100%;
+  margin-top: -25px;
+  left: 0;
+  display: none;
 }
 
-.admin .charter {
-  left: -108px;
+.admin.active {
+  display: block;
 }
 
-.admin .ship-lane {
-  left: -50px;
+.admin a, .admin button {
+  border: 1px solid white;
+  border-radius: 2px 2px 0 0;
+  padding: 5px 2px;
+  min-width: 45px;
+  width: 25%;
+  height: 100%;
+  border-bottom-color: transparent;
+  background: #666;
+  float: left;
 }
 
-.admin .edit-lane {
-  left: 100%;
-  margin-left: 10px;
+.admin a:hover,
+.admin button:hover {
+  border-color: #ffae00;
+  border-bottom-color: transparent;
 }
 
-.admin .delete-lane {
-  left: 100%;
-  margin-left: 55px;
+tr:nth-child(odd) .admin * {
+  background-color: #4f4f4f;
 }
+
+th:first-child,
+td:first-child {
+  border-left-color: transparent;
+}
+
+tr:first-child th:first-child {
+  border-top-left-radius: 2px;
+}
+
+.lane-options {
+  content: '⋯';
+  font-size: 15px;
+  color: #fff;
+  position: absolute;
+  left: 0;
+  top: 0;
+  padding: 0 5px;
+  border: 2px solid transparent;
+  border-radius: 2px;
+  height: 100%;
+}
+
+.delete-lane:hover,
+.lane-options:hover {
+  color: #ffae00;
+  border-color: #ffae00;
+}
+
+.delete-lane:hover {
+  border-bottom-color: transparent;
+}
+
+.lane-options.active {
+  background: #0af;
+  border-color: #07c;
+  color: #07c;
+}
+
+.lane-options:focus {
+  outline: none;
+}
+
 
 td.active {
   color: darkgoldenrod;
@@ -94,92 +181,39 @@ tr.deleting .admin {
   display: none;
 }
 
-@media all and (max-width: 1200px) {
-  .total-shipments-column,
-  .salvage-runs-column,
-  .type-column,
-  .current-state-column,
-  .followup-column,
-  .salvage-plan-column,
-  .captains-column {
-    display: none;
-  }
+#new-lane:hover {
+  color: #333;
+  border-color: #ffae00;
+  border-right-color: transparent;
+}
 
-  .lanes-table {
-    position: absolute;
-    margin: 40px -30px 0;
-  }
+#new-lane {
+  width: 100%;
+  border-width: 25px;
+  height: 0;
+  padding: 0;
+  line-height: 0;
+  border-color: #333;
+  border-right-color: transparent;
+  text-align: center;
+}
 
-  .lanes-table td {
-    font-size: 1.5625rem;
-    padding-bottom: 1rem;
-    position: relative;
-  }
-
-  .lanes-table .admin {
-    position: absolute;
-    left: 0;
+@media all and (max-width: 1023px) {
+  .admin.active {
+    margin-top: 0;
     top: 0;
-    width: 100%;
-    height: 100%;
-    bottom: 37px;
+    left: 98%;
+    z-index: 1;
+    border: 2px solid #ffae00;
+    border-left-color: transparent;
   }
 
-  .lanes-table .admin:after {
-    content: '⚙';
-    position: absolute;
-    left: 0;
-    top: 0;
-    font-size: 1rem;
-    color: #ffae00;
-    line-height: 1;
-    height: 50px;
-    width: 100%;
-    cursor: pointer;
-    padding: 10px;
+  .admin a, .admin button {
+    border-left-color: transparent;
+    border-bottom-color: #fff;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
   }
 
-  .lanes-table .admin:hover:after {
-    color: #aa7a00;
-  }
-
-  .lanes-table .admin.collapsed:after {
-    color: #2199e8;
-    text-align: left;
-    bottom: 0;
-    top: initial;
-    content: '☰';
-  }
-
-  .lanes-table .admin.collapsed:hover:after {
-    color: #1766c3;
-  }
-
-  .lanes-table .admin.collapsed .button {
-    display: none;
-  }
-
-  .lanes-table .admin .button {
-    margin: 0;
-    width: 25%;
-    font-size: 1rem;
-    padding: 20px 0;
-    bottom: 0;
-  }
-
-  .admin .charter {
-    left: 0;
-  }
-
-  .admin .ship-lane {
-    left: 25%;
-  }
-
-  .admin .edit-lane {
-    left: 50%;
-  }
-
-  .lanes-table .admin .delete-lane {
-    left: 75%;
-  }
 }
