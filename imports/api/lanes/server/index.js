@@ -54,12 +54,12 @@ Meteor.methods({
 
   'Lanes#update_webhook_token': function (lane_id, user_id, remove) {
     let lane = Lanes.findOne(lane_id);
-    let token = uuid.v4();
+    let token = uuid.v4().replace(/-/g, '_');
 
     if (lane.tokens && remove) {
       let tokens = _.invert(lane.tokens);
       delete tokens[user_id];
-      lane.tokens = tokens;
+      lane.tokens = _.invert(tokens);
     }
 
     lane.tokens = lane.tokens || {};

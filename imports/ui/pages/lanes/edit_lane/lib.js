@@ -186,20 +186,24 @@ const choose_salvage_plan = function () {
   return Session.get('choose_salvage_plan') || lane && lane.salvage_plan;
 };
 
+const can_ply = function (user, lane) {
+  if (user.harbormaster) return true;
+  if (lane.captains && lane.captains.length) {
+    return lane.captains.find(captain => user._id = captain);
+  }
+  return false;
+};
+
 const captain_list = function () {
   const lane = Session.get('lane');
   const users = Users.find().fetch();
+  const you = Users.findOne(H.userId);
   const captains = users.map(user => ({
     ...user,
-    can_ply: () => {
-      if (user.harbormaster) return true;
-      if (lane.captains instanceof 'Array') {
-        return lane.captains.find(captain => user._id = captain);
-      }
-      return false;
-    },
-    can_set_ply: user.harbormaster
+    can_ply: can_ply(user, lane),
+    can_set_ply: user.harbormaster || you?.harbormaster,
   }));
+  
   return captains;
 };
 
@@ -280,13 +284,13 @@ const validate_done = function () {
 const chosen_followup = function (followup) {
   let lane = get_lane(this.$route.params.name);
   
-  return followup._id && lane ? followup._id == lane.followup : false;
+  return followup._id && lane ? followup._id == lane.followup._id : false;
 };
 
 const chosen_salvage_plan = function (salvage_lane) {
   let lane = get_lane(this.$route.params.name);
 
-  return salvage_lane._id && lane ? salvage_lane._id == lane.salvage_plan : false;
+  return salvage_lane._id && lane ? salvage_lane._id == lane.salvage_plan._id : false;
 };
 
 const submit_form = function () {
@@ -317,7 +321,7 @@ const change_followup_lane = function (event) {
     lane.name != 'New' &&
     lane.type
   ) {
-    lane.followup = followup_lane ? followup_lane._id : null;
+    lane.followup = followup_lane ? followup_lane : null;
     return update_lane(lane);
   }
   return lane;
@@ -332,7 +336,7 @@ const change_salvage_plan = function (event) {
     lane.name != 'New' &&
     lane.type
   ) {
-    lane.salvage_plan = salvage_plan_lane ? salvage_plan_lane._id : null;
+    lane.salvage_plan = salvage_plan_lane ? salvage_plan_lane : null;
     return update_lane(lane);
   }
 };

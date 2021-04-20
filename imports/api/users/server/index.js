@@ -38,4 +38,12 @@ Meteor.methods({
     Users.update(email, user);
     return true;
   },
+
+  'Users#reset_password' (email) {
+    Accounts.sendResetPasswordEmail(
+      Accounts.findUserByEmail(email)._id
+    );
+
+    return email;
+  },
 });

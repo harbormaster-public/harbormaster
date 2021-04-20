@@ -1,36 +1,45 @@
-<template name="edit_lane">
-  <div>
-    <h1>Edit Lane:</h1>
+<template>
+  <div id=edit-lane-page>
+    <h1 class="text-5xl my-2">Edit Lane:</h1>
     <div v-if="plying">
 
       <form v-on:submit.prevent="submit_form" :key="harbor_refresh">
-        <label>Lane Name
-          <input 
-            v-on:change.prevent="change_lane_name" 
-            v-on:keypress="prevent_enter_key"
-            v-model="lane_name"
-            type=text 
-            required 
-            class="lane-name" >
-        </label>
-        <label class="url">Slug
-          <input type=text disabled :value="slug(this.$route.params.name)">
-        </label>
+        <pre>
+          <label>Name:&nbsp;
+            <input 
+              v-on:change.prevent="change_lane_name" 
+              v-on:keypress="prevent_enter_key"
+              v-model="lane_name"
+              type=text 
+              required 
+              class="lane-name"
+            >
+          </label>
+          <br>
+          <label class="url">Slug:&nbsp;
+            <input 
+              type=text 
+              disabled 
+              :value="slug(this.$route.params.name)"
+              class="slug"
+            >
+          </label>
+        </pre>
+        <hr>
         <button 
           v-on:click.prevent="back_to_lanes"
-          class="button hollow secondary back-to-lanes">Back to Lanes</button>
+          class="rounded-sm my-2 block back-to-lanes">Back to Lanes</button>
         <a
           v-on:click="new_lane" 
           href="/lanes/new/edit" 
-          class="hollow button new-lane" 
-          id="new-lane">New Lane</a>
+          class="new-lane rounded-sm my-2 block" >New Lane</a>
         <div v-if="validate_done()">
           <a 
             :href="'/lanes/'+lane().slug+'/ship'" 
-            class="button success ship-lane hollow">Ship to this Lane</a>
+            class="rounded-sm my-2 block ship-lane">Ship to this Lane</a>
         </div>
         <div v-else>
-          <button disabled class="button hollow alert lane-done">Not Ready</button>
+          <button disabled class="rounded-sm my-2 lane-done">Not Ready</button>
         </div>
         <fieldset v-on:change.prevent="change_captains" class="fieldset captains">
           <legend>Captain(s)</legend>
@@ -41,7 +50,7 @@
                   <input 
                     type=checkbox 
                     :checked="captain.can_ply" 
-                    :disabled="captain.can_set_ply" 
+                    :disabled="!captain.can_set_ply" 
                     :value="captain._id">
                   {{captain._id}}
                 </label>
@@ -50,50 +59,50 @@
           </ul>
         </fieldset>
 
-        <h2>Harbor</h2>
+        <h2 class="text-2xl my-2">Harbor</h2>
         <fieldset class="fieldset harbor">
+          <legend v-if="current_lane.type">Work: {{lane_type}}</legend>
+          <legend v-if="!current_lane.type && choose_type">Choose your type of Work:</legend>
           <div v-if="!current_lane.type">
             <div v-if="choose_type">
-              <legend>Choose your type of Work:</legend>
               <div 
                 v-for="harbor in harbors" 
                 :key="harbor._id">
                 <button 
                   v-on:click="choose_harbor_type"
                   :id="'button-choose-'+harbor._id" 
-                  class="button choose-harbor-type" 
+                  class="my-2 rounded-sm block choose-harbor-type" 
                   :data-type="harbor._id">{{harbor._id}}</button>
               </div>
             </div>
             <div v-else>
               <button 
                 v-on:click.prevent="add_destination"
-                class="button add-harbor">
-                <h3><span>+ </span>Add some Work for this Harbor</h3>
+                class="block rounded-sm my-2 add-harbor">
+                Add some Work for this Harbor
               </button>
             </div>
           </div>
           <div v-if="current_lane.type">
-            <legend>Work: {{lane_type}}</legend>
             <section id=rendered-input v-html="render_harbor">
             </section>
             <div v-if="validating_fields">
-              <button class="button secondary" disabled>Working...</button>
+              <button class="" disabled>Working...</button>
             </div>
             <div v-else>
-              <button :class="'button hollow save '+can_save">Save</button>
+              <button :class="'save p-2 rounded-sm my-2 block'+can_save">Save</button>
             </div>
           </div>
         </fieldset>
         <div v-if="!no_followup">
           <button 
             v-on:click.prevent="add_followup_lane"
-            class="button tiny add-followup">Add Followup Destination</button>
+            class="add-followup">Add Followup Destination</button>
         </div>
         <div v-if="!no_salvage">
           <button 
             v-on:click.prevent="add_salvage_plan"
-            class="button tiny warning add-salvage-plan">
+            class="warning add-salvage-plan">
             Add a Salvage Plan
           </button>
         </div>

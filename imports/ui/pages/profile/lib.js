@@ -18,7 +18,7 @@ const handle_change_from_webhook = function (event, lane) {
     remove_token = true;
   }
   
-  Meteor.call(
+  H.call(
     'Lanes#update_webhook_token',
     lane_id, user_id, remove_token,
     function (err) {

@@ -14,6 +14,7 @@ import ProfilePage from '../../ui/pages/profile';
 import EditLanePage from '../../ui/pages/lanes/edit_lane';
 import ShipLanePage from '../../ui/pages/lanes/ship_lane';
 import CharterPage from '../../ui/pages/lanes/charter';
+// import ResetPassword from ''
 
 const routes = [
   {
@@ -28,12 +29,16 @@ const routes = [
   },
   {
     path: "/lanes/:name/edit",
-    name: "edit lane",
+    name: "edit_lane",
     component: EditLanePage,
   },
   {
+    path: '/lanes//ship',
+    redirect: '/lanes',
+  },
+  {
     path: "/lanes/:name/ship/:date?",
-    name: "ship lane",
+    name: "ship_lane",
     component: ShipLanePage,
   },
   {
@@ -48,13 +53,18 @@ const routes = [
   },
   {
     path: "/users/add-user",
-    name: "add user",
+    name: "add_user",
     component: AddUserPage,
   },
   {
     path: "/profile/:user_id?",
     name: "profile",
     component: ProfilePage,
+  },
+  {
+    path: '/#/reset-password/:token',
+    name: 'reset_password',
+    component: RootPage,
   },
 ];
 

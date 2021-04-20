@@ -1,9 +1,9 @@
 <template>
   <div>
-    <form v-if="this.$subReady.Users && this.$subReady.Lanes">
-      <h1><span>User ID:</span> <span>{{user_email()}}</span></h1>
-      <fieldset class="fieldset">
-        <label>Harbormaster
+    <h1 class="text-5xl my-2"><span>User ID:</span> <span>{{user_email()}}</span></h1>
+    <form class="fieldset px-5" v-if="this.$subReady.Users && this.$subReady.Lanes">
+      <fieldset>
+        <label>Harbormaster?
           <input 
             class="is-harbormaster" 
             :disabled="not_harbormaster()" 
@@ -11,19 +11,19 @@
             :checked="is_harbormaster()"
             @change="handle_change_is_harbormaster"
           >
-        </label>
-        <label>Captain
+        </label>&nbsp;
+        <label>Captain?
           <input 
             class="is-captain" 
             disabled 
             type=checkbox 
-            :checked="is_captain()"
+            :checked="is_harbormaster() || is_captain()"
           >
         </label>
       </fieldset>
-      <h2>Lanes</h2>
-        <div :key="lane_list_renders">
-        <ul class="lane-list" v-for="lane in lanes()" :key="lane.render">
+      <h2 class="text-2xl my-2">Lanes</h2>
+      <div :key="lane_list_renders">
+        <ul class="lane-list" v-for="lane in lanes()" :key="lane.name">
             <li>
               <label>
                 <input 
@@ -49,11 +49,11 @@
                 >
                 Webhook allowed?
                 &nbsp;
-              <span v-if="webhook_allowed(lane)">Token: <code>{{webhook_token(lane)}}</code></span>
               </label>
+              <span v-if="webhook_allowed(lane)">Token: </span><code>{{webhook_token(lane)}}</code>
             </li>
         </ul>
-        </div>
+      </div>
     </form>
   </div>
 </template>

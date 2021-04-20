@@ -1,15 +1,17 @@
 <template>
   <div>
-    <h2>Shipping Log: Last {{shipping_log_amount_shown}} shipments</h2>
+    <h2 class="text-2xl my-2">Shipping Log: Last {{shipping_log_amount_shown}} shipments</h2>
     <div v-if="!this.$subReady.Shipments">
       <li>Loading...</li>
     </div>
     <div v-else>
       <div v-if="has_work_output()">
-        <ul>
+        <ul class="shipment-history">
           <li v-for="item in shipment_history" :key="item._id">
-            <a :href="'/lanes/'+lane.slug+'/ship/'+item.start" :class="'button tiny hollow'+(active ?' active':'')+' exit-code code-'+item.exit_code">
-              Shipped {{pretty_date(item.actual)}}; finished {{pretty_date(item.finished)}}; {{duration(item)}} duration
+            <a 
+              :href="'/lanes/'+lane.slug+'/ship/'+item.start" 
+              :class="'rounded-sm px-2 py-1'+(active ?' active':'')+' exit-code code-'+item.exit_code+' shipment-link'"
+            >Shipped {{pretty_date(item.actual)}}; finished {{pretty_date(item.finished)}}; {{duration(item)}} duration
             </a>
           </li>
         </ul>
@@ -63,5 +65,7 @@ export default {
 </script>
 
 <style>
-
+.shipment-history .shipment-link:hover {
+  color: #ffae00;
+}
 </style>

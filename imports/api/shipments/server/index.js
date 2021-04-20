@@ -110,15 +110,23 @@ Meteor.methods({
 
   'Shipments#get_latest_date': function () {
     this.unblock();
-
+    let lane;
+    
     let latest_shipment = Shipments.findOne({}, { sort: { finished: -1 } });
-    if (latest_shipment) {
-      let lane = Lanes.findOne(latest_shipment.lane);
-      return {
-        lane: lane.slug || lane.name,
-        date: latest_shipment.start,
-        locale: latest_shipment.finished.toLocaleString(),
-      };
+    if (latest_shipment) lane = Lanes.findOne(latest_shipment.lane);
+
+    if (latest_shipment && lane) return {
+      lane: lane.slug || lane.name,
+      date: latest_shipment.start,
+      locale: latest_shipment.finished.toLocaleString(),
+    };
+
+    if (latest_shipment) return {
+      lane: '',
+      date: '',
+      locale: `recorded at ${
+        latest_shipment.finished.toLocaleString()
+      }, <b><i>and is orphaned (no lane found to match it).</b></i>`,
     }
 
     return {

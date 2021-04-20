@@ -12,6 +12,7 @@ const empty = function () {
 };
 
 const sort_by_shipped_date = function (lane1, lane2) {
+  let reverse = Session.get('lanes_table_sort_reverse') ? -1 : 1;
   let lane1_shipments = Shipments.find({ lane: lane1._id }).fetch();
   let lane2_shipments = Shipments.find({ lane: lane2._id }).fetch();
 
@@ -33,6 +34,7 @@ const sort_by_shipped_date = function (lane1, lane2) {
 };
 
 const sort_by_total_shipments = function (lane1, lane2) {
+  let reverse = Session.get('lanes_table_sort_reverse') ? -1 : 1;
   let lane1_shipments = Shipments.find({ lane: lane1._id }).fetch();
   let lane2_shipments = Shipments.find({ lane: lane2._id }).fetch();
   let sort_order = 0;
@@ -49,6 +51,7 @@ const sort_by_total_shipments = function (lane1, lane2) {
 };
 
 const sort_by_total_salvage_runs = function (lane1, lane2) {
+  let reverse = Session.get('lanes_table_sort_reverse') ? -1 : 1;
   let lane1_shipments = Shipments.find({
     lane: lane1._id,
     exit_code: { $ne: 0 },
@@ -94,6 +97,15 @@ const lanes = function () {
     case 'salvage-runs':
       lane_list = Lanes.find({}, { sort: sort_by_total_salvage_runs });
       break;
+    case 'state':
+      lane_list = Lanes.find({}, { sort: { 'last_shipment.exit_code': reverse } });
+      break;
+    case 'followup':
+      lane_list = Lanes.find({}, { sort: { 'followup.name': reverse } });
+      break;
+    case 'salvage':
+      lane_list = Lanes.find({}, { sort: { 'salvage_plan.name': reverse } });
+      break;
     default:
       lane_list = Lanes.find();
       break;
@@ -111,7 +123,7 @@ const loading_lanes = function () {
   return false;
 };
 
-const sort_lane_table_reverse = function (sort) {
+const sort_lane_table_reverse = function (sort_value) {
   return (
     sort_value == Session.get('lanes_table_sort_by') &&
     !Session.get('lanes_table_sort_reverse')
@@ -219,7 +231,7 @@ const current_state = function (lane) {
 };
 
 const followup_name = function (lane) {
-  let followup = Lanes.findOne(lane?.followup);
+  let followup = Lanes.findOne(lane?.followup?._id);
 
   return followup ? followup.name : '';
 };
@@ -241,7 +253,7 @@ const latest_shipment = function (lane) {
 };
 
 const salvage_plan_name = function (lane) {
-  let salvage_plan = Lanes.findOne(lane.salvage_plan);
+  let salvage_plan = Lanes.findOne(lane?.salvage_plan?._id);
 
   return salvage_plan ? salvage_plan.name : '';
 };

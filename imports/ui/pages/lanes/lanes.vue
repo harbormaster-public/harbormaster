@@ -1,13 +1,13 @@
 <template>
   <div>
-    <h1>Lanes</h1>
+    <h1 class="text-5xl my-2">Lanes</h1>
     <router-link 
       to="/lanes/new/edit" 
-      class="hollow button" 
+      class="p-2 border-2 rounded-sm my-2 block" 
       id="new-lane"
       @click="set_new_lane"
       >New Lane</router-link>
-    <table class="lanes-table">
+    <table class="lanes-table table-auto my-2">
       <thead>
         <tr>
           <th @click="sort_by_header" :class="'name-header name-column '+active('name')" data-value=name>Name</th>
@@ -16,9 +16,9 @@
           <th @click="sort_by_header" :class="'last-shipped-header last-shipped-column '+active('shipped')" data-value=shipped>Last Shipped</th>
           <th @click="sort_by_header" :class="'total-shipments-column total-shipments-header '+active('shipments')" data-value=shipments>Total Completed Shipments</th>
           <th @click="sort_by_header" :class="'salvage-runs-column total-salvage-runs-header '+active('salvage-runs')" data-value=salvage-runs>Total Salvage Runs</th>
-          <th @click="sort_by_header" class="current-state-header current-state-column" disabled>Current State</th>
-          <th @click="sort_by_header" class="followup-header followup-column" disabled>Followup</th>
-          <th @click="sort_by_header" class="salvage-plan-header salvage-plan-column" disabled>Salvage Plan</th>
+          <th @click="sort_by_header" class="current-state-header current-state-column" data-value=state>Current State</th>
+          <th @click="sort_by_header" class="followup-header followup-column" data-value=followup>Followup</th>
+          <th @click="sort_by_header" class="salvage-plan-header salvage-plan-column" data-value=salvage>Salvage Plan</th>
         </tr>
       </thead>
       <tbody>
@@ -33,19 +33,20 @@
           :key="lane._id"
         >
           <td class="name-column">
-              <span v-if="can_ply(lane)" class="admin collapsed">
-                <router-link :to="'/lanes/'+lane.slug+'/charter'" class="button info tiny charter">Charter</router-link>
-                <router-link :to="'/lanes/'+lane.slug+'/ship'" class="button tiny success ship-lane">Ship</router-link>
-                <router-link :to="'/lanes/'+lane.slug+'/edit'" class="button tiny secondary edit-lane">Edit</router-link>
-                <button @click="delete_lane($event, lane)" class="button tiny warning delete-lane">Delete</button>
-              </span>
+            <button @click="handle_opts_click" class="lane-options">⋯</button>
+            <span v-if="can_ply(lane)" class="admin">
+              <router-link :to="'/lanes/'+lane.slug+'/charter'" class="charter">Charter</router-link>
+              <router-link :to="'/lanes/'+lane.slug+'/ship'" class="ship-lane">Ship</router-link>
+              <router-link :to="'/lanes/'+lane.slug+'/edit'" class="edit-lane">Edit</router-link>
+              <button @click="delete_lane($event, lane)" class="delete-lane">Delete</button>
+            </span>
             <span class="name">{{lane.name}}</span>
           </td>
           <td class="captains-column">{{total_captains(lane)}}</td>
           <td class="type-column">{{lane.type}}</td>
           <td class="last-shipped-column" width=125>
             <router-link :to="'/lanes/'+lane.slug+'/ship/'+lane.last_shipment.start">
-              {{lane.last_shipment.actual.toLocaleString()}}
+              {{lane.last_shipment.actual && lane.last_shipment.actual.toLocaleString()}}
             </router-link>
           </td>
           <td class="total-shipments-column">{{lane.shipment_count || '0'}}</td>
@@ -92,7 +93,6 @@ export default {
   meteor: {
     $subscribe: {
       'Lanes': [],
-      // 'LatestShipment': [],
       'Shipments': [lane_ids, options],
     },
     empty,
@@ -100,10 +100,38 @@ export default {
   },
 
   methods: {
+    handle_opts_click (event) {
+      if (event.target.getAttribute('class').match(/active/)) {
+        event.target.nextElementSibling.setAttribute(
+          'class',
+          event
+            .target
+            .nextElementSibling
+            .getAttribute('class')
+            .replace(' active', ''),
+        );
+        return event.target.setAttribute(
+          'class',
+          event.target.getAttribute('class').replace(' active', ''),
+        );
+      }
+
+      event.target.nextElementSibling.setAttribute(
+        'class',
+        event
+          .target
+          .nextElementSibling
+          .getAttribute('class') + ' active',
+      );
+      return event.target.setAttribute(
+        'class',
+        event.target.getAttribute('class') + ' active',
+      );
+    },
+    set_new_lane () { Session.set('lane', null) },
     loading_lanes,
     sort_by_header,
     delete_lane,
-    set_new_lane () { Session.set('lane', null) },
     ready,
     active,
     can_ply,

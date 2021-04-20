@@ -12,7 +12,7 @@
     "@babel/runtime": "^7.13.10",
     "bcrypt": "^5.0.1",
     "body-parser": "^1.19.0",
-    "cytoscape": "^3.18.1",
+    "cytoscape": "^3.18.2",
     "cytoscape-dagre": "^2.3.2",
     "expand-tilde": "^1.2.2",
     "faker": "3.1.0",
@@ -24,6 +24,7 @@
     "node-sass": "^5.0.0",
     "slack": "9.0.9",
     "svg.js": "2.6.0",
+    "tailwindcss": "^2.1.1",
     "uuid": "^2.0.3",
     "vue": "^2.6.12",
     "vue-d3-network": "^0.1.28",
@@ -31,5 +32,10 @@
     "vue-router": "^3.5.1",
     "what-input": "^5.2.10"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "autoprefixer": "^10.2.5",
+    "postcss": "^8.2.10",
+    "postcss-import": "^14.0.1",
+    "postcss-load-config": "^3.0.1"
+  }
 }

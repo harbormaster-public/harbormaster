@@ -11,13 +11,8 @@ const shipments_last_24_hours = function () {
 const latest_shipment = function () {
   let latest_shipment = Session.get('latest_shipment') || false;
 
-  Meteor.call('Shipments#get_latest_date', function (err, res) {
+  H.call('Shipments#get_latest_date', function (err, res) {
     if (err) throw err;
-
-    res.locale = res.locale != 'never' ?
-      new Date(res.locale).toLocaleString() :
-      res.locale
-    ;
     Session.set('latest_shipment', res);
   });
 

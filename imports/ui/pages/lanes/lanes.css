@@ -1,194 +1,219 @@
-th, td {
+.lanes-table th, td {
   border: 1px solid lightgrey;
-  white-space: nowrap;
 }
 
-th {
-  cursor: pointer;
-}
-
-/* table tbody tr:nth-child(even) {
-background-color: #dfdfdf;
+table tbody tr:nth-child(odd) {
+  background-color: #4f4f4f;
 }
 
 .last-shipped-header {
-width: 210px;
+  width: 210px;
 }
 
 .lanes-table th {
-cursor: pointer;
+  cursor: pointer;
+  padding: 15px 0;
 }
 
-.lanes-table th.current-state-header,
-.lanes-table th.followup-header,
-.lanes-table th.salvage-plan-header {
-cursor: default;
-}
-
-.lanes-table {
-position: relative;
-margin-top: 40px
-}
-
-.lanes-table th.active {
-background: #0af;
-position: relative;
-color: #fff;
-}
-
-.lanes-table th.active::after {
-content: 'v';
-color: #fff;
-position: absolute;
-bottom: -5px;
-left: 50%;
-margin-left: -4px;
-}
-
-.lanes-table th.active.reverse:after {
-content: '^';
-color: #fff;
-position: absolute;
-top: 0;
-left: 50%;
-font-size: 18px;
-margin-left: -4px;
-margin-top: -2px;
-}
-
-.admin .button {
-position: absolute;
-}
-
-.admin .charter {
-left: -108px;
-}
-
-.admin .ship-lane {
-left: -50px;
-}
-
-.admin .edit-lane {
-left: 100%;
-margin-left: 10px;
-}
-
-.admin .delete-lane {
-left: 100%;
-margin-left: 55px;
-}
-
-td.active {
-color: darkgoldenrod;
-}
-
-td.ready {
-color: green;
-}
-
-td.error {
-color: red;
-}
-
-.loading-text {
-background: #ffae00;
-}
-
-tr.deleting {
-background: #f0a;
-opacity: 0.5;
-}
-
-tr.deleting .admin {
-display: none;
-}
-
-@media all and (max-width: 1200px) {
-.total-shipments-column,
-.salvage-runs-column,
-.type-column,
-.current-state-column,
-.followup-column,
-.salvage-plan-column,
-.captains-column {
-  display: none;
-}
-
-.lanes-table {
-  position: absolute;
-  margin: 40px -30px 0;
+.lanes-table th:hover {
+  background: #4f4f4f;
 }
 
 .lanes-table td {
-  font-size: 1.5625rem;
-  padding-bottom: 1rem;
+  text-align: center;
+  position: relative
+}
+
+.lanes-table {
   position: relative;
+  width: 100%;
+  border-left-color: #ffae00;
 }
 
-.lanes-table .admin {
+.lanes-table:after,
+.lanes-table:before {
+  content: '';
   position: absolute;
-  left: 0;
-  top: 0;
-  width: 100%;
+  width: 10px;
   height: 100%;
-  bottom: 37px;
+  background: #ffae00;
+  left: -10px;
+  top: 0px;
 }
 
-.lanes-table .admin:after {
-  content: '⚙';
-  position: absolute;
-  left: 0;
-  top: 0;
-  font-size: 1rem;
-  color: #ffae00;
-  line-height: 1;
-  height: 50px;
-  width: 100%;
-  cursor: pointer;
-  padding: 10px;
-}
-
-.lanes-table .admin:hover:after {
-  color: #aa7a00;
-}
-
-.lanes-table .admin.collapsed:after {
-  color: #2199e8;
-  text-align: left;
-  bottom: 0;
+.lanes-table:after {
   top: initial;
-  content: '☰';
+  bottom: 0px
 }
 
-.lanes-table .admin.collapsed:hover:after {
-  color: #1766c3;
+.lanes-table th.active {
+  background: #0af;
+  position: relative;
+  color: #fff;
 }
 
-.lanes-table .admin.collapsed .button {
+.lanes-table th.active::after {
+  content: '⇩';
+  color: #fff;
+  position: absolute;
+  bottom: -5px;
+  left: 50%;
+  margin-left: -8px;
+}
+
+.lanes-table th.active.reverse:after {
+  content: '⇧';
+  color: #fff;
+  position: absolute;
+  top: 0;
+  left: 50%;
+  font-size: 18px;
+  margin-left: -8px;
+  margin-top: -2px;
+}
+
+.name-header {
+  width: 200px;
+}
+
+.admin {
+  font-size: 10px;
+  position: absolute;
+  width: 100%;
+  min-width: 185px;
+  height: 100%;
+  margin-top: -25px;
+  left: 0;
   display: none;
 }
 
-.lanes-table .admin .button {
-  margin: 0;
+.admin.active {
+  display: block;
+}
+
+.admin a, .admin button {
+  border: 1px solid white;
+  border-radius: 2px 2px 0 0;
+  padding: 5px 2px;
+  min-width: 45px;
   width: 25%;
-  font-size: 1rem;
-  padding: 20px 0;
-  bottom: 0;
+  height: 100%;
+  border-bottom-color: transparent;
+  background: #666;
+  float: left;
 }
 
-.admin .charter {
+.admin a:hover,
+.admin button:hover {
+  border-color: #ffae00;
+  border-bottom-color: transparent;
+}
+
+tr:nth-child(odd) .admin * {
+  background-color: #4f4f4f;
+}
+
+th:first-child,
+td:first-child {
+  border-left-color: transparent;
+}
+
+tr:first-child th:first-child {
+  border-top-left-radius: 2px;
+}
+
+.lane-options {
+  content: '⋯';
+  font-size: 15px;
+  color: #fff;
+  position: absolute;
   left: 0;
+  top: 0;
+  padding: 0 5px;
+  border: 2px solid transparent;
+  border-radius: 2px;
+  height: 100%;
 }
 
-.admin .ship-lane {
-  left: 25%;
+.delete-lane:hover,
+.lane-options:hover {
+  color: #ffae00;
+  border-color: #ffae00;
 }
 
-.admin .edit-lane {
-  left: 50%;
+.delete-lane:hover {
+  border-bottom-color: transparent;
 }
 
-.lanes-table .admin .delete-lane {
-  left: 75%;
+.lane-options.active {
+  background: #0af;
+  border-color: #07c;
+  color: #07c;
 }
-} */
+
+.lane-options:focus {
+  outline: none;
+}
+
+
+td.active {
+  color: darkgoldenrod;
+}
+
+td.ready {
+  color: green;
+}
+
+td.error {
+  color: red;
+}
+
+.loading-text {
+  background: #ffae00;
+}
+
+tr.deleting {
+  background: #f0a;
+  opacity: 0.5;
+}
+
+tr.deleting .admin {
+  display: none;
+}
+
+#new-lane:hover {
+  color: #333;
+  border-color: #ffae00;
+  border-right-color: transparent;
+}
+
+#new-lane {
+  width: 100%;
+  border-width: 25px;
+  height: 0;
+  padding: 0;
+  line-height: 0;
+  border-color: #333;
+  border-right-color: transparent;
+  text-align: center;
+}
+
+@media all and (max-width: 1023px) {
+  .admin.active {
+    margin-top: 0;
+    top: 0;
+    left: 98%;
+    z-index: 1;
+    border: 2px solid #ffae00;
+    border-left-color: transparent;
+  }
+
+  .admin a, .admin button {
+    border-left-color: transparent;
+    border-bottom-color: #fff;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+}

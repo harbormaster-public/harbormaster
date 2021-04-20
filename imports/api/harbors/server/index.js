@@ -31,7 +31,8 @@ Meteor.methods({
 
       if (success && lane.rendered_work_preview) {
         lane.last_shipment = { 
-          shipment: { actual: 'Never', start: '' },
+          actual: 'Never', 
+          start: '',
           shipment_count: 0,
           salvage_runs: 0,
         };
