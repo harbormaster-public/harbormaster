@@ -11,6 +11,8 @@ RUN ln -s /opt/harbormaster/start.sh /start.sh
 
 WORKDIR /harbormaster/bundle/programs/server
 RUN npm install
+WORKDIR /
 
 VOLUME /root/.ssh
 
+ENTRYPOINT ["./start.sh"]

@@ -22,7 +22,13 @@ let reload = () => {
   process.exit(reload_exit_code);
 };
 
-fs.watch(harbors_dir, { recursive: true }, reload);
+// https://nodejs.org/docs/latest/api/fs.html#fs_caveats
+try {
+  fs.watch(harbors_dir, { recursive: true }, reload);
+} catch (err) {
+  console.error(err);
+  fs.watch(harbors_dir, { recursive: false }, reload);
+}
 
 console.log(`Registering Harbors from: ${harbors_dir}`);
 fs.readdirSync(harbors_dir).forEach(function (file) {
