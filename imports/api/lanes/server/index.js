@@ -27,10 +27,7 @@ console.log('Collecting latest shipments...');
 Lanes.find().forEach((lane) => {
   console.log(`Finding latest shipment for ${lane.name}...`);
 
-  if (
-    !lane.last_shipment
-    // !LatestShipment.findOne(lane._id)
-  ) {
+  if (!lane.last_shipment) {
     let shipment = Shipments.findOne(
       { lane: lane._id }, 
       { sort: { actual: -1 } }
@@ -91,8 +88,8 @@ Meteor.methods({
       actual: new Date(),
       lane: lane._id,
       stdin: [],
-      stdout: [],
-      stderr: [],
+      stdout: {},
+      stderr: {},
       active: true,
     });
 
@@ -121,18 +118,29 @@ Meteor.methods({
       if (new_manifest && new_manifest.error) {
         let exit_code = 1;
         let shipment = Shipments.findOne(shipment_id);
+        let key = new Date();
+        let result = new_manifest.error.toString();
 
-        shipment.stderr.push({
-          date: new Date(),
-          result: new_manifest.error.toString(),
-        });
+        // shipment.stderr.push({
+        //   date: new Date(),
+        //   result: new_manifest.error.toString(),
+        // });
+        shipment.stderr[key] = shipment.stderr[key].length ?
+          shipment.stderr[key] + result :
+          result
+        ;
 
-        Shipments.update(shipment_id, shipment);
         lane.last_shipment = shipment;
+        Shipments.update(shipment_id, shipment);
         Lanes.update(lane._id, lane);
         LatestShipment.upsert(shipment.lane, { shipment });
 
-        return Meteor.call('Lanes#end_shipment', lane, exit_code, new_manifest);
+        return Meteor.call(
+          'Lanes#end_shipment', 
+          lane, 
+          exit_code, 
+          new_manifest
+        );
       }
 
       return new_manifest;

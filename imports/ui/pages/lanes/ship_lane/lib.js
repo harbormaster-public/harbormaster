@@ -92,8 +92,8 @@ const has_work_output = function () {
 
   if (
     shipment && (
-      shipment.stdout.length || 
-      shipment.stderr.length || 
+      Object.keys(shipment.stdout).length || 
+      Object.keys(shipment.stderr).length || 
       shipment.exit_code == 0
       ) ||
     any_shipment
@@ -107,11 +107,14 @@ const has_work_output = function () {
 const work_output = function () {
   let lane = get_lane(this.$route.params.name);
   let date = this.$route.params.date;
-  let shipment = Shipments.findOne({ 
-    lane: lane?._id, 
-    start: date,
-  });
-
+  let shipment = lane.latest_shipment ? 
+    lane.latest_shipment :
+    Shipments.findOne({ 
+      lane: lane?._id, 
+      start: date,
+    })
+  ;
+  // debugger
   return shipment;
 };
 

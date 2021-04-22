@@ -1,15 +1,17 @@
 <template>
-  <div id=edit-lane-page>
-    <h1 class="text-5xl my-2">Edit Lane:</h1>
+  <div v-if="this.$subReady.Lanes && this.$subReady.Users && this.$subReady.Harbors" id=edit-lane-page>
+    <h1 class="text-5xl my-2">Edit Lane</h1>
     <div v-if="plying">
 
-      <form v-on:submit.prevent="submit_form" :key="harbor_refresh">
+      <form 
+        v-on:submit.prevent="submit_form" 
+        :key="harbor_refresh">
         <pre>
           <label>Name:&nbsp;
             <input 
-              v-on:change.prevent="change_lane_name" 
-              v-on:keypress="prevent_enter_key"
-              v-model="lane_name"
+              @change.prevent="change_lane_name" 
+              @keypress="prevent_enter_key"
+              :value="get_lane_name()"
               type=text 
               required 
               class="lane-name"
@@ -94,19 +96,12 @@
             </div>
           </div>
         </fieldset>
+
         <div v-if="!no_followup">
           <button 
             v-on:click.prevent="add_followup_lane"
-            class="add-followup">Add Followup Destination</button>
+            class="add-followup rounded-sm my-2 block">Add Followup Destination</button>
         </div>
-        <div v-if="!no_salvage">
-          <button 
-            v-on:click.prevent="add_salvage_plan"
-            class="warning add-salvage-plan">
-            Add a Salvage Plan
-          </button>
-        </div>
-
         <div v-if="choose_followup">
           <fieldset v-on:change.prevent="change_followup_lane" class="fieldset followup">
             <legend>Followup: {{followup_lane}}</legend>
@@ -127,6 +122,13 @@
           </fieldset>
         </div>
 
+        <div v-if="!no_salvage">
+          <button 
+            v-on:click.prevent="add_salvage_plan"
+            class="warning add-salvage-plan rounded-sm my-2 block">
+            Add a Salvage Plan
+          </button>
+        </div>
         <div v-if="choose_salvage_plan">
           <fieldset 
             v-on:change.prevent="change_salvage_plan" 
@@ -152,6 +154,9 @@
     </div>
     
     <shipping-log></shipping-log>
+  </div>
+  <div v-else>
+    <h1 class="text-5xl my-2">Loading...</h1>
   </div>
 </template>
 
@@ -233,8 +238,11 @@ export default {
   },
 
   data () {
+    // let lane_name = this.get_lane_name();
+
     return {
       harbor_refresh: 0,
+      lane_name: this.get_lane_name(),
     };
   },
 
@@ -276,13 +284,5 @@ export default {
 
     if (lane) Meteor.subscribe('Shipments', lane, options);
   },
-
-  data () {
-    let lane_name = this.get_lane_name();
-
-    return {
-      lane_name
-    }
-  }
 }
 </script>

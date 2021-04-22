@@ -22,8 +22,8 @@ const has_work_output = function () {
 
   if (
     shipment && (
-      shipment.stdout.length || 
-      shipment.stderr.length || 
+      Object.keys(shipment.stdout).length || 
+      Object.keys(shipment.stderr).length || 
       shipment.exit_code == 0
       ) ||
     any_shipment

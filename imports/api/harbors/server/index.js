@@ -58,6 +58,12 @@ Meteor.methods({
     
     try {
       lane.rendered_input = H.harbors[lane.type].render_input(manifest, lane);
+      lane.rendered_work_preview = H
+        .harbors
+        [lane.type]
+        .render_work_preview(manifest, lane)
+      ;
+      Lanes.update(lane._id, lane);
 
       return lane;
 
@@ -75,6 +81,7 @@ Meteor.methods({
         [lane.type]
         .render_work_preview(manifest, lane)
       ;
+      Lanes.update(lane._id, lane);
 
       return lane;
     }

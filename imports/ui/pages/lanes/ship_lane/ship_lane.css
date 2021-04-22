@@ -5,19 +5,21 @@ pre {
 
 .exit-code {
   background: rgba(255, 150, 0, 0.75);
+  border-color: rgba(255, 150, 0, 0.75);
 }
 
 .exit-code.code- {
-  background: none;
+  background: #333;
 }
 
 .exit-code.code-0 {
-  background: rgba(0, 255, 0, 0.25);
-  border-color: rgba(0, 100, 0, 0.25);
+  background: rgba(0, 255, 0, 0.5);
+  border-color: rgba(0, 255, 0, 0.5);
 }
 
 .exit-code.code-1 {
-  background-color: #ec5840;
+  background-color: rgba(255, 0, 0, 0.5);;
+  border-color: rgba(255, 0, 0, 0.5);
   color: #fff;
 }
 
@@ -34,34 +36,65 @@ pre {
 figure {
   border: 1px solid #ccc;
   padding: 20px 10px;
+  background: #333;
 }
 
-figcaption {
-  color: #000;
-}
-
-.pre {
-  white-space: pre;
+pre {
   font: bold 18px monospace;
   color: #ccc;
-}
-
-.code- .pre, .code-0 .pre {
-  color: #777;
+  padding: 2px 5px;
+  border: 1px solid #7f7f7f;
+  background-color: #333;
+  border-radius: 2px;
 }
 
 .work-caption {
   position: absolute;
   margin-top: -32.5px;
-  background: #fff;
+  background: #666;
   padding: 0 5px;
+  color: #ffae00;
 }
 
-p {
+.ship-lane-page figure p {
   margin: 0;
+  color: #ccc;
 }
 
 .work-preview.active {
-  background: #eee;
+  background: #ffae00;
 }
 
+.work-output .result {
+  padding-left: 10px;
+  white-space: pre;
+}
+
+.ship-lane-page .start-shipment,
+.ship-lane-page .reset-shipment,
+.ship-lane-page .show-lanes,
+.ship-lane-page .lane-charter,
+.ship-lane-page .edit-lane {
+  width: 100%;
+  border-width: 25px;
+  height: 0;
+  padding: 0;
+  line-height: 0;
+  border-color: #333;
+  border-right-color: transparent;
+  text-align: center;
+}
+
+.ship-lane-page .reset-shipment:hover,
+.ship-lane-page .show-lanes:hover,
+.ship-lane-page .lane-charter:hover,
+.ship-lane-page .edit-lane:hover {
+  color: #333;
+  border-color: #ffae00;
+  border-right-color: transparent;
+}
+
+.start-shipment:hover {
+  border-color: #0af;
+  border-right-color: transparent;
+}

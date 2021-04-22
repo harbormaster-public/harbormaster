@@ -25,9 +25,11 @@ let reload = () => {
 // https://nodejs.org/docs/latest/api/fs.html#fs_caveats
 try {
   fs.watch(harbors_dir, { recursive: true }, reload);
+  console.log(`Watching ${harbors_dir} recursively...`);
 } catch (err) {
   console.error(err);
   fs.watch(harbors_dir, { recursive: false }, reload);
+  console.log(`Watching ${harbors_dir} *non*-recursively...`);
 }
 
 console.log(`Registering Harbors from: ${harbors_dir}`);

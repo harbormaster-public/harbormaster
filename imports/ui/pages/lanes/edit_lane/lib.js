@@ -74,7 +74,7 @@ const change_lane_name = function (event) {
   lane.name = event.target.value;
   
   if (Lanes.findOne(lane._id)) update_lane(lane);
-  else Session.set('lane', lane);
+  Session.set('lane', lane);
   const new_path = '/lanes/' + lane.name + '/edit';
 
   if (new_path != this.$route.path) this.$router.push(
@@ -246,7 +246,7 @@ const lane_type = function () {
 
 const render_harbor = function () {
   let name = this.$route.params.name;
-  let lane = Session.get('lane') || get_lane(name);
+  let lane = get_lane(name) || Session.get('lane');
   if (!lane) return;
   let harbor = lane.type ? Harbors.findOne(lane.type) : {};
   let harbor_lane_reference = harbor?.lanes ? 
@@ -284,13 +284,19 @@ const validate_done = function () {
 const chosen_followup = function (followup) {
   let lane = get_lane(this.$route.params.name);
   
-  return followup._id && lane ? followup._id == lane.followup._id : false;
+  return followup._id && lane ? 
+    followup._id == lane.followup?._id : 
+    false
+  ;
 };
 
 const chosen_salvage_plan = function (salvage_lane) {
   let lane = get_lane(this.$route.params.name);
 
-  return salvage_lane._id && lane ? salvage_lane._id == lane.salvage_plan._id : false;
+  return salvage_lane._id && lane ? 
+    salvage_lane._id == lane.salvage_plan?._id : 
+    false
+  ;
 };
 
 const submit_form = function () {
@@ -389,29 +395,6 @@ const get_lane_name = function () {
 
   return lane.name == 'New' ? '' : lane.name;
 };
-
-// can_ply () {
-      //   let lane = Session.get('lane') || {};
-    //   let user = this;
-
-    //   if (user.harbormaster) { return true; }
-
-    //   if (lane.captains && lane.captains.length) {
-      //     return _.find(lane.captains, (captain) => user._id == captain);
-    //   }
-
-    //   return false;
-    // },
-
-// can_set_ply () {
-      //   var user = Users.findOne(Meteor.user().emails[0].address);
-
-    //   if (this.harbormaster) { return true; }
-
-    //   if (user) { return ! user.harbormaster; }
-
-    //   return false;
-    // },
 
 export {
   update_harbor,

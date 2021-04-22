@@ -36,8 +36,18 @@ fieldset.harbor {
   background: #333;
 }
 
-fieldset.harbor input {
-  margin-left: 10px;
+fieldset.harbor label {
+  display: block;
+}
+
+fieldset.harbor input[type="text"],
+fieldset.harbor input[type="password"] {
+  width: 100%;
+}
+
+fieldset.harbor textarea {
+  display: block;
+  width: 100%;
 }
 
 .slug,
@@ -65,6 +75,7 @@ legend {
   padding: 2px 5px;
 }
 
+.add-salvage-plan:hover,
 .add-harbor,
 .save,
 #edit-lane-page .ship-lane:hover,
@@ -75,6 +86,8 @@ legend {
   border-right-color: transparent;
 }
 
+.add-salvage-plan,
+.add-followup,
 .lane-done,
 .choose-harbor-type,
 .add-harbor,
@@ -104,6 +117,7 @@ legend {
   cursor: not-allowed;
 }
 
+.add-followup:hover,
 .add-harbor:hover,
 .save {
   border-color: #0af;
