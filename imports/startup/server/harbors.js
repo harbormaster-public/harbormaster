@@ -81,7 +81,8 @@ fs.readdirSync(harbors_dir).forEach(function (file) {
     H.harbors[harbor_name] = entrypoint;
     if (entrypoint.next) entrypoint.next();
     harbor.rendered_input = entrypoint.render_input();
-    harbor.constraints = entrypoint.constraints && entrypoint.constraints();
+    //TODO
+    // harbor.constraints = entrypoint.constraints && entrypoint.constraints();
     Harbors.upsert({ _id: harbor_name }, harbor);
     console.log(`Harbor registered: ${file}`);
   }
