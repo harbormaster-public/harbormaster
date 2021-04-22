@@ -74,7 +74,7 @@ fs.readdirSync(harbors_dir).forEach(function (file) {
     if (packages.length) {
       packages = packages.join(' ');
       console.log(`Installing packages: ${packages}`);
-      execSync(`npm i -S ${packages}`);
+      execSync(`npm i ${packages}`);
     }
 
     let harbor = Harbors.findOne(harbor_name) || {};

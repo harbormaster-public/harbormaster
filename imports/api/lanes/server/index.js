@@ -121,7 +121,9 @@ Meteor.methods({
         let key = new Date();
         let result = new_manifest.error.toString();
 
-        shipment.stderr[key] = shipment.stderr[key]?.length ?
+        shipment.stderr[key] = (
+          shipment.stderr[key] && shipment.stderr[key].length
+        ) ?
           shipment.stderr[key] + result :
           result
         ;
