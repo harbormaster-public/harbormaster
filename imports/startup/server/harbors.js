@@ -79,7 +79,7 @@ fs.readdirSync(harbors_dir).forEach(function (file) {
 
     let harbor = Harbors.findOne(harbor_name) || {};
     H.harbors[harbor_name] = entrypoint;
-    entrypoint.next && entrypoint.next();
+    if (entrypoint.next) entrypoint.next();
     harbor.rendered_input = entrypoint.render_input();
     harbor.constraints = entrypoint.constraints && entrypoint.constraints();
     Harbors.upsert({ _id: harbor_name }, harbor);
