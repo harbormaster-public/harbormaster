@@ -70,6 +70,10 @@ pre {
   white-space: pre;
 }
 
+.work-output .result span {
+  white-space: break-spaces;
+}
+
 .ship-lane-page .start-shipment,
 .ship-lane-page .reset-shipment,
 .ship-lane-page .show-lanes,
