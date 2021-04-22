@@ -42,7 +42,6 @@
       <figure :class="'my-4 rounded-sm work-output exit-code code-'+exit_code">
         <figcaption class="work-caption">Work Output</figcaption>
         <section>
-          <!-- <pre> -->
             <div v-if="has_work_output() && work_output()">
               <div v-if="work_output().stdout && Object.keys(work_output().stdout).length">
                 <div v-for="entry in Object.keys(work_output().stdout)" :key="entry.finished">
@@ -66,7 +65,6 @@
             <div v-else>
               (Nothing yet to report.)
             </div>
-          <!-- </pre> -->
         </section>
       </figure>
     </div>
