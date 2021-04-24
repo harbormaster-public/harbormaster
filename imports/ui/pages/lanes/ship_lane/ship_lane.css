@@ -40,12 +40,17 @@ figure {
 }
 
 pre {
-  font: bold 18px monospace;
+  font: 18px monospace;
   color: #ccc;
   padding: 2px 5px;
   border: 1px solid #7f7f7f;
   background-color: #333;
   border-radius: 2px;
+}
+
+.result pre {
+  border-bottom: transparent;
+  border-top: transparent;
 }
 
 .work-caption {

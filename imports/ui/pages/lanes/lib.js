@@ -215,7 +215,6 @@ const current_state = function (lane) {
   const text_na = 'N/A';
   const text_error = 'error';
   const text_ready = 'ready';
-  // let latest = LatestShipment.findOne(lane?._id);
   let latest = lane.last_shipment;
   let active_shipments = Shipments.find({
     lane: lane?._id,
@@ -226,7 +225,6 @@ const current_state = function (lane) {
 
   if (latest?.exit_code) return text_error;
   if (latest?.exit_code == 0) return text_ready;
-  // debugger
   return text_na;
 };
 
@@ -237,7 +235,6 @@ const followup_name = function (lane) {
 };
 
 const last_shipped = function (lane) {
-  // const latest = LatestShipment.findOne(lane._id);
   let latest = lane.last_shipment;
   const actual = latest ? latest.actual : 'Loading...';
 
@@ -245,7 +242,6 @@ const last_shipped = function (lane) {
 };
 
 const latest_shipment = function (lane) {
-  // const latest = LatestShipment.findOne(lane._id);
   let latest = lane.last_shipment;
   const start = latest ? latest.start : '';
   

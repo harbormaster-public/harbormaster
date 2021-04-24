@@ -6,7 +6,7 @@
       <form 
         v-on:submit.prevent="submit_form" 
         :key="harbor_refresh">
-        <pre>
+        <pre class="py-2">
           <label>Name:&nbsp;
             <input 
               @change.prevent="change_lane_name" 

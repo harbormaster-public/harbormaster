@@ -20,8 +20,6 @@
     "meteor-node-stubs": "0.2.4",
     "mkdirp": "^0.5.5",
     "node-sass": "^5.0.0",
-    "slack": "9.0.9",
-    "svg.js": "2.6.0",
     "tailwindcss": "^2.1.1",
     "tiny-json-http": "^7.3.0",
     "uuid": "^2.0.3",

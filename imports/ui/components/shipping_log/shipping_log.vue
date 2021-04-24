@@ -7,7 +7,7 @@
     <div v-else>
       <div v-if="has_work_output()">
         <ul class="shipment-history">
-          <li v-for="item in shipment_history" :key="item._id">
+          <li class="my-2" v-for="item in shipment_history" :key="item._id">
             <a 
               :href="'/lanes/'+lane.slug+'/ship/'+item.start" 
               :class="'rounded-sm px-2 py-1'+(active ?' active':'')+' exit-code code-'+item.exit_code+' shipment-link'"
@@ -67,5 +67,23 @@ export default {
 <style>
 .shipment-history .shipment-link:hover {
   color: #ffae00;
+}
+
+.shipment-history li {
+  list-style-type: none;
+  position: relative;
+}
+
+.shipment-link.code-0:before {
+  content: '✔';
+}
+
+.shipment-link.code-1:before {
+  content: '❌';
+}
+
+.shipment-link:before {
+  position: absolute;
+  left: -25px;
 }
 </style>

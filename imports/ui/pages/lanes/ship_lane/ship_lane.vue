@@ -46,13 +46,17 @@
               <div v-if="work_output().stdout && Object.keys(work_output().stdout).length">
                 <div v-for="entry in Object.keys(work_output().stdout)" :key="entry.finished">
                   <em><div class="timestamp">{{entry}}:</div></em>
-                  <div class="result"><span>{{work_output().stdout[entry]}}</span></div>
+                  <div class="result">
+                    <span v-html="work_output().stdout[entry]"></span>
+                  </div>
                 </div>
               </div>
               <div v-else-if="work_output().stderr && Object.keys(work_output().stderr).length">
                 <div v-for="entry in Object.keys(work_output().stderr)" :key="entry.finished">
                   <em><div class="timestamp">{{entry}}:</div></em>
-                  <div class="result"><span>{{work_output().stderr[entry]}}</span></div>
+                  <div class="result">
+                    <span v-html="work_output().stderr[entry]"></span>
+                  </div>
                 </div>
               </div>
               <div v-else-if="work_output().finished">
