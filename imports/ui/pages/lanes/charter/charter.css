@@ -5,6 +5,11 @@
 
 .link-label {
   pointer-events: none;
+  fill: #fff;
+}
+
+.node-label {
+  fill: #fff;
 }
 
 figure.charter {
