@@ -48,6 +48,7 @@ fieldset.harbor input[type="password"] {
 fieldset.harbor textarea {
   display: block;
   width: 100%;
+  min-height: 250px;
 }
 
 .slug,

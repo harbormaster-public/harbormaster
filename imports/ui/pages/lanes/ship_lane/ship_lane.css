@@ -79,6 +79,7 @@ pre {
   white-space: break-spaces;
 }
 
+.ship-lane-page .reset-all-active,
 .ship-lane-page .start-shipment,
 .ship-lane-page .reset-shipment,
 .ship-lane-page .show-lanes,
@@ -94,6 +95,7 @@ pre {
   text-align: center;
 }
 
+.ship-lane-page .reset-all-active:hover,
 .ship-lane-page .reset-shipment:hover,
 .ship-lane-page .show-lanes:hover,
 .ship-lane-page .lane-charter:hover,

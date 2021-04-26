@@ -74,6 +74,10 @@ export default {
   position: relative;
 }
 
+.shipment-link.exit-code:before {
+  content: '⚠';
+}
+
 .shipment-link.code-0:before {
   content: '✔';
 }

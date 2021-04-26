@@ -1,4 +1,4 @@
-version: '3.6'
+version: '3.9'
 
 services:
 
@@ -8,6 +8,7 @@ services:
       - "3000:80"
     container_name: harbormaster
     hostname: harbormaster
+    restart: unless-stopped
     environment:
       # Required:
       MONGO_URL: ${MONGO_URL}

@@ -45,8 +45,10 @@
           <td class="captains-column">{{total_captains(lane)}}</td>
           <td class="type-column">{{lane.type}}</td>
           <td class="last-shipped-column" width=125>
-            <router-link :to="'/lanes/'+lane.slug+'/ship/'+lane.last_shipment.start">
-              {{lane.last_shipment.actual && lane.last_shipment.actual.toLocaleString()}}
+            <router-link 
+              v-if="lane.last_shipment"
+              :to="'/lanes/'+lane.slug+'/ship/'+lane.last_shipment.start">
+              {{lane.last_shipment.actual.toLocaleString()}}
             </router-link>
           </td>
           <td class="total-shipments-column">{{lane.shipment_count || '0'}}</td>
@@ -100,6 +102,7 @@ export default {
   },
 
   methods: {
+
     handle_opts_click (event) {
       if (event.target.getAttribute('class').match(/active/)) {
         event.target.nextElementSibling.setAttribute(

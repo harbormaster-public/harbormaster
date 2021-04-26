@@ -89,7 +89,7 @@
             <section id=rendered-input v-html="render_harbor">
             </section>
             <div v-if="validating_fields">
-              <button class="" disabled>Working...</button>
+              <h3 class="text-xl my-2 text-center">Working...</h3>
             </div>
             <div v-else>
               <button :class="'save p-2 rounded-sm my-2 block'+can_save">Save</button>
