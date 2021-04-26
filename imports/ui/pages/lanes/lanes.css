@@ -116,9 +116,6 @@ tr:nth-child(odd) .admin * {
 th:first-child,
 td:first-child {
   border-left-color: transparent;
-}
-
-td:first-child .name {
   padding-left: 35px;
   text-align: left
 }
