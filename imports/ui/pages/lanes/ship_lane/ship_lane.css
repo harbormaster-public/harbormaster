@@ -109,3 +109,13 @@ pre {
   border-color: #0af;
   border-right-color: transparent;
 }
+
+.salvage-plan-link:hover,
+.followup-link {
+  color: #0af;
+}
+
+.salvage-plan-link {
+  color: #ffae00;
+}
+

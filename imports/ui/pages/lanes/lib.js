@@ -217,14 +217,15 @@ const current_state = function (lane) {
   const text_ready = 'ready';
   let latest = lane.last_shipment;
   let active_shipments = Shipments.find({
-    lane: lane?._id,
+    lane: lane._id,
     active: true,
   }).count();
 
-  if (active_shipments) return 'active';
+  if (active_shipments || lane.last_shipment.active) return 'active';
 
   if (latest?.exit_code) return text_error;
   if (latest?.exit_code == 0) return text_ready;
+  
   return text_na;
 };
 

@@ -186,7 +186,12 @@ Meteor.methods({
     });
     let shipment = Shipments.findOne(shipment_id);
     lane.last_shipment = shipment;
-    Lanes.update(lane._id, lane);
+    Lanes.update(lane._id, {
+      $set: {
+        last_shipment: lane.last_shipment
+      }
+    });
+    
     LatestShipment.upsert(shipment.lane, { shipment });
     manifest.stdout = shipment.stdout;
     manifest.stderr = shipment.stderr;
@@ -242,20 +247,21 @@ Meteor.methods({
   'Lanes#reset_shipment': function (name, date) {
     let lane = Lanes.findOne({ $or: [{ name }, { slug: name }] });
     let shipment = Shipments.findOne({ start: date, lane: lane._id });
-    lane.last_shipment = shipment;
-    Lanes.update(lane._id, lane);
-    LatestShipment.upsert(shipment.lane, { shipment });
-
-    return Shipments.update(shipment._id, { $set: {
+    Shipments.update(shipment._id, { $set: {
       active: false,
       exit_code: 1,
     }});
+
+    lane.last_shipment = Shipments.findOne(shipment._id);
+    Lanes.update(lane._id, lane);
+
+    return lane;
   },
 
   'Lanes#reset_all_active_shipments': function (name) {
     let lane = Lanes.findOne({ $or: [{ name }, { slug: name }] });
 
-    return Shipments.update(
+    Shipments.update(
       { lane: lane._id, active: true },
       { $set: {
         active: false,
@@ -263,6 +269,14 @@ Meteor.methods({
       }},
       { multi: true }
     );
+
+    lane.latest_shipment = Shipments.findOne(
+      { lane: lane._id },
+      { sort: { actual: -1 }},
+    );
+    Lanes.update(lane._id, lane);
+
+    return lane;
   },
 
   'Lanes#update_slug': (lane) => {

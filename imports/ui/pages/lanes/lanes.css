@@ -85,6 +85,7 @@ table tbody tr:nth-child(odd) {
   margin-top: -25px;
   left: 0;
   display: none;
+  text-align: center;
 }
 
 .admin.active {

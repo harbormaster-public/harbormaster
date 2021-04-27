@@ -74,11 +74,27 @@
     </div>
 
     <div v-if="lane && lane.followup">
-      <h4><a class="button" :href="'/lanes/'+followup_name(lane)+'/ship'">Followup: {{followup_name(lane)}}</a></h4>
+      <h3 class="text-xl my-2 px-2"><em>Followup: </em>
+        <strong>
+          <a
+            class="followup-link" 
+            :href="'/lanes/'+followup_name(lane)+'/ship'">
+            {{followup_name(lane)}}
+          </a>
+        </strong>
+      </h3>
     </div>
 
     <div v-if="lane && lane.salvage_plan">
-      <h4><a class="button warning" :href="'/lanes/'+salvage_plan_name(lane)+'/ship'">Salvage Plan: {{salvage_plan_name(lane)}}</a></h4>
+      <h3 class="text-xl my-2 px-2"><em>Salvage Plan: </em>
+        <strong>
+          <a 
+            class="salvage-plan-link"
+            :href="'/lanes/'+salvage_plan_name(lane)+'/ship'">
+            {{salvage_plan_name(lane)}}
+          </a>
+        </strong>
+      </h3>
     </div>
     
     <shipping-log></shipping-log>
