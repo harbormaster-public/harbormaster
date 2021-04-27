@@ -120,22 +120,14 @@ const followup_lane = function () {
   let lane = get_lane(this.$route.params.slug);
   if (! lane) return false;
 
-  let followup_lane = Lanes.findOne(lane.followup);
-
-  if (followup_lane) return followup_lane.name;
-
-  return '';
+  return lane.followup?.name || '';
 }
 
 const salvage_plan_lane = function () {
   let lane = get_lane(this.$route.params.slug);
   if (! lane) return false;
 
-  let salvage_plan = Lanes.findOne(lane.salvage_plan);
-
-  if (salvage_plan) return salvage_plan.name;
-
-  return '';
+  return lane.salvage_plan?.name || ''
 };
 
 const lanes = function () {

@@ -36,7 +36,7 @@ Meteor.methods({
           shipment_count: 0,
           salvage_runs: 0,
         };
-        Lanes.update(lane._id, lane);
+        Lanes.update(lane._id, {$set: { last_shipment: lane.last_shipment}});
         LatestShipment.upsert(
           lane._id, 
           lane.last_shipment,
@@ -63,7 +63,10 @@ Meteor.methods({
         [lane.type]
         .render_work_preview(manifest, lane)
       ;
-      Lanes.update(lane._id, lane);
+      Lanes.update(lane._id, {$set:{
+        rendered_input: lane.rendered_input,
+        rendered_work_preview: lane.rendered_work_preview,
+      }});
 
       return lane;
 
@@ -81,7 +84,9 @@ Meteor.methods({
         [lane.type]
         .render_work_preview(manifest, lane)
       ;
-      Lanes.update(lane._id, lane);
+      Lanes.update(lane._id, {$set: {
+        rendered_work_preview: lane.rendered_work_preview
+      }});
 
       return lane;
     }

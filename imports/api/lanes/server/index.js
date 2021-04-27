@@ -40,7 +40,7 @@ Lanes.find().forEach((lane) => {
       { sort: { actual: -1 } }
     ) || { actual: 'Never', start: '' };
     lane.last_shipment = shipment;
-    Lanes.update(lane._id, lane);
+    Lanes.update(lane._id, {$set:{ last_shipment: lane.last_shipment }});
     LatestShipment.upsert(lane._id, { shipment });
   }
 });
@@ -106,7 +106,7 @@ Meteor.methods({
     ;
     manifest.shipment_start_date = shipment_start_date;
     manifest.shipment_id = shipment_id;
-    Lanes.update(lane._id, lane);
+    Lanes.update(lane._id, {$set: { shipment_count: lane.shipment_count }});
 
     console.log('Starting shipment for lane:', lane.name);
     try { new_manifest = H.harbors[lane.type].work(lane, manifest); }
@@ -137,7 +137,7 @@ Meteor.methods({
 
         lane.last_shipment = shipment;
         Shipments.update(shipment_id, shipment);
-        Lanes.update(lane._id, lane);
+        Lanes.update(lane._id, {$set: { last_shipment: lane.last_shipment }});
         LatestShipment.upsert(shipment.lane, { shipment });
 
         return Meteor.call(
@@ -218,7 +218,7 @@ Meteor.methods({
         .manifest
       ;
       salvage_manifest.prior_manifest = trim_manifest(manifest);
-      Lanes.update(lane._id, lane);
+      
       console.log(
         `Starting shipment for "${
           lane.salvage_plan.name
@@ -239,7 +239,7 @@ Meteor.methods({
         .manifest
       ;
       followup_manifest.prior_manifest = trim_manifest(manifest);
-      Lanes.update(lane._id, lane);
+      
       console.log(
         `Starting shipment for "${
           lane.followup.name
@@ -266,7 +266,7 @@ Meteor.methods({
     }});
 
     lane.last_shipment = Shipments.findOne(shipment._id);
-    Lanes.update(lane._id, lane);
+    Lanes.update(lane._id, {$set: { last_shipment: lane.last_shipment }});
 
     return lane;
   },
@@ -287,7 +287,7 @@ Meteor.methods({
       { lane: lane._id },
       { sort: { actual: -1 }},
     );
-    Lanes.update(lane._id, lane);
+    Lanes.update(lane._id, {$set: { last_shipment: lane.last_shipment }});
 
     return lane;
   },
