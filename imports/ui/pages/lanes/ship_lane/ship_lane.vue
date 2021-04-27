@@ -78,8 +78,8 @@
         <strong>
           <a
             class="followup-link" 
-            :href="'/lanes/'+followup_name(lane)+'/ship'">
-            {{followup_name(lane)}}
+            :href="'/lanes/'+lane.followup.slug+'/ship'">
+            {{lane.followup.name}}
           </a>
         </strong>
       </h3>
@@ -90,8 +90,8 @@
         <strong>
           <a 
             class="salvage-plan-link"
-            :href="'/lanes/'+salvage_plan_name(lane)+'/ship'">
-            {{salvage_plan_name(lane)}}
+            :href="'/lanes/'+lane.salvage_plan.slug+'/ship'">
+            {{lane.salvage_plan.name}}
           </a>
         </strong>
       </h3>
@@ -112,8 +112,6 @@ import {
   any_active,
   reset_all_active,
   reset_shipment,
-  salvage_plan_name,
-  followup_name,
   work_output,
   duration,
   pretty_date,
@@ -137,8 +135,6 @@ export default {
     any_active,
     reset_all_active,
     reset_shipment,
-    salvage_plan_name,
-    followup_name,
     work_output,
     duration,
     pretty_date,

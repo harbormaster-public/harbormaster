@@ -205,37 +205,43 @@ Meteor.methods({
       exit_code
     );
 
-    let salvage_lane = Lanes.findOne(lane.salvage_plan);
-    let followup_lane = Lanes.findOne(lane.followup);
-
-    if (exit_code != 0 && salvage_lane) {
-      let salvage_manifest = Harbors.findOne(salvage_lane.type)
-        .lanes[salvage_lane._id]
+    if (exit_code != 0 && lane.salvage_plan) {
+      let salvage_manifest = Harbors.findOne(lane.salvage_plan.type)
+        .lanes[lane.salvage_plan._id]
         .manifest
       ;
       salvage_manifest.prior_manifest = trim_manifest(manifest);
       Lanes.update(lane._id, lane);
+      console.log(
+        `Starting shipment for "${
+          lane.salvage_plan.name
+        }" as salvage run of "${lane.name}"`
+      );
 
       return Meteor.call(
         'Lanes#start_shipment',
-        salvage_lane._id,
+        lane.salvage_plan._id,
         salvage_manifest,
         next_shipment_start_date
       );
     }
 
-    if (exit_code == 0 && followup_lane) {
-      let followup_manifest = Harbors.findOne(followup_lane.type)
-        .lanes[followup_lane._id]
+    if (exit_code == 0 && lane.followup) {
+      let followup_manifest = Harbors.findOne(lane.followup.type)
+        .lanes[lane.followup._id]
         .manifest
       ;
       followup_manifest.prior_manifest = trim_manifest(manifest);
       Lanes.update(lane._id, lane);
-      console.log(followup_manifest);
+      console.log(
+        `Starting shipment for "${
+          lane.followup.name
+        }" as followup of "${lane.name}"`
+      );
 
       return Meteor.call(
         'Lanes#start_shipment',
-        followup_lane._id,
+        lane.followup._id,
         followup_manifest,
         next_shipment_start_date
       );

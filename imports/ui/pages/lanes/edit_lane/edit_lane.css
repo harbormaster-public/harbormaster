@@ -34,6 +34,7 @@ fieldset.salvage-plan {
 
 fieldset.harbor {
   background: #333;
+  border-radius: 2px;
 }
 
 fieldset.harbor label {
@@ -74,6 +75,7 @@ legend {
   color: #fff;
   background: #666;
   padding: 2px 5px;
+  border-radius: 2px;
 }
 
 .add-salvage-plan:hover,

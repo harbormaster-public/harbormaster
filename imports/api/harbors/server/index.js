@@ -29,7 +29,7 @@ Meteor.methods({
         lane.minimum_complete = success;
       }
 
-      if (success && lane.rendered_work_preview) {
+      if (success && lane.rendered_work_preview && !lane.last_shipment) {
         lane.last_shipment = { 
           actual: 'Never', 
           start: '',

@@ -133,18 +133,6 @@ const duration = function (shipment) {
   return moment.duration(shipment.finished - shipment.actual).humanize();
 };
 
-const followup_name = function (lane) {
-  let followup = Lanes.findOne(lane.followup);
-
-  return followup ? followup.name : false;
-};
-
-const salvage_plan_name = function (lane) {
-  let salvage_plan = Lanes.findOne(lane.salvage_plan);
-
-  return salvage_plan ? salvage_plan.name : false;
-};
-
 const any_active = function () {
   let lane = get_lane(this.$route.params.name) || false;
   let shipments = Shipments.find({ lane: lane._id, active: true });

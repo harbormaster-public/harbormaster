@@ -42,7 +42,7 @@ fs.readdirSync(harbors_dir).forEach(function (file) {
   try {
     let string = fs.readFileSync(harbor_path).toString();
     fs.watch(harbor_path, reload);
-
+    
     let entrypoint = eval(string);
     let harbor_name;
     let packages = [];
