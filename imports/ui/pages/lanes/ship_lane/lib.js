@@ -17,12 +17,12 @@ const not_found_text = `
 `;
 
 const lane = function () {
-  let lane = get_lane(this.$route.params.name) || false;
+  let lane = get_lane(this.$route.params.slug) || false;
   return lane;
 };
 
 const active = function () {
-  let lane = get_lane(this.$route.params.name) || {};
+  let lane = get_lane(this.$route.params.slug) || {};
   let date = this.$route.params.date;
   let total = Shipments.find({
     active: true, 
@@ -34,7 +34,7 @@ const active = function () {
 };
 
 const exit_code = function () {
-  let lane = get_lane(this.$route.params.name) || {};
+  let lane = get_lane(this.$route.params.slug) || {};
   let date = this.$route.params.date;
   
   let shipment = lane ?
@@ -47,7 +47,7 @@ const exit_code = function () {
 };
 
 const work_preview = function () {
-  let lane = get_lane(this.$route.params.name);
+  let lane = get_lane(this.$route.params.slug);
   let harbor = Harbors.findOne(lane?.type);
   const harbor_not_ready_text = `
     <h4>This Harbor is not ready, or otherwise not fully configured.</h4>
@@ -85,7 +85,7 @@ const work_preview = function () {
 };
 
 const has_work_output = function () {
-  let lane = get_lane(this.$route.params.name);
+  let lane = get_lane(this.$route.params.slug);
   let date = this.$route.params.date;
   let shipment = Shipments.findOne({ lane: lane?._id, start: date });
   let any_shipment = Shipments.findOne({ lane: lane?._id });
@@ -105,7 +105,7 @@ const has_work_output = function () {
 };
 
 const work_output = function () {
-  let lane = get_lane(this.$route.params.name);
+  let lane = get_lane(this.$route.params.slug);
   let date = this.$route.params.date;
   let shipment = lane.latest_shipment ? 
     lane.latest_shipment :
@@ -119,7 +119,7 @@ const work_output = function () {
 };
 
 const shipment_history = function () {
-  let shipments = history(get_lane(this.$route.params.name), H.AMOUNT_SHOWN);
+  let shipments = history(get_lane(this.$route.params.slug), H.AMOUNT_SHOWN);
   return shipments;
 };
 
@@ -134,7 +134,7 @@ const duration = function (shipment) {
 };
 
 const any_active = function () {
-  let lane = get_lane(this.$route.params.name) || false;
+  let lane = get_lane(this.$route.params.slug) || false;
   let shipments = Shipments.find({ lane: lane._id, active: true });
 
   if (shipments.count()) return true;
@@ -161,7 +161,7 @@ const reset_all_active = function () {
 const start_shipment = function () {
   let { $router } = this;
   let working_lanes = Session.get('working_lanes') || {};
-  let lane = get_lane(this.$route.params.name);
+  let lane = get_lane(this.$route.params.slug);
   let harbor = Harbors.findOne(lane.type);
   let manifest = harbor.lanes[lane._id].manifest;
   let shipment_start_date = H.start_date();

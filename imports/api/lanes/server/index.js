@@ -18,6 +18,13 @@ const trim_manifest = (manifest) => {
 };
 
 Meteor.publish('Lanes', function (lane = {}) {
+  if (typeof lane == 'string') {
+    const single = Lanes.find(
+      { $or: [{ _id: lane }, { name: lane }, { slug: lane }] }
+    );
+    
+    return single;
+  }
   if (lane instanceof Array) return Lanes.find({ _id: { $in: lane }});
   return Lanes.find(lane);
 });

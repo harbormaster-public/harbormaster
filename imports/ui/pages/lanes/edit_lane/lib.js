@@ -117,7 +117,7 @@ const slug = function (lane) {
 };
 
 const followup_lane = function () {
-  let lane = get_lane(this.$route.params.name);
+  let lane = get_lane(this.$route.params.slug);
   if (! lane) return false;
 
   let followup_lane = Lanes.findOne(lane.followup);
@@ -128,7 +128,7 @@ const followup_lane = function () {
 }
 
 const salvage_plan_lane = function () {
-  let lane = get_lane(this.$route.params.name);
+  let lane = get_lane(this.$route.params.slug);
   if (! lane) return false;
 
   let salvage_plan = Lanes.findOne(lane.salvage_plan);
@@ -143,21 +143,21 @@ const lanes = function () {
 };
 
 const lane = function () {
-  let lane = get_lane(this.$route.params.name);
+  let lane = get_lane(this.$route.params.slug);
 
   return lane;
 };
 
 const lane_count = function () {
-  return count(get_lane(this.$route.params.name));
+  return count(get_lane(this.$route.params.slug));
 };
 
 const shipment_history = function () {
-  return history(get_lane(this.$route.params.name));
+  return history(get_lane(this.$route.params.slug));
 };
 
 const no_followup = function () {
-  let lane = get_lane(this.$route.params.name);
+  let lane = get_lane(this.$route.params.slug);
 
   return Lanes.find().count() < 2 ||
     lane && lane.followup ||
@@ -166,7 +166,7 @@ const no_followup = function () {
 };
 
 const no_salvage = function () {
-  let lane = get_lane(this.$route.params.name);
+  let lane = get_lane(this.$route.params.slug);
 
   return Lanes.find().count() < 2 ||
     lane && lane.salvage_plan ||
@@ -175,13 +175,13 @@ const no_salvage = function () {
 };
 
 const choose_followup = function () {
-  let lane = get_lane(this.$route.params.name);
+  let lane = get_lane(this.$route.params.slug);
 
   return Session.get('choose_followup') || lane && lane.followup;
 };
 
 const choose_salvage_plan = function () {
-  let lane = get_lane(this.$route.params.name);
+  let lane = get_lane(this.$route.params.slug);
 
   return Session.get('choose_salvage_plan') || lane && lane.salvage_plan;
 };
@@ -231,21 +231,21 @@ const harbors = function () {
 };
 
 const current_lane = function () {
-  let name = this.$route.params.name;
+  let name = this.$route.params.slug;
   let lane = Session.get('lane') || get_lane(name);
 
   return lane || { type: false };
 };
 
 const lane_type = function () {
-  let name = this.$route.params.name;
+  let name = this.$route.params.slug;
   let lane = Session.get('lane') || get_lane(name);
 
   return lane && lane.type;
 };
 
 const render_harbor = function () {
-  let name = this.$route.params.name;
+  let name = this.$route.params.slug;
   let lane = get_lane(name) || Session.get('lane');
   if (!lane) return;
   let harbor = lane.type ? Harbors.findOne(lane.type) : {};
@@ -276,13 +276,13 @@ const render_harbor = function () {
 };
 
 const validate_done = function () {
-  let lane = get_lane(this.$route.params.name);
+  let lane = get_lane(this.$route.params.slug);
   
   return lane && lane.minimum_complete;
 };
 
 const chosen_followup = function (followup) {
-  let lane = get_lane(this.$route.params.name);
+  let lane = get_lane(this.$route.params.slug);
   
   return followup._id && lane ? 
     followup._id == lane.followup?._id : 
@@ -291,7 +291,7 @@ const chosen_followup = function (followup) {
 };
 
 const chosen_salvage_plan = function (salvage_lane) {
-  let lane = get_lane(this.$route.params.name);
+  let lane = get_lane(this.$route.params.slug);
 
   return salvage_lane._id && lane ? 
     salvage_lane._id == lane.salvage_plan?._id : 
@@ -300,7 +300,7 @@ const chosen_salvage_plan = function (salvage_lane) {
 };
 
 const submit_form = function () {
-  let lane = get_lane(this.$route.params.name) || Session.get('lane');
+  let lane = get_lane(this.$route.params.slug) || Session.get('lane');
   if (!lane) return;
 
   if (
@@ -309,7 +309,7 @@ const submit_form = function () {
     lane.type
   ) {
     
-    slug(lane, this.$route.params.name);
+    slug(lane, this.$route.params.slug);
     Session.set('validating_fields', true);
     
     return this.update_harbor();
@@ -319,7 +319,7 @@ const submit_form = function () {
 };
 
 const change_followup_lane = function (event) {
-  let lane = get_lane(this.$route.params.name);
+  let lane = get_lane(this.$route.params.slug);
   let followup_lane = Lanes.findOne(event.target.value);
 
   if (
@@ -334,7 +334,7 @@ const change_followup_lane = function (event) {
 };
 
 const change_salvage_plan = function (event) {
-  let lane = get_lane(this.$route.params.name);
+  let lane = get_lane(this.$route.params.slug);
   let salvage_plan_lane = Lanes.findOne(event.target.value);
   
   if (
@@ -348,7 +348,7 @@ const change_salvage_plan = function (event) {
 };
 
 const change_captains = function (event) {
-  let lane = get_lane(this.$route.params.name);
+  let lane = get_lane(this.$route.params.slug);
   let captains = lane && lane.captains ? lane.captains : [];
   let user = event.target.value;
 
@@ -389,7 +389,7 @@ const choose_harbor_type = function (event) {
 };
 
 const get_lane_name = function () {
-  var name = this.$route.params.name;
+  var name = this.$route.params.slug;
   var lane = get_lane(name) || Session.get('lane') || { };
   Session.set('lane', lane);
 

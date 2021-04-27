@@ -22,7 +22,7 @@
             <input 
               type=text 
               disabled 
-              :value="slug(this.$route.params.name)"
+              :value="slug(this.$route.params.slug)"
               class="slug"
             >
           </label>
@@ -209,10 +209,10 @@ export default {
 
   meteor: {
     $subscribe: {
-      'Lanes': function () { return [get_lane(this.$route.params.name)] },
+      'Lanes': function () { return [get_lane(this.$route.params.slug)] },
       'Users': [],
       'Harbors': function () {
-        const type = get_lane(this.$route.params.name)?.type;
+        const type = get_lane(this.$route.params.slug)?.type;
         return [Harbors.findOne(type)];
       },
     },
@@ -278,7 +278,7 @@ export default {
   },
 
   mounted () {
-    const name = this.$route.params.name;
+    const name = this.$route.params.slug;
     const lane = get_lane(name);
     const harbor = lane && Harbors.findOne(lane.type) || {};
 

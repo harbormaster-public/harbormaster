@@ -1,7 +1,7 @@
 <template>
   <div>
     <h2 class="text-2xl my-2">Shipping Log: Last {{shipping_log_amount_shown}} shipments</h2>
-    <div v-if="!this.$subReady.Shipments">
+    <div v-if="!is_ready()">
       <li>Loading...</li>
     </div>
     <div v-else>
@@ -31,9 +31,6 @@ import {
   pretty_date,
   duration,
 } from './lib';
-import { 
-  get_lane,
-} from '../../pages/lanes/lib/util';
 
 const options = { sort: { actual: -1 }, limit: H.AMOUNT_SHOWN };
 
@@ -41,10 +38,11 @@ export default {
   meteor: {
     $subscribe: {
       'Shipments': function () {
-        const { name } = this.$route.params;
-
-        return [get_lane(name), options];
+        const { slug } = this.$route.params;
+        
+        return [{ slug }, options];
       },
+      'Lanes': function () { return [this.$route.params.slug] },
     },
     lane,
     shipment_history,
@@ -54,6 +52,12 @@ export default {
     has_work_output,
     pretty_date,
     duration,
+    is_ready () {
+      return (
+        this.$subReady.Shipments &&
+        this.$subReady.Lanes
+      );
+    },
   },
 
   computed: {

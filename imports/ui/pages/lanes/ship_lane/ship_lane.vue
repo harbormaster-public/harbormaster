@@ -123,7 +123,7 @@ import './ship_lane.css';
 export default {
   meteor: {
     $subscribe: {
-      'Lanes': function () { return [get_lane(this.$route.params.name)] },
+      'Lanes': function () { return [this.$route.params.slug] },
     },
     lane,
     work_preview,

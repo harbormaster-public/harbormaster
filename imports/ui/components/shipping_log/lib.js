@@ -10,16 +10,16 @@ import {
  } from '../../pages/lanes/ship_lane/lib';
 
 const shipment_history = function () {
-  let shipments = history(get_lane(this.$route.params.name), H.AMOUNT_SHOWN);
+  let shipments = history(get_lane(this.$route.params.slug), H.AMOUNT_SHOWN);
   return shipments;
 };
 
 const has_work_output = function () {
-  let lane = get_lane(this.$route.params.name);
+  let lane = get_lane(this.$route.params.slug);
   let date = this.$route.params.date;
   let shipment = Shipments.findOne({ lane: lane?._id, start: date });
   let any_shipment = Shipments.findOne({ lane: lane?._id });
-
+  
   if (
     shipment && (
       Object.keys(shipment.stdout).length || 

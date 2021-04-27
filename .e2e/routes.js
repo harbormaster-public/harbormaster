@@ -85,7 +85,7 @@ describe('Routing', function () {
     });
   });
 
-  describe('/lanes/:name/edit', function () {
+  describe('/lanes/:slug/edit', function () {
     it('should load for "new" and any given name', function () {
       var new_lane_url = 'http://localhost:3000/lanes/new/edit';
       var random_lane_url = 'http://localhost:3000/lanes/' +
@@ -98,7 +98,7 @@ describe('Routing', function () {
     });
   });
 
-  describe('/lanes/:name/ship', function () {
+  describe('/lanes/:slug/ship', function () {
     it('should load', function () {
       var random_lane_url = 'http://localhost:3000/lanes/' +
         faker.lorem.word() +
@@ -108,7 +108,7 @@ describe('Routing', function () {
     });
   });
 
-  describe('/lanes/:name/ship/:date', function () {
+  describe('/lanes/:slug/ship/:date', function () {
     it('should load', function () {
       var date = new Date();
       var random_shipped_lane_url = 'http://localhost:3000/lanes/' +

@@ -35,11 +35,11 @@ WebApp.rawConnectHandlers.use(function (req, res, next) {
   return next();
 });
 
-post_hooks.route('/lanes/:name/ship', function (params, req, res) {
+post_hooks.route('/lanes/:slug/ship', function (params, req, res) {
 
   let results;
   let query = require('url').parse(req.url, true).query;
-  let lane_name = decodeURI(params.name);
+  let lane_name = decodeURI(params.slug);
   let user_id = query ? query.user_id : false;
   let token = query ? query.token : false;
 

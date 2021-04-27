@@ -28,7 +28,7 @@ const routes = [
     component: LanesPage,
   },
   {
-    path: "/lanes/:name/edit",
+    path: "/lanes/:slug/edit",
     name: "edit_lane",
     component: EditLanePage,
   },
@@ -37,12 +37,12 @@ const routes = [
     redirect: '/lanes',
   },
   {
-    path: "/lanes/:name/ship/:date?",
+    path: "/lanes/:slug/ship/:date?",
     name: "ship_lane",
     component: ShipLanePage,
   },
   {
-    path: "/lanes/:name/charter",
+    path: "/lanes/:slug/charter",
     name: "charter",
     component: CharterPage,
   },

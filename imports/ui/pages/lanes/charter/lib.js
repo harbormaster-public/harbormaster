@@ -117,7 +117,7 @@ const assign_children = (target, parent_id, nodes, links) => {
 };
 
 const build_graph = function () {
-  let lane = get_lane(this.$route.params.name);
+  let lane = get_lane(this.$route.params.slug);
   let nodes = [];
   let links = [];
 
@@ -155,7 +155,7 @@ const build_graph = function () {
 };
 
 const lane = function () {
-  let lane = get_lane(this.$route.params.name);
+  let lane = get_lane(this.$route.params.slug);
 
   return lane ? lane : {};
 };
