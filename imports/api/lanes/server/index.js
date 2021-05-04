@@ -70,7 +70,7 @@ Meteor.methods({
 
     if (! remove) lane.tokens[token] = user_id;
 
-    return Lanes.update(lane_id, lane);
+    return Lanes.update(lane_id, {$set:{ tokens: lane.tokens }});
   },
 
   'Lanes#start_shipment': function (id, manifest, shipment_start_date) {
