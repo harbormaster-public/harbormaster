@@ -102,6 +102,7 @@ table tbody tr:nth-child(odd) {
   border-bottom-color: transparent;
   background: #666;
   float: left;
+  line-height: inherit;
 }
 
 .admin a:hover,
