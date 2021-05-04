@@ -19,6 +19,7 @@ services:
       DEBUG: ${DEBUG}
     volumes:
       - ~/.harbormaster:/root/.harbormaster
+      - ~/.ssh:/root/.ssh
     logging:
       driver: "json-file"
       options:
