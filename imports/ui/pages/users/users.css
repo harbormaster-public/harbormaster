@@ -51,114 +51,89 @@ td:first-child {
 
 .profile,
 .expire-user {
-  position: absolute;
-  left: 0;
-  top: 0;
+  display: inline-block;
+  vertical-align: middle;
   width: 100%;
   height: 100%;
-}
-
-/* .users-table th {
-  cursor: pointer;
-}
-
-.users-table th.current-state-header,
-.users-table th.followup-header,
-.users-table th.salvage-plan-header {
-  cursor: default;
-}
-
-.users-table {
+  background: #333;
+  padding: 0 30px 0 10px;
   position: relative;
 }
 
-.users-table th.active {
-  background: #0af;
-  position: relative;
-  color: #fff;
-}
-
-.users-table th.active::after {
-  content: 'v';
-  color: #fff;
-  position: absolute;
-  bottom: -5px;
-  left: 50%;
-  margin-left: -4px;
-}
-
-.users-table th.active.reverse:after {
-  content: '^';
-  color: #fff;
+.profile:after,
+.expire-user:after {
+  content: '';
   position: absolute;
   top: 0;
-  left: 50%;
-  font-size: 18px;
-  margin-left: -4px;
-  margin-top: -2px;
+  right: 0;
+  height: 100%;
+  border-style: solid;
+  border-color: transparent;
+  border-right-color: #666;
 }
 
-.admin .button {
-  position: absolute;
+.profile:after {
+  border-width: 12px;
 }
 
-.admin .profile {
-  left: -75px;
+.expire-user:after {
+  border-width: 24px;
 }
 
-.admin .expire-user {
-  right: -100px;
-  margin-top: -25px;
+.users-table .user-column {
+  width: 25%;
+  padding: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  max-width: 600px;
 }
 
-td.active {
-  color: darkgoldenrod;
+.users-table th.user-column {
+  padding-left: 10px;
 }
 
-td.ready {
-  color: green;
-}
+@media all 
+  and (min-device-width: 280px)
+  and (max-device-width: 800px) {
 
-td.error {
-  color: red;
-}
-
-@media all and (max-width: 1200px) {
-  .harbormaster-column,
-  th.captained-column,
-  .captained-lane-list {
+  .captained-column {
     display: none;
   }
 
-  .captained-column {
-    padding: 0;
+  #users-page {
+    font-size: 50px;
   }
 
-  .users-table td {
-    font-size: 1.5625rem;
+  .abbreviation {
+    display: none;
+  }
+
+  .profile:after {
+    border-width: 35px;
+  }
+  
+  .expire-user:after {
+    border-width: 75px;
+  }
+
+  .invite-user {
+    font-size: 50px;
+    line-height: 1;
+    height: initial;
+    border-width: 0;
+    background: #333;
+    padding: 20px 0;
+    margin: 20px 0;
     position: relative;
   }
 
-  .users-table .admin {
+  .invite-user:after {
+    content: '';
     position: absolute;
-    left: 0;
-    width: 100%;
+    right: -1px;
+    top: -1px;
+    border-color: transparent;
+    border-right-color: #666;
+    border-width: 45px;
   }
-
-  .users-table .admin .button {
-    margin: 0;
-    width: 220px;
-    font-size: 1rem;
-    padding: 0 20px;
-  }
-
-  .users-table .admin .profile {
-    top: 65px;
-    left: 0;
-  }
-
-  .admin .expire-user {
-    top: 24px;
-    right: 0;
-  }
-} */
+}

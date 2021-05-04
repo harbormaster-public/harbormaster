@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div id=lanes-page>
     <h1 class="text-5xl my-2">Lanes</h1>
     <router-link 
       to="/lanes/new/edit" 

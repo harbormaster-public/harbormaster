@@ -1,5 +1,5 @@
 <template>
-  <div class="ship-lane-page">
+  <div id="ship-lane-page">
     <div v-if="this.$subReady.Lanes && lane">
       <h1 class="text-5xl my-2"><em>Ship to lane:</em>&nbsp;<strong>{{lane.name}}</strong></h1>
       <h2 class="text-2xl my-2 px-2">Let's review.  Ready to ship?</h2>

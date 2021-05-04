@@ -201,15 +201,21 @@ tr.deleting .admin {
   text-align: center;
 }
 
-@media all and (max-width: 1023px) {
+@media all 
+  and (min-device-width: 280px)
+  and (max-device-width: 800px) {
+
   .admin.active {
     margin-top: 0;
     top: 0;
-    left: 98%;
+    left: 70px;
     height: 100%;
     z-index: 1;
-    border: 2px solid #ffae00;
+    background: #0af;
+    box-shadow: 0 0 5px 5px #ffae00;
     border-left-color: transparent;
+    font-size: 50px;
+    width: 800px;
   }
 
   .admin a, .admin button {
@@ -219,5 +225,111 @@ tr.deleting .admin {
     justify-content: center;
     align-items: center;
     height: 100%;
+  }
+
+  #ship-lane-page h1,
+  #edit-lane-page h1,
+  #lanes-page h1 {
+    font-size: 75px;
+    margin: 20px 0;
+    line-height: 1;
+  }
+
+  #ship-lane-page h2,
+  #edit-lane-page h2 {
+    font-size: 60px;
+    margin: 20px 0;
+    line-height: 1;
+  }
+
+  #ship-lane-page h3,
+  #edit-lane-page h3 {
+    font-size: 50px;
+    line-height: 1;
+    margin: 20px 0;
+  }
+
+  button.save,
+  #edit-lane-page a.ship-lane,
+  button.back-to-lanes,
+  a.edit-lane,
+  a.new-lane,
+  a.lane-charter,
+  a.show-lanes,
+  button.start-shipment,
+  a#new-lane {
+    font-size: 50px;
+    line-height: 1;
+    height: initial;
+    border-width: 0;
+    background: #333;
+    padding: 20px 0;
+    margin: 20px 0;
+    position: relative;
+  }
+
+  button.save:after,
+  #edit-lane-page a.ship-lane:after,
+  button.back-to-lanes:after,
+  a.edit-lane:after,
+  a.new-lane:after,
+  a.lane-charter:after,
+  a.show-lanes:after,
+  button.start-shipment:after,
+  a#new-lane:after {
+    content: '';
+    position: absolute;
+    right: -1px;
+    top: -1px;
+    border-color: transparent;
+    border-right-color: #666;
+    border-width: 45px;
+  }
+
+  button.save:active,
+  #edit-lane-page a.ship-lane:active,
+  button.back-to-lanes:active,
+  a.edit-lane:active,
+  a.new-lane:active,
+  a.lane-charter:active,
+  a.show-lanes:active,
+  button.start-shipment:active,
+  a#new-lane:active {
+    background: #ffae00;
+    color: #fff;
+  }
+
+  .lanes-table th, td {
+    font-size: 50px;
+  }
+
+  .followup-column,
+  .salvage-plan-column,
+  .salvage-runs-column,
+  .total-shipments-column,
+  .captains-column {
+    display: none;
+  }
+
+  .lane-options {
+    font-size: 60px;
+    line-height: 0;
+  }
+
+  .lane-options.active {
+    box-shadow: 0 0 5px 5px #0af;
+  }
+
+  th:first-child,
+  td:first-child {
+    padding-left: 80px;
+  }
+
+  figure {
+    font-size: 50px;
+  }
+
+  figure section {
+    margin: 50px 0 0;
   }
 }

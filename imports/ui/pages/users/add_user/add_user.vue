@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div id=add-user-page>
     <div v-if="fresh">
       <h1 class="text-5xl my-2">Welcome to Harbormaster!</h1>
       <h2 class="text-2xl my-2 px-2">You're the first user to sign in.</h2>
@@ -84,5 +84,45 @@ export default {
 
 .email-user-invite {
   width: 100%;
+}
+
+
+@media all 
+  and (min-device-width: 280px)
+  and (max-device-width: 800px) {
+  
+  #add-user-page {
+    font-size: 50px;
+  }
+
+  #add-user-page h1 {
+    font-size: 75px;
+  }
+
+  #add-user-page h2 {
+    font-size: 50px;
+    line-height: 1;
+  }
+
+  .send-invitation {
+    font-size: 50px;
+    line-height: 1;
+    height: initial;
+    border-width: 0;
+    background: #333;
+    padding: 20px 0;
+    margin: 20px 0;
+    position: relative;
+  }
+
+  .send-invitation:after {
+    content: '';
+    position: absolute;
+    right: -1px;
+    top: -1px;
+    border-color: transparent;
+    border-right-color: #666;
+    border-width: 45px;
+  }
 }
 </style>

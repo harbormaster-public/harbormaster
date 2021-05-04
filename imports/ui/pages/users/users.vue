@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div id=users-page>
     <h1 class="text-5xl my-2">Users</h1>
     <a 
       v-if="is_harbormaster()" 
@@ -10,7 +10,7 @@
       <thead>
         <tr>
           <th class="user-column">User</th>
-          <th class="harbormaster-column">Harbormaster?</th>
+          <th class="harbormaster-column">H<span class="abbreviation">arbormaster</span>?</th>
           <th class="captained-column">Lanes Captained</th>
           <th class="user-access-column">User Access</th>
         </tr>

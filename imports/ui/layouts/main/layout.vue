@@ -85,4 +85,12 @@ export default {
 * {
   color: #efefef;
 }
+
+@media all 
+  and (min-device-width: 280px)
+  and (max-device-width: 800px) {
+    #router-view {
+      max-width: 100%;
+    }
+  }
 </style>

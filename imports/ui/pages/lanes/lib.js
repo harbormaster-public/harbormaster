@@ -195,17 +195,25 @@ const active = function (header) {
 };
 
 const can_ply = function (lane) {
-  var user = Users.findOne(Meteor.user().emails[0].address);
+  var user = Users.findOne(H.user().emails[0].address);
   if (user && user.harbormaster) {
     return true;
   }
 
   if (lane?.captains && lane?.captains.length) {
     let captain = _.find(lane.captains, function (email) {
-      return email == Meteor.user().emails[0].address;
+      return email == H.user().emails[0].address;
+    });
+    
+    return captain ? true : false;
+  }
+  
+  if (lane?.tokens) {
+    let token = _.find(_.invert(Object.keys(lane?.tokens)), function (email) {
+      return email == H.user().emails[0].address;
     });
 
-    return captain ? true : false;
+    return token ? true : false;
   }
 
   return false;

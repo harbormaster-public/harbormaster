@@ -62,7 +62,7 @@ pre {
   border-radius: 2px;
 }
 
-.ship-lane-page figure p {
+#ship-lane-page figure p {
   margin: 0;
   color: #ccc;
 }
@@ -80,12 +80,12 @@ pre {
   white-space: break-spaces;
 }
 
-.ship-lane-page .reset-all-active,
-.ship-lane-page .start-shipment,
-.ship-lane-page .reset-shipment,
-.ship-lane-page .show-lanes,
-.ship-lane-page .lane-charter,
-.ship-lane-page .edit-lane {
+.reset-all-active,
+.start-shipment,
+.reset-shipment,
+.show-lanes,
+.lane-charter,
+.edit-lane {
   width: 100%;
   border-width: 25px;
   height: 0;
@@ -96,11 +96,11 @@ pre {
   text-align: center;
 }
 
-.ship-lane-page .reset-all-active:hover,
-.ship-lane-page .reset-shipment:hover,
-.ship-lane-page .show-lanes:hover,
-.ship-lane-page .lane-charter:hover,
-.ship-lane-page .edit-lane:hover {
+.reset-all-active:hover,
+.reset-shipment:hover,
+.show-lanes:hover,
+.lane-charter:hover,
+.edit-lane:hover {
   color: #333;
   border-color: #ffae00;
   border-right-color: transparent;
@@ -120,3 +120,15 @@ pre {
   color: #ffae00;
 }
 
+@media all 
+  and (min-device-width: 280px)
+  and (max-device-width: 800px) {
+
+  #ship-lane-page figure {
+    margin: 40px 0;
+  }
+
+  .work-caption {
+    margin-top: -50px;
+  }
+}

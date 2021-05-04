@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="shipping-log">
     <h2 class="text-2xl my-2">Shipping Log: Last {{shipping_log_amount_shown}} shipments</h2>
     <div v-if="!is_ready()">
       <li>Loading...</li>
@@ -11,7 +11,7 @@
             <a 
               :href="'/lanes/'+lane.slug+'/ship/'+item.start" 
               :class="'rounded-sm px-2 py-1'+(active ?' active':'')+' exit-code code-'+item.exit_code+' shipment-link'"
-            >Shipped {{pretty_date(item.actual)}}; finished {{pretty_date(item.finished)}}; {{duration(item)}} duration
+            ><span>Shipped {{pretty_date(item.actual)}};</span><span> finished {{pretty_date(item.finished)}};</span><span> {{duration(item)}} duration</span>
             </a>
           </li>
         </ul>
@@ -94,4 +94,35 @@ export default {
   position: absolute;
   left: -25px;
 }
+
+@media all 
+  and (min-device-width: 280px)
+  and (max-device-width: 800px) {
+
+  .shipment-link:before {
+    left: -65px;
+  }
+
+  .shipping-log {
+    font-size: 50px;
+  }
+
+  .shipping-log ul {
+    margin-left: 50px;
+  }
+
+  .shipping-log ul a {
+    padding: 0 20px;
+  }
+
+  .shipping-log ul span {
+    display: inline-block;
+    padding-left: 40px;
+  }
+
+  .shipping-log ul span:first-child {
+    padding-left: 0;
+  }
+}
+
 </style>

@@ -134,3 +134,35 @@ legend {
   border-color: #ffae00;
   border-right-color: transparent;
 }
+
+@media all 
+  and (min-device-width: 280px)
+  and (max-device-width: 800px) {
+
+  #edit-lane-page,
+  #edit-lane-page pre,
+  #edit-lane-page textarea {
+    font-size: 60px;
+  }
+
+  #edit-lane-page ul li {
+    list-style-type: none;
+  }
+  
+  input {
+    min-width: 50px;
+    min-height: 50px;
+  }
+
+  button.save {
+    background: #0af;
+  }
+
+  button.save:active {
+    background: #ffae00;
+  }
+
+  button.save:after {
+    border-right-color: #333;
+  }
+}

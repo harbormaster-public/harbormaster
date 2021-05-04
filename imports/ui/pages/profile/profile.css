@@ -10,3 +10,30 @@
   background-color: #dfdfdf;
   border-color: #d1d1d1;
 }
+
+@media all 
+  and (min-device-width: 280px)
+  and (max-device-width: 800px) {
+
+  #profile-page {
+    font-size: 50px;
+  }
+
+  #profile-page h1 {
+    font-size: 75px;
+  }
+
+  #profile-page h2 {
+    font-size: 60px;
+    margin: 40px 0;
+  }
+
+  #profile-page code {
+    width: 100%;
+    display: inline-block;
+    padding: 0 5px;
+    overflow: scroll;
+    border-radius: 10px;
+    background: #333;
+  }
+}

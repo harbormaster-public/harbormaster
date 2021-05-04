@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div id=profile-page>
     <h1 class="text-5xl my-2"><span>User ID:</span> <span>{{user_email()}}</span></h1>
     <form class="fieldset px-5" v-if="this.$subReady.Users && this.$subReady.Lanes">
       <fieldset>

@@ -74,7 +74,8 @@ a:hover, .nav-item:hover {
   color: #07c;
 }
 
-a:active, .nav-item:active, .button.hollow:active, .admin .button:active { 
+.nav-item:active, 
+.admin .button:active { 
   border-color: #aa7a00;
   color: #aa7a00;
 }
@@ -84,4 +85,16 @@ a:active, .nav-item:active, .button.hollow:active, .admin .button:active {
   border-bottom: 10px solid #fff;
 }
 
+@media all 
+  and (min-device-width: 280px)
+  and (max-device-width: 800px) {
+    #navigation .container {
+      max-width: 100%;
+      font-size: 40px;
+    }
+
+    #navigation .menu .nav-item {
+      border-width: 0;
+    }
+}
 </style>
