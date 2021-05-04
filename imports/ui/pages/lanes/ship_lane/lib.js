@@ -145,8 +145,9 @@ const any_active = function () {
 };
 
 const reset_shipment = function () {
-  const { name, date } = this.$route.params;
-  H.call('Lanes#reset_shipment', name, date, function (err, res) {
+  const { date, slug } = this.$route.params;
+
+  H.call('Lanes#reset_shipment', slug, date, function (err, res) {
     if (err) throw err;
     console.log('Reset shipment response:', res);
   });

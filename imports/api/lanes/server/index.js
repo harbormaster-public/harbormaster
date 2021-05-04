@@ -257,15 +257,27 @@ Meteor.methods({
     return manifest;
   },
 
-  'Lanes#reset_shipment': function (name, date) {
-    let lane = Lanes.findOne({ $or: [{ name }, { slug: name }] });
+  'Lanes#reset_shipment': function (slug, date) {
+    let lane = Lanes.findOne({ slug });
     let shipment = Shipments.findOne({ start: date, lane: lane._id });
+    if (!shipment) shipment = Shipments.findOne(
+      { lane: lane._id },
+      { sort: { actual: -1 }},
+    );
+    debugger
     Shipments.update(shipment._id, { $set: {
       active: false,
       exit_code: 1,
     }});
 
-    lane.last_shipment = Shipments.findOne(shipment._id);
+    lane.last_shipment = shipment ? 
+      Shipments.findOne(shipment._id) :
+      Shipments.findOne(
+        { lane: lane._id },
+        { sort: { actual: -1 }},
+      )
+    ;
+    
     Lanes.update(lane._id, {$set: { last_shipment: lane.last_shipment }});
 
     return lane;
