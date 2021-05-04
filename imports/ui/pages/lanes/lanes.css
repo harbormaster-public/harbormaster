@@ -218,13 +218,23 @@ tr.deleting .admin {
     width: 800px;
   }
 
-  .admin a, .admin button {
-    border-left-color: transparent;
-    border-bottom-color: #fff;
+  #lanes-page .admin a, 
+  #lanes-page .admin button {
+    border: 0;
     display: inline-flex;
     justify-content: center;
     align-items: center;
     height: 100%;
+    margin: 0;
+  }
+
+  #lanes-page .admin .edit-lane:after {
+    content: none;
+  }
+
+  #lanes-page .admin .edit-lane {
+    padding: 0;
+    margin: 0;
   }
 
   #ship-lane-page h1,
