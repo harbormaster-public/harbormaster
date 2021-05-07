@@ -254,7 +254,7 @@ const last_shipped = function (lane) {
 
 const latest_shipment = function (lane) {
   
-  let latest = LatestShipment.findOne(lane?._id).shipment;
+  let latest = LatestShipment.findOne(lane?._id)?.shipment;
   const start = latest ? latest.start : '';
   
   return start;
