@@ -99,6 +99,10 @@ Meteor.methods({
       stderr: {},
       active: true,
     });
+    LatestShipment.upsert(
+      lane._id, 
+      {$set: {shipment: Shipments.findOne(shipment_id)}}
+    );
 
     lane.shipment_count = lane.shipment_count >= 0 ? 
       lane.shipment_count + 1 
@@ -264,11 +268,16 @@ Meteor.methods({
       { lane: lane._id },
       { sort: { actual: -1 }},
     );
-    debugger
+    
     Shipments.update(shipment._id, { $set: {
       active: false,
       exit_code: 1,
     }});
+
+    LatestShipment.upsert(
+      lane._id, 
+      {$set: {shipment: Shipments.findOne(shipment_id)}}
+    );
 
     lane.last_shipment = shipment ? 
       Shipments.findOne(shipment._id) :
@@ -299,6 +308,7 @@ Meteor.methods({
       { lane: lane._id },
       { sort: { actual: -1 }},
     );
+    LatestShipment.upsert(lane._id, {shipment: lane.latest_shipment});
     Lanes.update(lane._id, {$set: { last_shipment: lane.last_shipment }});
 
     return lane;

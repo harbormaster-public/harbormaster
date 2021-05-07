@@ -29,10 +29,7 @@ const active = function () {
     lane: lane._id,
   }).fetch();
 
-  if (
-    total.length == 1 && total[0].start == date ||
-    lane.last_shipment?.active
-  ) return true;
+  if (total.length == 1 && total[0].start == date) return true;
   else return false;
 };
 
@@ -117,7 +114,7 @@ const work_output = function () {
       start: date,
     })
   ;
-  // debugger
+  
   return shipment;
 };
 

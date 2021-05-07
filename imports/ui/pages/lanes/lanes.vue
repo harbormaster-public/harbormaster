@@ -46,9 +46,9 @@
           <td class="type-column">{{lane.type}}</td>
           <td class="last-shipped-column" width=125>
             <router-link 
-              v-if="lane.last_shipment"
-              :to="'/lanes/'+lane.slug+'/ship/'+lane.last_shipment.start">
-              {{lane.last_shipment.actual.toLocaleString()}}
+              v-if="latest_shipment(lane)"
+              :to="'/lanes/'+lane.slug+'/ship/'+latest_shipment(lane)">
+              {{last_shipped(lane)}}
             </router-link>
           </td>
           <td class="total-shipments-column">{{lane.shipment_count || '0'}}</td>
@@ -67,6 +67,7 @@
 
 <script>
 import { Lanes } from '../../../api/lanes';
+import { Shipments } from '../../../api/shipments';
 import {
   loading_lanes,
   sort_by_header,
@@ -95,14 +96,21 @@ export default {
   meteor: {
     $subscribe: {
       'Lanes': [],
-      'Shipments': [lane_ids, options],
+      'LatestShipment': [],
+      'Shipments': [lane_ids.get(), options],
+    },
+    lanes () {
+      return Lanes.find({});
+    },
+    shipments () {
+      return Shipments.find({});
     },
     empty,
     lanes,
   },
 
   methods: {
-
+    current_state,
     handle_opts_click (event) {
       if (event.target.getAttribute('class').match(/active/)) {
         event.target.nextElementSibling.setAttribute(
@@ -138,7 +146,6 @@ export default {
     ready,
     active,
     can_ply,
-    current_state,
     followup_name,
     last_shipped,
     latest_shipment,

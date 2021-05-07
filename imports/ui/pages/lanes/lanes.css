@@ -260,6 +260,13 @@ tr.deleting .admin {
     margin: 20px 0;
   }
 
+  #ship-lane-page .reset-shipment,
+  #ship-lane-page .reset-all-active,
+  #edit-lane-page .choose-harbor-type,
+  #edit-lane-page .add-followup,
+  #edit-lane-page .add-salvage-plan,
+  #edit-lane-page .add-harbor,
+  #edit-lane-page .lane-done,
   button.save,
   #edit-lane-page a.ship-lane,
   button.back-to-lanes,
@@ -279,6 +286,13 @@ tr.deleting .admin {
     position: relative;
   }
 
+  #ship-lane-page .reset-shipment:after,
+  #ship-lane-page .reset-all-active:after,
+  #edit-lane-page .choose-harbor-type:after,
+  #edit-lane-page .add-followup:after,
+  #edit-lane-page .add-salvage-plan:after,
+  #edit-lane-page .add-harbor:after,
+  #edit-lane-page .lane-done:after,
   button.save:after,
   #edit-lane-page a.ship-lane:after,
   button.back-to-lanes:after,
@@ -295,6 +309,17 @@ tr.deleting .admin {
     border-color: transparent;
     border-right-color: #666;
     border-width: 45px;
+  }
+
+  #edit-lane-page .choose-harbor-type,
+  #edit-lane-page .add-harbor {
+    background-color: #ffae00;
+    color: #333;
+  }
+
+  #edit-lane-page .choose-harbor-type:after,
+  #edit-lane-page .add-harbor:after {
+    border-right-color: #333;
   }
 
   button.save:active,

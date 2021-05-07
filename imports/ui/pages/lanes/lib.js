@@ -175,7 +175,7 @@ const delete_lane = function (event, lane) {
 const ready = function () {
   if (
     this.$subReady.Lanes
-    // && this.$subReady.LatestShipment
+    && this.$subReady.LatestShipment
   ) return true;
   return false;
 };
@@ -223,16 +223,17 @@ const current_state = function (lane) {
   const text_na = 'N/A';
   const text_error = 'error';
   const text_ready = 'ready';
-  let latest = lane.last_shipment;
+  
   let active_shipments = Shipments.find({
     lane: lane._id,
     active: true,
   }).count();
+  let last_shipment = LatestShipment.findOne(lane._id)?.shipment;
 
-  if (active_shipments || lane.last_shipment.active) return 'active';
+  if (active_shipments) return 'active';
 
-  if (latest?.exit_code) return text_error;
-  if (latest?.exit_code == 0) return text_ready;
+  if (last_shipment?.exit_code) return text_error;
+  if (last_shipment?.exit_code == 0) return text_ready;
   
   return text_na;
 };
@@ -244,14 +245,16 @@ const followup_name = function (lane) {
 };
 
 const last_shipped = function (lane) {
-  let latest = lane.last_shipment;
+  
+  let latest = LatestShipment.findOne(lane?._id).shipment;
   const actual = latest ? latest.actual : 'Loading...';
 
   return actual.toLocaleString();
 };
 
 const latest_shipment = function (lane) {
-  let latest = lane.last_shipment;
+  
+  let latest = LatestShipment.findOne(lane?._id).shipment;
   const start = latest ? latest.start : '';
   
   return start;

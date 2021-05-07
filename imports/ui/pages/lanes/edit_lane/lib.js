@@ -49,12 +49,14 @@ const update_harbor = function () {
       if (err) throw err;
       
       if (! res.success && validating_fields) alert('Invalid values.');
-      refresh_harbor();
-
-      return Session.set({
+      
+      Session.set({
         lane: res.lane,
         validating_fields: false,
       });
+      refresh_harbor();
+      
+      return Session.get('lane');
     }
   );
 };
@@ -92,7 +94,7 @@ const slug = function (lane) {
     get_lane(lane)
   ;
   
-  if (lane) {
+  if (lane.name) {
     const slug = lane.name.toLowerCase()
     // https://gist.github.com/matthagemann/382adfc57adbd5af078dc93feef01fe1
       .replace(/\s+/g, '-') // Replace spaces with -
@@ -294,7 +296,7 @@ const chosen_salvage_plan = function (salvage_lane) {
 const submit_form = function () {
   let lane = get_lane(this.$route.params.slug) || Session.get('lane');
   if (!lane) return;
-
+  
   if (
     lane.name &&
     lane.name != 'New' &&

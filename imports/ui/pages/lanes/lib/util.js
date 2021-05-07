@@ -13,7 +13,10 @@ const history = (lane, limit) => {
 };
 
 const get_lane = (string) => {
-  const lane =  Lanes.findOne({ $or: [{ name: string }, { slug: string }] });
+  let lane = Lanes.findOne(
+    { $or: [{ name: string }, { slug: string }] }
+  ) || Session.get('lane');
+  
   return lane;
 };
 

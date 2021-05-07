@@ -69,10 +69,6 @@ export default {
       Session.set('password_reset_token', null);
       this.reset = false;
     },
-  },
-
-  mounted () {
-    // debugger
   }
 }
 </script>

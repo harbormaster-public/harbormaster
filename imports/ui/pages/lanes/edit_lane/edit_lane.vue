@@ -238,8 +238,6 @@ export default {
   },
 
   data () {
-    // let lane_name = this.get_lane_name();
-
     return {
       harbor_refresh: 0,
       lane_name: this.get_lane_name(),
@@ -280,7 +278,6 @@ export default {
   mounted () {
     const name = this.$route.params.slug;
     const lane = get_lane(name);
-    const harbor = lane && Harbors.findOne(lane.type) || {};
 
     if (lane) Meteor.subscribe('Shipments', lane, options);
   },
