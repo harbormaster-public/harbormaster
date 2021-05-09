@@ -92,7 +92,10 @@
               <h3 class="text-xl my-2 text-center">Working...</h3>
             </div>
             <div v-else>
-              <button :class="'save p-2 rounded-sm my-2 block'+can_save">Save</button>
+              <button 
+                id=harbor-save-button
+                :class="'save p-2 rounded-sm my-2 block'+can_save"
+              >Save</button>
             </div>
           </div>
         </fieldset>

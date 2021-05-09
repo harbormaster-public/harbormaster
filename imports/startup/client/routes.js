@@ -3,6 +3,12 @@ import VueRouter from 'vue-router';
 import VueMeteorTracker from 'vue-meteor-tracker';
 
 import Layout from '../../ui/layouts/main';
+import { 
+  Constraints,
+  is_valid_constraint,
+  add_rel,
+  add_script,
+} from '../../ui/layouts/main/lib';
 
 import '../../ui/components/welcome';
 import '../../ui/components/new_harbormaster';
@@ -14,7 +20,6 @@ import ProfilePage from '../../ui/pages/profile';
 import EditLanePage from '../../ui/pages/lanes/edit_lane';
 import ShipLanePage from '../../ui/pages/lanes/ship_lane';
 import CharterPage from '../../ui/pages/lanes/charter';
-// import ResetPassword from ''
 
 const routes = [
   {

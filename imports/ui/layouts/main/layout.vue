@@ -1,6 +1,6 @@
 <template>
   <div id=layout class="min-h-screen">
-    <div v-if="is_loaded">
+    <div v-if="is_loaded()">
       <div v-if="no_users" class="container mx-auto p-2">
         <add-user v-bind:fresh="true"></add-user>
       </div>
@@ -21,6 +21,9 @@
         <div v-else class="container mx-auto p-2">
           <welcome></welcome>
         </div>
+      </div>
+      <div id=global-constraints>
+        {{set_constraints}}
       </div>
     </div>
     <div v-else>
@@ -45,9 +48,8 @@ import {
   no_users,
   logged_in,
   no_harbormasters,
+  set_constraints,
 } from './lib';
-
-const Constraints = new ReactiveVar({});
 
 export default {
   meteor: {
@@ -56,10 +58,14 @@ export default {
       'Lanes': [],
       'Harbors': [],
     },
-    is_loaded,
     no_users,
     logged_in,
     no_harbormasters,
+    set_constraints,
+  },
+
+  methods: {
+    is_loaded,
   },
 
   components: {

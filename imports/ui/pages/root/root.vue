@@ -12,6 +12,7 @@
         <li><a href="/lanes">{{total_lanes}} Lanes</a></li>
         <li><a href="/users">{{total_users}} Users, {{total_captains}} of which are Captains, and {{total_harbormasters}} of which are Harbormasters</a></li>
       </ul>
+      <p>This is version [TODO].</p>
     </div>
   </div>
 </template>
