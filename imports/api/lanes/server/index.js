@@ -294,7 +294,7 @@ Meteor.methods({
 
   'Lanes#reset_all_active_shipments': function (name) {
     let lane = Lanes.findOne({ $or: [{ name }, { slug: name }] });
-
+    
     Shipments.update(
       { lane: lane._id, active: true },
       { $set: {

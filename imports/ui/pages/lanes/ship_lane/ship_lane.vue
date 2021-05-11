@@ -103,7 +103,7 @@
 
 <script>
 import ShippingLog from '../../../components/shipping_log';
-import { get_lane } from '../lib/util';
+
 import {
   lane,
   work_preview,
