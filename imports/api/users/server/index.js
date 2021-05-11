@@ -28,6 +28,7 @@ Meteor.methods({
   'Users#expire_user' (email) {
     let expired_password = uuid.v4();
     let user = Accounts.findUserByEmail(email);
+    Users.update(email, {$set: { expired: true }});
 
     Accounts.setPassword(user._id, expired_password);
 

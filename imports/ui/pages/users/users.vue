@@ -16,7 +16,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="user in users()" :key="user.id">
+        <tr v-for="user in users" :key="user._id">
           <td class="user-column">
             <span v-if="is_harbormaster(user)" class="user-profile-link">
               <a 
@@ -30,7 +30,7 @@
           </td>
           <td class="captained-column">
             <span class="captained-lane-list">
-              {{captain_lanes()}}
+              {{captain_lanes}}
             </span>
           </td>
           <td>
@@ -60,13 +60,13 @@ export default {
   meteor: {
     $subscribe: {
       'Users': [],
-    }
+    },
+    users () { return Users.find({ expired: { $not: true }}) },
+    captain_lanes,
   },
 
   methods: {
-    users () { return Users.find() },
     is_harbormaster,
-    captain_lanes,
     expire_user,
   }
 }

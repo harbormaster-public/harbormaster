@@ -1,11 +1,11 @@
 <template>
-  <div>
-    <h1>Lane Charter</h1>
+  <div id=charter-page>
+    <h1 class="text-5xl my-2">Lane Charter</h1>
     <figure
       v-if="this.$subReady.Shipments && build_graph().length"
       class="charter"
     >
-      <figcaption>
+      <figcaption class="text-2xl">
         Starting with lane:
         <a class="root" :href="'/lanes/' + lane().slug + '/ship'">{{
           lane().name
@@ -76,7 +76,3 @@ export default {
   },
 };
 </script>
-
-<style>
-
-</style>

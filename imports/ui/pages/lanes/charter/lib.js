@@ -15,7 +15,6 @@ const TOP_PADDING = 225;
 const STROKE_WIDTH = 5;
 
 const root_node = new ReactiveVar();
-const graphed_nodes = new ReactiveVar({});
 const node_list = new ReactiveVar([]);
 const link_list = new ReactiveVar([]);
 
@@ -99,9 +98,9 @@ const assign_salvage = function (plan, target, parent_id, nodes, links) {
 };
 
 const assign_children = (target, parent_id, nodes, links) => {
-  let followup = Lanes.findOne(target.followup);
-  let plan = Lanes.findOne(target.salvage_plan);
-
+  let followup = Lanes.findOne(target.followup?._id);
+  let plan = Lanes.findOne(target.salvage_plan?._id);
+  
   assign_followup(followup, target, parent_id, nodes, links);
 
   assign_salvage(plan, target, parent_id, nodes, links);
@@ -144,13 +143,11 @@ const build_graph = function () {
   });
   nodes.push(root_node.get());
 
-  graphed_nodes[lane._id] = 1;
-
   assign_children(lane, false, nodes, links);
 
   node_list.set(nodes);
   link_list.set(links);
-
+  
   return node_list.get();
 };
 
