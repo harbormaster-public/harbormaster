@@ -35,8 +35,8 @@ export default {
       'Users': [],
     },
   
-    total_lanes () { return Lanes.find().count().toLocaleString() },
-    total_users () { return Users.find().count().toLocaleString() },
+    total_lanes () { return Lanes.find().count() },
+    total_users () { return Users.find({ expired: { $not: true }}).count() },
     shipments_last_24_hours,
     latest_shipment,
     total_captains,
