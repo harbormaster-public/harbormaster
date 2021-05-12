@@ -230,7 +230,7 @@ const current_state = function (lane) {
   }).count();
   let last_shipment = LatestShipment.findOne(lane._id)?.shipment;
 
-  if (active_shipments) return 'active';
+  if (active_shipments || last_shipment?.active) return 'active';
 
   if (last_shipment?.exit_code) return text_error;
   if (last_shipment?.exit_code == 0) return text_ready;
