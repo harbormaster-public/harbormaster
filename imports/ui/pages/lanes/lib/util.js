@@ -1,7 +1,7 @@
 import { Shipments } from '../../../../api/shipments';
 import { Lanes } from '../../../../api/lanes';
 
-const count = (lane = { _id: false }) => {
+const count = (lane = { _id: '' }) => {
   return Shipments.find({ lane: lane._id }).count();
 };
 
@@ -17,7 +17,7 @@ const get_lane = (string) => {
     { $or: [{ name: string }, { slug: string }] }
   ) || Session.get('lane');
   
-  return lane;
+  return lane || {};
 };
 
 export { count, history, get_lane };

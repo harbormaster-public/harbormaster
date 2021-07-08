@@ -78,6 +78,7 @@ export default {
 </script>
 
 <style>
+
 #layout {
   background-color: #333;
 }
@@ -95,6 +96,11 @@ export default {
 @media all 
   and (min-device-width: 280px)
   and (max-device-width: 800px) {
+    html {
+      width: 100%;
+      min-width: fit-content;
+    }
+
     #router-view {
       max-width: 100%;
     }

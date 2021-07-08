@@ -189,8 +189,8 @@ const can_ply = function (user, lane) {
 };
 
 const captain_list = function () {
-  const lane = Session.get('lane');
-  const users = Users.find().fetch();
+  const lane = Session.get('lane') || {};
+  const users = Users.find({expired: {$not: {$exists: true}}}).fetch();
   const you = Users.findOne(H.userId);
   const captains = users.map(user => ({
     ...user,
@@ -373,7 +373,7 @@ const choose_harbor_type = function (event) {
 
   lane.type = type;
   slug.bind(this, lane);
-
+  
   return H.call('Lanes#upsert', lane, (err, res) => {
     if (err) throw err;
     console.log(`Lane ${lane.name} added: ${res}`);

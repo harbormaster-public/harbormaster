@@ -73,7 +73,7 @@ Meteor.methods({
     return Lanes.update(lane_id, {$set:{ tokens: lane.tokens }});
   },
 
-  'Lanes#start_shipment': function (id, manifest, shipment_start_date) {
+  'Lanes#start_shipment': async function (id, manifest, shipment_start_date) {
     if (
       typeof id != 'string' ||
       (manifest && typeof manifest != 'object') ||
@@ -113,7 +113,11 @@ Meteor.methods({
     Lanes.update(lane._id, {$set: { shipment_count: lane.shipment_count }});
 
     console.log('Starting shipment for lane:', lane.name);
-    try { new_manifest = H.harbors[lane.type].work(lane, manifest); }
+    try { 
+      new_manifest = await Meteor.bindEnvironment(
+        H.harbors[lane.type].work(lane, manifest)
+      ); 
+    }
     catch (err) {
       console.error(
         'Shipment failed with error:\n',
@@ -144,7 +148,7 @@ Meteor.methods({
         Lanes.update(lane._id, {$set: { last_shipment: lane.last_shipment }});
         LatestShipment.upsert(shipment.lane, { shipment });
 
-        return Meteor.call(
+        return await Meteor.call(
           'Lanes#end_shipment', 
           lane, 
           exit_code, 
@@ -156,7 +160,7 @@ Meteor.methods({
     }
   },
 
-  'Lanes#end_shipment': function (lane, exit_code, manifest) {
+  'Lanes#end_shipment': async function (lane, exit_code, manifest) {
     if (
       typeof lane._id != 'string' ||
       (typeof exit_code != 'string' && typeof exit_code != 'number') ||
@@ -229,7 +233,7 @@ Meteor.methods({
         }" as salvage run of "${lane.name}"`
       );
 
-      return Meteor.call(
+      return await Meteor.call(
         'Lanes#start_shipment',
         lane.salvage_plan._id,
         salvage_manifest,
@@ -250,7 +254,7 @@ Meteor.methods({
         }" as followup of "${lane.name}"`
       );
 
-      return Meteor.call(
+      return await Meteor.call(
         'Lanes#start_shipment',
         lane.followup._id,
         followup_manifest,

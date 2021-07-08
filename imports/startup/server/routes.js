@@ -35,7 +35,7 @@ WebApp.rawConnectHandlers.use(function (req, res, next) {
   return next();
 });
 
-post_hooks.route('/lanes/:slug/ship', function (params, req, res) {
+post_hooks.route('/lanes/:slug/ship', async function (params, req, res) {
 
   let results;
   let query = require('url').parse(req.url, true).query;
@@ -89,7 +89,7 @@ post_hooks.route('/lanes/:slug/ship', function (params, req, res) {
 
   }
 
-  results = Meteor.call(
+  results = await Meteor.call(
     'Lanes#start_shipment',
     lane._id,
     manifest,

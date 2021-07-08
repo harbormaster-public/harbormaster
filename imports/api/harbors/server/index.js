@@ -14,7 +14,7 @@ const not_found = (err) => {
 };
 
 Meteor.methods({
-  'Harbors#update': function update_harbor (lane, values) {
+  'Harbors#update': async function update_harbor (lane, values) {
     try {
       let harbor = Harbors.findOne(lane.type);
       let success = H.harbors[lane.type].update(lane, values);
@@ -23,8 +23,8 @@ Meteor.methods({
         harbor.lanes[lane._id] = {
           manifest: values,
         };
-        Harbors.update(harbor._id, harbor);
-        lane = Meteor.call('Harbors#render_work_preview', lane, values);
+        await Harbors.update(harbor._id, harbor);
+        lane = await Meteor.call('Harbors#render_work_preview', lane, values);
         lane.minimum_complete = success;
       }
 
@@ -53,13 +53,13 @@ Meteor.methods({
     }
   },
 
-  'Harbors#render_input': function render_input (lane, manifest) {
+  'Harbors#render_input': async function render_input (lane, manifest) {
     const $newLaneName = 'New';
     if (lane.name == $newLaneName || !lane.type) return false;
     
     try {
       lane.rendered_input = H.harbors[lane.type].render_input(manifest, lane);
-      lane.rendered_work_preview = H
+      lane.rendered_work_preview = await H
         .harbors
         [lane.type]
         .render_work_preview(manifest, lane)
@@ -77,10 +77,12 @@ Meteor.methods({
     catch (err) { return not_found(err); }
   },
 
-  'Harbors#render_work_preview': function render_work_preview (lane, manifest) {
+  'Harbors#render_work_preview': async function render_work_preview (
+    lane, manifest
+  ) {
     if (! H.harbors[lane.type]) return 404;
     try {
-      lane.rendered_work_preview = H
+      lane.rendered_work_preview = await H
         .harbors
         [lane.type]
         .render_work_preview(manifest, lane)
