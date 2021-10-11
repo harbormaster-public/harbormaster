@@ -280,7 +280,7 @@ Meteor.methods({
 
     LatestShipment.upsert(
       lane._id, 
-      {$set: {shipment: Shipments.findOne(shipment_id)}}
+      {$set: {shipment: Shipments.findOne(shipment._id)}}
     );
 
     lane.last_shipment = shipment ? 
