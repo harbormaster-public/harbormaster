@@ -10,31 +10,31 @@
     "test:e2e:watch": "TEST_BROWSER_DRIVER=puppeteer npm run test:watch"
   },
   "dependencies": {
-    "@babel/runtime": "^7.13.10",
+    "@babel/runtime": "^7.15.4",
     "bcrypt": "^5.0.1",
     "body-parser": "^1.19.0",
     "expand-tilde": "^1.2.2",
     "faker": "3.1.0",
-    "foundation-sites": "^6.6.3",
+    "foundation-sites": "^6.7.3",
     "jquery": "^3.6.0",
     "lodash": "^4.17.21",
     "meteor-node-stubs": "0.2.4",
     "mkdirp": "^0.5.5",
     "node-sass": "^5.0.0",
-    "tailwindcss": "^2.1.1",
+    "tailwindcss": "^2.2.16",
     "tiny-json-http": "^7.3.0",
     "uuid": "^2.0.3",
-    "vue": "^2.6.12",
+    "vue": "^2.6.14",
     "vue-d3-network": "^0.1.28",
     "vue-meteor-tracker": "^1.2.3",
-    "vue-router": "^3.5.1",
+    "vue-router": "^3.5.2",
     "what-input": "^5.2.10"
   },
   "devDependencies": {
-    "autoprefixer": "^10.2.5",
-    "postcss": "^8.2.10",
-    "postcss-import": "^14.0.1",
-    "postcss-load-config": "^3.0.1",
+    "autoprefixer": "^10.3.7",
+    "postcss": "^8.3.9",
+    "postcss-import": "^14.0.2",
+    "postcss-load-config": "^3.1.0",
     "puppeteer": "^8.0.0"
   }
 }
