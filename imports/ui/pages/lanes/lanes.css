@@ -202,6 +202,35 @@ tr.deleting .admin {
   text-align: center;
 }
 
+a#new-lane {
+  height: initial;
+  border-width: 0;
+  background: #333;
+  padding: 20px 0;
+  margin: 20px 0;
+  position: relative;
+}
+
+a#new-lane:after {
+  content: '';
+  position: absolute;
+  right: -1px;
+  top: -1px;
+  border-color: transparent;
+  border-right-color: #666;
+  border-width: 21px;
+}
+
+@media all and (max-width: 1023px) {
+  .followup-column,
+  .salvage-plan-column,
+  .salvage-runs-column,
+  .total-shipments-column,
+  .captains-column {
+    display: none;
+  }
+}
+
 @media all 
   and (min-device-width: 280px)
   and (max-device-width: 800px) {
