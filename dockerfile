@@ -6,6 +6,7 @@ ADD . /opt/harbormaster
 WORKDIR /opt/harbormaster
 
 RUN mkdir /harbormaster
+RUN meteor npm install
 RUN meteor --allow-superuser build /harbormaster --directory
 RUN ln -s /opt/harbormaster/start.sh /start.sh
 
