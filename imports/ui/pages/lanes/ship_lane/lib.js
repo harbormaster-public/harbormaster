@@ -1,6 +1,6 @@
 import { Session } from 'meteor/session';
 import { ReactiveVar } from 'meteor/reactive-var';
-import { Lanes } from '../../../../api/lanes';
+import { HTTP } from 'meteor/http';
 import { Harbors } from '../../../../api/harbors';
 import { Shipments } from '../../../../api/shipments';
 import { history, get_lane } from '../lib/util';
@@ -31,6 +31,17 @@ const active = function () {
 
   if (total.length == 1 && total[0].start == date) return true;
   else return false;
+};
+
+// If we're GET for this, it's because we can't use POST due to platform
+// Gmail Android, for example, bans this; iOS treats it as GET anyway
+// 🤷‍♂️
+const created = function () {
+  const { user_id, token } = this.$route.query;
+
+  if (user_id && token) HTTP.post(this.$route.fullPath, (err, res) => {
+    if (!err) console.log(`Shipment started.`);
+  });
 };
 
 const exit_code = function () {
@@ -201,6 +212,7 @@ export {
   lane,
   work_preview,
   active,
+  created,
   exit_code,
   shipment_history,
   any_active,

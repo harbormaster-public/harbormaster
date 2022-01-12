@@ -108,6 +108,7 @@ import {
   lane,
   work_preview,
   active,
+  created,
   exit_code,
   any_active,
   reset_all_active,
@@ -130,6 +131,7 @@ export default {
     active,
     exit_code,
   },
+  created,
 
   methods: {
     any_active,
