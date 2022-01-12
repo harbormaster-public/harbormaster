@@ -1,18 +1,18 @@
 <template>
   <div id=root-page>
-    <h1 id=welcome-header class="text-5xl my-2">Welcome, {{moniker}}!</h1>
+    <h1 id=welcome-header class="text-7xl my-5">Welcome, {{moniker}}!</h1>
     <div class="px-5">
-      <h2 class="text-2xl my-2"><span class="font-mono">{{shipments_last_24_hours}}</span> total shipments made in the last day</h2>
+      <h2 class="text-5xl my-5"><span class="font-mono">{{shipments_last_24_hours}}</span> total shipments made in the last day</h2>
       <h3 id="last-time-shipped-header">
         <a class="button hollow" :href="'/lanes/'+latest_shipment.lane+'/ship/'+latest_shipment.date" v-html="'The last shipment was '+latest_shipment.locale">
         </a>
       </h3>
       <h4>You currently have:</h4>
       <ul class="list-inside">
-        <li><a href="/lanes">{{total_lanes}} Lanes</a></li>
+        <li class="my-5"><a href="/lanes">{{total_lanes}} Lanes</a></li>
         <li><a href="/users">{{total_users}} Users, {{total_captains}} of which are Captains, and {{total_harbormasters}} of which are Harbormasters</a></li>
       </ul>
-      <p>This is version {{get_version()}}.</p>
+      <p class="text-2xl my-10">This is version {{get_version()}}.</p>
     </div>
   </div>
 </template>
@@ -42,9 +42,11 @@ export default {
     total_captains,
     total_harbormasters,
     moniker () {
-      if (this.is_harbormaster()) return 'Harbormaster';
-      if (this.is_captain()) return 'Captain';
-      return 'User';
+      let user = H.user().emails[0]?.address;
+      let role = 'User';
+      if (this.is_harbormaster()) role = `Harbormaster`;
+      if (this.is_captain()) role = `Captain`;
+      return `${role}  ${user}`;
     },
   },
 
@@ -96,14 +98,6 @@ export default {
     #root-page h2,
     #root-page h3 {
       text-align: center;
-    }
-    #root-page h1 {
-      font-size: 150px;
-    }
-
-    #root-page h2 {
-      font-size: 75px;
-      line-height: 1;
     }
 
     #root-page h3 {

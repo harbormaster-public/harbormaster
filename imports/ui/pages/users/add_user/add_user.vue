@@ -1,12 +1,12 @@
 <template>
   <div id=add-user-page>
     <div v-if="fresh">
-      <h1 class="text-5xl my-2">Welcome to Harbormaster!</h1>
-      <h2 class="text-2xl my-2 px-2">You're the first user to sign in.</h2>
-      <h3 class="text-xl my-2 px-2">Please enter your email, and Harbormaster will send you a link to set your password.</h3>
-      <form class="text-2xl my-2 px-2" v-on:submit.prevent="on_submit()" id="new-instance">
-        <label>Email:
-          <input v-model="invite_email" type=email required class="email-user-invite" placeholder="user@example.com">
+      <h1 class="text-7xl my-5">Welcome to Harbormaster!</h1>
+      <h2 class="text-5xl my-5 px-2">You're the first user to sign in.</h2>
+      <h3 class="text-4xl my-5 px-2">Harbormaster will send you a link to set your password.</h3>
+      <form class="my-5 px-4" v-on:submit.prevent="on_submit()" id="new-instance">
+        <label class="text-4xl">Email:
+          <input v-model="invite_email" type=email required class="email-user-invite my-2" placeholder="user@example.com">
         </label>
         <button class="initial-sign-in rounded-sm block my-4">Okay!</button>
       </form>
@@ -60,14 +60,28 @@ export default {
 <style>
 .send-invitation,
 .initial-sign-in {
-  width: 100%;
-  border-width: 25px;
-  height: 0;
-  padding: 0;
-  line-height: 0;
-  border-color: #0af;
-  border-right-color: transparent;
+  font-size: 50px;
+  line-height: 1;
+  height: initial;
+  border-width: 0;
+  background: #666;
+  padding: 20px 0;
+  margin: 20px 0;
+  position: relative;
   text-align: center;
+  display: inline-block;
+  width: 100%;
+}
+
+.send-invitation::after,
+.initial-sign-in::after {
+  content: '';
+  position: absolute;
+  right: -1px;
+  top: -1px;
+  border-color: transparent;
+  border-right-color: #333;
+  border-width: 45px;
 }
 
 .send-invitation {
@@ -77,13 +91,21 @@ export default {
 
 .send-invitation:hover,
 .initial-sign-in:hover {
-  color: #333;
-  border-color: #ffae00;
-  border-right-color: transparent;
+  background: #0af;
+  color: #fff;
+}
+
+.send-invitation:active,
+.initial-sign-in:active {
+  background: #ffae00;
 }
 
 .email-user-invite {
   width: 100%;
+}
+
+#new-instance input {
+  height: 90px;
 }
 
 
@@ -93,10 +115,6 @@ export default {
   
   #add-user-page {
     font-size: 50px;
-  }
-
-  #add-user-page h1 {
-    font-size: 75px;
   }
 
   #add-user-page h2 {

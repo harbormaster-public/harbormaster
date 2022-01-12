@@ -1,7 +1,7 @@
 <template>
   <div id=layout class="min-h-screen">
     <div v-if="is_loaded()">
-      <div v-if="no_users" class="container mx-auto p-2">
+      <div v-if="no_users" class="p-5">
         <add-user v-bind:fresh="true"></add-user>
       </div>
       <div v-else>
@@ -18,7 +18,7 @@
             </div>
           </div>
         </div>
-        <div v-else class="container mx-auto p-2">
+        <div v-else class="p-5">
           <welcome></welcome>
         </div>
       </div>

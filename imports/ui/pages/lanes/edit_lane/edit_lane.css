@@ -66,8 +66,9 @@ ul {
 }
 
 li {
-  list-style-type: circle;
+  list-style-type: disc;
   margin: 5px;
+  line-height: 1;
 }
 
 
