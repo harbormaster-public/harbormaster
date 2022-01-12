@@ -7,7 +7,7 @@
     <div v-else>
       <div v-if="has_work_output()">
         <ul class="shipment-history">
-          <li class="my-2" v-for="item in shipment_history" :key="item._id">
+          <li class="my-4" v-for="item in shipment_history" :key="item._id">
             <a 
               :href="'/lanes/'+lane.slug+'/ship/'+item.start" 
               :class="'rounded-sm px-2 py-1'+(active ?' active':'')+' exit-code code-'+item.exit_code+' shipment-link'"
