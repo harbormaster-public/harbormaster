@@ -79,11 +79,11 @@ export default {
 }
 
 .shipment-link.exit-code:before {
-  content: '⚠';
+  content: '⚠️';
 }
 
 .shipment-link.code-0:before {
-  content: '✔';
+  content: '✅';
 }
 
 .shipment-link.code-1:before {

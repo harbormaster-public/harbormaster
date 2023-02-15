@@ -6,14 +6,14 @@
 
 meteor-base@1.5.1             # Packages every Meteor app needs to have
 mobile-experience@1.1.0       # Packages for a great mobile UX
-mongo@1.13.0                   # The database Meteor supports right now
-reactive-var@1.0.11            # Reactive variable for tracker
-tracker@1.2.0                 # Meteor's client-side reactive programming library
+mongo@1.16.4                   # The database Meteor supports right now
+reactive-var@1.0.12            # Reactive variable for tracker
+tracker@1.3.0                 # Meteor's client-side reactive programming library
 
 es5-shim@4.8.0                # ECMAScript 5 compatibility for older browsers.
-ecmascript@0.15.3              # Enable ECMAScript2015+ syntax in app code
+ecmascript@0.16.5              # Enable ECMAScript2015+ syntax in app code
 
-session@1.2.0
+session@1.2.1
 momentjs:moment
 shell-server@0.5.0
 dispatch:mocha-phantomjs
@@ -27,16 +27,16 @@ ostrio:meteor-root
 255kb:meteor-status
 xolvio:backdoor
 http@1.4.1
-dynamic-import@0.7.1
+dynamic-import@0.7.2
 meteorhacks:zones
 xyz:loading
-underscore@1.0.10
-accounts-password@2.1.0
+underscore@1.0.11
+accounts-password@2.3.3
 jquery
-email@2.2.0
+email@2.2.3
 akryum:vue-blaze-template
 blaze-html-templates
-standard-minifier-js@2.7.0
+standard-minifier-js@2.8.1
 akryum:vue-component
 akryum:vue-pug
 akryum:vue-stylus

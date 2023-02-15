@@ -69,7 +69,7 @@ a:hover, .nav-item:hover {
 }
 
 .router-link-exact-active {
-  background: #0af;
+  background: #fff;
   border-color: #07c;
   color: #07c;
 }
