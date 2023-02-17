@@ -9,6 +9,8 @@ const is_harbormaster = function () {
   return false;
 };
 
+let invite_email;
+
 const on_submit = function () {
   let { 
     invite_email,
@@ -31,4 +33,5 @@ const on_submit = function () {
 export {
   is_harbormaster,
   on_submit,
+  invite_email,
 }

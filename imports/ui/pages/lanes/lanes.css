@@ -12,7 +12,7 @@ table tbody tr:nth-child(odd) {
 
 .lanes-table th {
   cursor: pointer;
-  padding: 15px 0;
+  padding: 15px 0.5em;
 }
 
 .lanes-table th:hover {
@@ -53,7 +53,7 @@ table tbody tr:nth-child(odd) {
 }
 
 .lanes-table th.active::after {
-  content: '⇩';
+  content: '⬇️';
   color: #fff;
   position: absolute;
   bottom: -5px;
@@ -62,7 +62,7 @@ table tbody tr:nth-child(odd) {
 }
 
 .lanes-table th.active.reverse:after {
-  content: '⇧';
+  content: '⬆️';
   color: #fff;
   position: absolute;
   top: 0;
@@ -76,7 +76,7 @@ table tbody tr:nth-child(odd) {
   min-width: 200px;
 }
 
-.admin {
+.lanes-table .admin {
   font-size: 10px;
   position: absolute;
   width: 100%;
@@ -88,11 +88,14 @@ table tbody tr:nth-child(odd) {
   text-align: center;
 }
 
-.admin.active {
+.lanes-table .admin.active {
   display: block;
+  box-shadow: 1px -2px 0px 2px #ffae00;
 }
 
-.admin a, .admin button {
+.lanes-table .admin a, 
+.lanes-table .admin button {
+  color: #fff;
   border: 1px solid white;
   border-radius: 2px 2px 0 0;
   padding: 5px 2px;
@@ -103,11 +106,13 @@ table tbody tr:nth-child(odd) {
   background: #666;
   float: left;
   line-height: inherit;
+  font-size: 1em;
 }
 
-.admin a:hover,
-.admin button:hover {
+.lanes-table .admin a:hover,
+.lanes-table .admin button:hover {
   border-color: #ffae00;
+  color: #ffae00;
   border-bottom-color: transparent;
 }
 
@@ -137,6 +142,8 @@ tr:first-child th:first-child {
   border: 2px solid transparent;
   border-radius: 2px;
   height: 100%;
+  background: none;
+  margin-left: -1px;
 }
 
 .delete-lane:hover,
@@ -150,9 +157,10 @@ tr:first-child th:first-child {
 }
 
 .lane-options.active {
-  background: #0af;
-  border-color: #07c;
-  color: #07c;
+  background: #ffae00;
+  border-color: #fff;
+  color: #fff;
+  border-left-color: #ffae00;
 }
 
 .lane-options:focus {
@@ -215,8 +223,8 @@ a#new-lane {
 a#new-lane:after {
   content: '';
   position: absolute;
-  right: -1px;
-  top: -1px;
+  right: 0;
+  top: 0;
   border-color: transparent;
   border-right-color: #666;
   border-width: 21px;
@@ -236,7 +244,7 @@ a#new-lane:after {
   and (min-device-width: 280px)
   and (max-device-width: 800px) {
 
-  .admin.active {
+  .lanes-table .admin.active {
     margin-top: 0;
     top: 0;
     left: 70px;
@@ -313,8 +321,8 @@ a#new-lane:after {
     border-width: 0;
     background: #333;
     padding: 20px 0;
-    margin: 20px 0;
     position: relative;
+    color: #fff;
   }
 
   .harbor-button:after,
@@ -337,10 +345,13 @@ a#new-lane:after {
     content: '';
     position: absolute;
     right: -1px;
-    top: -1px;
+    top: 0;
     border-color: transparent;
     border-right-color: #666;
-    border-width: 45px;
+    border-width: .9em;
+    border-right-width: 1em;
+    height: 100%;
+    width: 1em;
   }
 
   #edit-lane-page .choose-harbor-type,

@@ -47,7 +47,14 @@ export default {
   methods: {
     password_login: function () {
       const { email, password } = this;
-      H.loginWithPassword(email, password, err => {if (err) throw err});
+      H.loginWithPassword(email, password, err => {
+        if (err?.error == 403) {
+          const invalid_msg = 'Invalid credentials.';
+          console.error(invalid_msg);
+          alert(invalid_msg);
+        }
+        else if (err) throw err;
+      });
     },
 
     password_reset: function () {
@@ -77,6 +84,10 @@ export default {
 .login-form input {
   width: 100%;
   height: 90px;
+}
+
+.invalid {
+  color: red;
 }
 
 .sign-in,

@@ -1,4 +1,5 @@
-form input, form textarea {
+html form input, 
+html form textarea {
   color: #333;
   padding: 5px 15px;
 }
@@ -101,13 +102,14 @@ legend {
 .new-lane,
 .back-to-lanes {
   width: 100%;
-  border-width: 25px;
   height: 0;
   padding: 0;
   line-height: 0;
-  border-color: #333;
+  border: 25px solid #333;
   border-right-color: transparent;
   text-align: center;
+  background: none;
+  color: #fff;
 }
 
 .harbor-button,

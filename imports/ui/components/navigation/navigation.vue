@@ -47,8 +47,10 @@ export default {
 </script>
 
 <style>
-.menu {
+#navigation .menu {
   margin: 0;
+  display: block;
+  padding: 0;
 }
 
 .menu li {
@@ -58,7 +60,15 @@ export default {
 }
 
 .menu .nav-item {
+  border-color: #fff;
   border-bottom-color: transparent;
+  color: #fff;
+  border-width: 2px;
+  border-style: solid;
+}
+
+.nav-item.logout {
+  background: none;
 }
 
 a:hover, .nav-item:hover {
@@ -68,15 +78,17 @@ a:hover, .nav-item:hover {
   background-color: #666;
 }
 
-.router-link-exact-active {
+.router-link-exact-active,
+.router-link-exact-active:visited {
   background: #fff;
   border-color: #07c;
   color: #07c;
 }
 
-.nav-item:active, 
+.container .nav-item:active, 
 .admin .button:active { 
   border-color: #aa7a00;
+  border-bottom-color: transparent;
   color: #aa7a00;
 }
 
@@ -91,10 +103,14 @@ a:hover, .nav-item:hover {
     #navigation .container {
       max-width: 100%;
       font-size: 40px;
+      margin-bottom: -2px;
     }
 
-    #navigation .menu .nav-item {
-      border-width: 0;
+    .menu .nav-item {
+      border-width: 5px;
+      border-top-width: 10px;
+      margin-top: -10px;
+      margin-left: -5px;
     }
 }
 </style>

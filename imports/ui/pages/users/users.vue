@@ -30,12 +30,12 @@
           </td>
           <td class="captained-column">
             <span class="captained-lane-list">
-              {{captain_lanes}}
+              {{captain_lanes(user)}}
             </span>
           </td>
-          <td>
+          <td class="expire-user-column">
             <div v-if="is_harbormaster(user)" class="">
-              <button @click.prevent="expire_user(user)" class="expire-user">Expire User</button>
+              <button @click.prevent="expire_user(user)" class="expire-user">Expire?</button>
             </div>
           </td>
         </tr>
@@ -62,10 +62,10 @@ export default {
       'Users': [],
     },
     users () { return Users.find({ expired: { $not: true }}) },
-    captain_lanes,
   },
-
+  
   methods: {
+    captain_lanes,
     is_harbormaster,
     expire_user,
   }

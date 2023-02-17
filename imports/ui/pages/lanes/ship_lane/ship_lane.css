@@ -80,26 +80,40 @@ pre {
   white-space: break-spaces;
 }
 
-.reset-all-active,
-.start-shipment,
-.reset-shipment,
-.show-lanes,
-.lane-charter,
-.edit-lane {
+.container .reset-all-active,
+.container .start-shipment,
+.container .reset-shipment,
+.container .show-lanes,
+.container .lane-charter,
+.container .new-lane,
+.container .edit-lane {
   width: 100%;
-  border-width: 25px;
-  height: 0;
-  padding: 0;
-  line-height: 0;
-  border-color: #333;
-  border-right-color: transparent;
+  height: initial;
+  padding: 20px 0;
+  font-size: 50px;
+  line-height: 1em;
+  border: none;
   text-align: center;
+  color: #fff;
+}
+
+.container .reset-all-active:active,
+.container .start-shipment:active,
+.container .reset-shipment:active,
+.container .show-lanes:active,
+.container .lane-charter:active,
+.container .new-lane:active,
+.container .edit-lane:active {
+  border-color: #fff;
+  border-right-color: transparent;
+  color: #333;
 }
 
 .reset-all-active:hover,
 .reset-shipment:hover,
 .show-lanes:hover,
 .lane-charter:hover,
+.new-lane:hover,
 .edit-lane:hover {
   color: #333;
   border-color: #ffae00;

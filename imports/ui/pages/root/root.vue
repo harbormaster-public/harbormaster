@@ -1,8 +1,8 @@
 <template>
   <div id=root-page>
-    <h1 id=welcome-header class="text-7xl my-5">Welcome, {{moniker}}!</h1>
+    <h1 id=welcome-header class="text-5xl my-5">Welcome, {{moniker}}!</h1>
     <div class="px-5">
-      <h2 class="text-5xl my-5"><span class="font-mono">{{shipments_last_24_hours}}</span> total shipments made in the last day</h2>
+      <h2 class="text-3xl my-5"><span class="font-mono">{{shipments_last_24_hours}}</span> total shipments made in the last day</h2>
       <h3 id="last-time-shipped-header">
         <a class="button hollow" :href="'/lanes/'+latest_shipment.lane+'/ship/'+latest_shipment.date" v-html="'The last shipment was '+latest_shipment.locale">
         </a>
@@ -81,10 +81,6 @@ export default {
 </script>
 
 <style>
-#last-time-shipped-header a:hover {
-  color: #ffae00;
-}
-
 ::marker {
   color: #0af;
 }
@@ -113,18 +109,18 @@ export default {
       padding: 20px 0;
       background: #333;
       position: relative;
-      border: 1px dashed #fff;
+      border-bottom: none;
     }
 
     #root-page h3 a:after {
       content: '';
       position: absolute;
       right: -1px;
-      top: -1px;
+      top: 0;
       height: 100%;
-      border-top: 85px solid #333;
-      border-bottom: 85px solid #333;
-      border-right: 50px solid #666;
+      border-top: 1.3em solid #333;
+      border-bottom: 1.3em solid #333;
+      border-right: 1em solid #666;
     }
 
     #root-page h4,

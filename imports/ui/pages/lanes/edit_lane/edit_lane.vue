@@ -41,7 +41,7 @@
             class="rounded-sm my-2 block ship-lane">Ship to this Lane</a>
         </div>
         <div v-else>
-          <button disabled class="rounded-sm my-2 lane-done">Not Ready</button>
+          <button disabled class="rounded-sm lane-done">Not Ready</button>
         </div>
         <fieldset v-on:change.prevent="change_captains" class="fieldset captains">
           <legend>Captain(s)</legend>

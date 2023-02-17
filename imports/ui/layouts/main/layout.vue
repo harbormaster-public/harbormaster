@@ -89,8 +89,27 @@ export default {
   border-right: 2px solid #0af;
 }
 
-* {
+html body * {
   color: #efefef;
+}
+
+html body a,
+html body a:visited {
+  color: #0af;
+  border-bottom: 1px dotted #0af;
+}
+
+.container a:active {
+  color: #fff;
+}
+
+html body a:visited {
+  border-bottom-color: #07c;
+}
+
+html body a:hover {
+  color: #ffae00;
+  border-bottom: 1px dotted #ffae00;
 }
 
 @media all 
@@ -103,6 +122,11 @@ export default {
 
     #router-view {
       max-width: 100%;
+    }
+
+    html body a,
+    html body a:visited {
+      border-bottom: 5px dotted #0af;
     }
   }
 </style>

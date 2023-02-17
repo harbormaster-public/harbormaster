@@ -8,14 +8,25 @@ const is_harbormaster = function (user) {
   return 'No';
 };
 
-const captain_lanes = function () {
-  var pliable_lanes = Lanes.find({ captains: { $in: [this._id] } }).fetch();
+const captain_lanes = function (user) {
+  var pliable_lanes = Lanes.find({ $or: [
+    {captains: { $in: [user._id] } },
+    { tokens: { $exists: true }}
+  ]}).fetch();
   var lane_names = [];
-
-  if (this.harbormaster) { return 'All'; }
+  
+  if (user.harbormaster) { return 'All'; }
   _.each(pliable_lanes, function (lane) {
-    lane_names.push(lane.name);
-  });
+    if (
+        // user webhook assigned
+        (lane.tokens && Object.values(lane.tokens).includes(user._id)) ||
+        // user is assigned as captain
+        !lane.tokens
+      ) {
+        lane_names.push(lane.name);
+      }
+    });
+  
   return lane_names.length ? lane_names.join(', ') : 'None';
 };
 

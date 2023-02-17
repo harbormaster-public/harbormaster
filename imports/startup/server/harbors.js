@@ -27,7 +27,7 @@ try {
   fs.watch(harbors_dir, { recursive: true }, reload);
   console.log(`Watching ${harbors_dir} recursively...`);
 } catch (err) {
-  console.error(err);
+  // console.warn(err);
   fs.watch(harbors_dir, { recursive: false }, reload);
   console.log(`Watching ${harbors_dir} *non*-recursively...`);
 }

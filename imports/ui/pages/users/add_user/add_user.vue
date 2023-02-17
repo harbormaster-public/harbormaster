@@ -14,7 +14,8 @@
     <div v-else>
       <h1 class="text-5xl my-2">Invite A User</h1>
       <div v-if="is_harbormaster">
-        <h2 class="text-2xl my-2 px-2">Enter a user's email address and password to setup an account for them.</h2>
+        <h2 class="text-2xl my-2 px-2">Enter a user's email address to send them
+        an account setup email.</h2>
         <form v-on:submit.prevent="on_submit()">
           <label>Email:
             <input 
@@ -25,7 +26,7 @@
             v-model="invite_email"
           >
           </label>
-          <button class="block rounded-sm my-4 send-invitation">Invite User</button>
+          <button class="block rounded-sm my-4 send-invitation">Send Invite</button>
         </form>
       </div>
       <div v-else>
@@ -39,12 +40,20 @@
 import {
   is_harbormaster,
   on_submit,
+  invite_email,
 } from './lib';
 
 export default {
   props: {
     fresh: Boolean,
   },
+
+  data () {
+    return {
+      invite_email
+    }
+  },
+
   meteor: {
     $subscribe: {
       'Users': [],
@@ -60,19 +69,17 @@ export default {
 <style>
 .send-invitation,
 .initial-sign-in {
-  font-size: 50px;
-  line-height: 1;
+  line-height: 0;
+  height: 0;
   height: initial;
-  border-width: 0;
-  background: #666;
-  padding: 20px 0;
-  margin: 20px 0;
-  position: relative;
+  border: 25px solid #333;
+  border-right-color: transparent;
+  background: none;
   text-align: center;
-  display: inline-block;
+  display: block;
   width: 100%;
 }
-
+/*
 .send-invitation::after,
 .initial-sign-in::after {
   content: '';
@@ -80,10 +87,10 @@ export default {
   right: -1px;
   top: -1px;
   border-color: transparent;
-  border-right-color: #333;
+  border-right-color: #666;
   border-width: 45px;
 }
-
+*/
 .send-invitation {
   border-color: #333;
   border-right-color: transparent;
@@ -91,13 +98,15 @@ export default {
 
 .send-invitation:hover,
 .initial-sign-in:hover {
-  background: #0af;
   color: #fff;
+  border-color: #0af;
+  border-right-color: transparent;
 }
 
 .send-invitation:active,
 .initial-sign-in:active {
-  background: #ffae00;
+  border-color: #ffae00;
+  border-right-color: transparent;
 }
 
 .email-user-invite {

@@ -1,5 +1,6 @@
 .lane-list {
   margin-left: 20px;
+  display: inline-block;
 }
 
 .lane-list li {
@@ -9,6 +10,26 @@
 .lane-list li:nth-child(even) {
   background-color: #dfdfdf;
   border-color: #d1d1d1;
+}
+
+#profile-page .lane-list li,
+#profile-page fieldset label {
+  background: #333;
+  padding: 5px 10px;
+  border-radius: 3px;
+  margin: 5px 0;
+  display: inline-block;
+}
+
+#profile-page code {
+  color: #ffae00;
+  overflow: scroll;
+  color: #ffae00;
+  overflow: scroll;
+  border: 1px solid #666;
+  padding: 5px 15px !important;
+  box-shadow: 0 0 25px 5px inset black;
+  min-height: 1em;
 }
 
 @media all 
@@ -31,9 +52,10 @@
   #profile-page code {
     width: 100%;
     display: inline-block;
-    padding: 0 5px;
+    padding: 5px 15px;
     overflow: scroll;
-    border-radius: 10px;
+    border-radius: 3px;
     background: #333;
+    max-width: 17.5em;
   }
 }

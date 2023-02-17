@@ -3,7 +3,7 @@
     <h1 class="text-5xl my-2"><span>User ID:</span> <span>{{user_email()}}</span></h1>
     <form class="fieldset px-5" v-if="this.$subReady.Users && this.$subReady.Lanes">
       <fieldset>
-        <label>Harbormaster?
+        <label>
           <input 
             class="is-harbormaster" 
             :disabled="not_harbormaster()" 
@@ -11,17 +11,19 @@
             :checked="is_harbormaster()"
             @change="handle_change_is_harbormaster"
           >
+          Harbormaster?
         </label>&nbsp;
-        <label>Captain?
+        <label>
           <input 
             class="is-captain" 
             disabled 
             type=checkbox 
             :checked="is_harbormaster() || is_captain()"
           >
+          Captain?
         </label>
       </fieldset>
-      <h2 class="text-2xl my-2">Lanes</h2>
+      <h2 class="text-2xl my-2">Lanes Captained</h2>
       <div :key="lane_list_renders">
         <ul class="lane-list" v-for="lane in lanes()" :key="lane.name">
             <li>
@@ -47,10 +49,10 @@
                   :value="webhook_token(lane)"
                   @change="handle_change_from_webhook($event, lane)"
                 >
-                Webhook allowed?
+                Webhook?
                 &nbsp;
               </label>
-              <span v-if="webhook_allowed(lane)">Token: </span><code>{{webhook_token(lane)}}</code>
+              <span v-if="webhook_allowed(lane)">Token: <code>{{webhook_token(lane)}}</code></span>
             </li>
         </ul>
       </div>
