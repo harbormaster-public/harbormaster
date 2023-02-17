@@ -396,7 +396,7 @@ a#new-lane:after {
   }
 
   .lane-options.active {
-    box-shadow: 0 0 5px 5px #0af;
+    box-shadow: 0 0 5px 5px #ffae00;
   }
 
   th:first-child,

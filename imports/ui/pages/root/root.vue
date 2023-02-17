@@ -118,9 +118,10 @@ export default {
       right: -1px;
       top: 0;
       height: 100%;
-      border-top: 1.3em solid #333;
-      border-bottom: 1.3em solid #333;
+      border-top: 1.3em solid transparent;
+      border-bottom: 1.3em solid transparent;
       border-right: 1em solid #666;
+      background: none;
     }
 
     #root-page h4,
