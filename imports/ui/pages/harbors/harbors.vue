@@ -126,28 +126,12 @@ export default {
 
       if (!confirm(warn)) return;
 
-      H.call('Harbors#register', harbor, (err, res) => {
-        console.log(err);
-        console.log(H.status())
-        // debugger
-      });
+      H.call('Harbors#register', harbor);
       setTimeout(() => {
+        // TODO Add server check for status code, reload on 200
         console.log('Reloading...');
         window.location.reload()
       }, reload_timeout_ms);
-      // window.location.reload();
-      
-      if (harbor.registered) {
-        // deregister
-        // remove files
-        // return success or error
-      }
-
-      // register
-      // copy file
-      // return success or error
-      // debugger;
-      // window.location.reload();
     }
   }
 }

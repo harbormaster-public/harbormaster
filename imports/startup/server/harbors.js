@@ -2,6 +2,8 @@ import fs from 'fs';
 import path from 'path';
 import expandTilde from 'expand-tilde';
 import mkdirp from 'mkdirp';
+import { checkSync } from 'diskusage';
+import getFolderSize from 'get-folder-size';
 import { execSync } from 'child_process';
 import { Lanes } from '../../api/lanes';
 import { Users } from '../../api/users';
@@ -15,6 +17,10 @@ const reload_exit_code = 10;
 H.harbors_dir = harbors_dir;
 H.depot_dir = depot_dir;
 H.should_reload = true;
+
+// TODO: https://coderrocketfuel.com/article/get-the-total-size-of-all-files-in-a-directory-using-node-js
+console.log(checkSync(H.depot_dir).available)
+console.log(await getFolderSize(H.depot_dir));
 
 H.reload = () => {
   if (H.should_reload) {
