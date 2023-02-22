@@ -1,3 +1,6 @@
+import fs from 'fs';
+import path from 'path';
+import { copySync } from 'fs-extra';
 import { Harbors } from '..';
 import { Lanes } from '../../lanes';
 import { 
@@ -114,5 +117,45 @@ Meteor.methods({
 
     return constraints;
   },
+
+  'Harbors#register': (harbor) => {
+    harbor.registered = !harbor.registered;
+    Harbors.update(harbor._id, harbor);
+    H.should_reload = false;
+
+    if (harbor.registered) {
+      let registered_files = [];
+      let depotpath = path.join(H.depot_dir, harbor._id);
+      fs.readdirSync(depotpath).forEach(file => {
+        if (
+          (
+            file.match(harbor._id) && 
+            fs.statSync(path.join(depotpath, file)).isDirectory()
+          ) ||
+          file.match(`${harbor._id}.js`)
+        ) { registered_files.push(file); }
+      })
+      registered_files.forEach(file => {
+        let filepath = path.join(depotpath, file);
+        let registeredpath = path.join(H.harbors_dir, file);
+        console.log(`Adding harbor "${file}" for registration...`)
+        copySync(filepath, registeredpath, { overwrite: true });
+      })
+    }
+    else {
+      let deregistered_files = [];
+      fs.readdirSync(H.harbors_dir).forEach(file => {
+        if (file.match(harbor._id)) { deregistered_files.push(file); }
+      });
+      deregistered_files.forEach(file =>{
+        let filepath = path.join(H.harbors_dir, file);
+        console.log(`Removing recursively: ${filepath}`);
+        fs.rmSync(filepath, { recursive: true });
+      });
+    }
+
+    H.should_reload = true;
+    return H.reload();
+  }
 });
 

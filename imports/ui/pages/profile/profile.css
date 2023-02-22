@@ -23,13 +23,12 @@
 
 #profile-page code {
   color: #ffae00;
-  overflow: scroll;
-  color: #ffae00;
-  overflow: scroll;
-  border: 1px solid #666;
-  padding: 5px 15px !important;
-  box-shadow: 0 0 25px 5px inset black;
+  border: none;
+  padding: 5px 10px !important;
+  box-shadow: 0 0 30px 3px inset #222;
   min-height: 1em;
+  border-radius: 3px;
+  display: inline-block;
 }
 
 @media all 

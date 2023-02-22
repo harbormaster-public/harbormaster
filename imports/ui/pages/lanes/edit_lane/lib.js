@@ -219,7 +219,7 @@ const plying = function () {
 };
 
 const harbors = function () {
-  let harbors = Harbors.find().fetch();
+  let harbors = Harbors.find({ registered: true }).fetch();
 
   return harbors;
 };

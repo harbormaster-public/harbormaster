@@ -20,6 +20,7 @@ import ProfilePage from '../../ui/pages/profile';
 import EditLanePage from '../../ui/pages/lanes/edit_lane';
 import ShipLanePage from '../../ui/pages/lanes/ship_lane';
 import CharterPage from '../../ui/pages/lanes/charter';
+import HarborsPage from '../../ui/pages/harbors';
 
 const routes = [
   {
@@ -40,6 +41,11 @@ const routes = [
   {
     path: '/lanes//ship',
     redirect: '/lanes',
+  },
+  {
+    path: "/harbors",
+    name: "harbors",
+    component: HarborsPage,
   },
   {
     path: "/lanes/:slug/ship/:date?",

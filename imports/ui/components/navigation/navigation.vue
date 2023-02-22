@@ -15,6 +15,11 @@
         <li>
           <router-link 
             class="p-2 border-2 inline-block rounded-sm nav-item"
+            @click.native="handle_click_lanes" to="/harbors">Harbors</router-link>
+        </li>
+        <li>
+          <router-link 
+            class="p-2 border-2 inline-block rounded-sm nav-item"
             to="/users">Users</router-link>
         </li>
         <li>
