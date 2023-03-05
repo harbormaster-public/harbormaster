@@ -67,30 +67,30 @@ export default {
 </script>
 
 <style>
-.send-invitation,
-.initial-sign-in {
-  line-height: 0;
-  height: 0;
+.initial-sign-in,
+.send-invitation {
+  font-size: 50px;
+  line-height: 1;
   height: initial;
-  border: 25px solid #333;
-  border-right-color: transparent;
-  background: none;
-  text-align: center;
-  display: block;
+  border-width: 0;
+  background: #0af;
+  padding: 20px 0;
+  margin: 20px 0;
+  position: relative;
   width: 100%;
 }
-/*
-.send-invitation::after,
-.initial-sign-in::after {
+
+.initial-sign-in:after,
+.send-invitation:after {
   content: '';
   position: absolute;
-  right: -1px;
-  top: -1px;
+  right: -2px;
+  top: 0;
   border-color: transparent;
-  border-right-color: #666;
+  border-right-color: #333;
   border-width: 45px;
 }
-*/
+
 .send-invitation {
   border-color: #333;
   border-right-color: transparent;
@@ -129,27 +129,6 @@ export default {
   #add-user-page h2 {
     font-size: 50px;
     line-height: 1;
-  }
-
-  .send-invitation {
-    font-size: 50px;
-    line-height: 1;
-    height: initial;
-    border-width: 0;
-    background: #333;
-    padding: 20px 0;
-    margin: 20px 0;
-    position: relative;
-  }
-
-  .send-invitation:after {
-    content: '';
-    position: absolute;
-    right: -1px;
-    top: -1px;
-    border-color: transparent;
-    border-right-color: #666;
-    border-width: 45px;
   }
 }
 </style>
