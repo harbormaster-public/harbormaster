@@ -38,7 +38,6 @@
   },
   "devDependencies": {
     "@volar-plugins/vetur": "^0.1.0",
-    "@vue/runtime-dom": "^3.2.47",
     "autoprefixer": "^10.4.13",
     "postcss": "^8.4.21",
     "postcss-import": "^14.1.0",
