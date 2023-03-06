@@ -11,6 +11,7 @@
       </li>
     </ul>
     <h3 class="text-3xl my-2">Found in Depot:</h3>
+    <h4>({{ space_avail }} space available)</h4>
     <ul class="depot-list" v-for="harbor in found_in_depot()" :key="harbor._id">
       <li>
         <h4>Name:</h4>
@@ -100,6 +101,7 @@ ul {
 <script>
 import { Harbors } from '../../../api/harbors';
 import { Users } from '../../../api/users';
+
 export default {
   meteor: {
     $subscribe: {
@@ -108,9 +110,25 @@ export default {
     }
   },
 
+  data () {
+    return {
+      space_avail: 'Loading',
+    }
+  },
+
+  mounted () {
+    this.get_space_avail();
+  },
+  
   methods: {
     currently_registered () { return Harbors.find({ registered: true }) },
     found_in_depot () { return Harbors.find({ in_depot: true }) },
+    get_space_avail () { 
+      H.call('Harbors#space_avail', (err, res) => {
+        console.log(`Detected ${res} space available.`);
+        this.space_avail = res;
+      });
+    },
     registration_button_title (harbor) { 
       return harbor.registered ? 
         `Deregister "${harbor._id}"` : 

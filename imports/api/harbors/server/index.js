@@ -158,6 +158,10 @@ Meteor.methods({
 
     H.should_reload = true;
     return H.reload();
+  },
+
+  'Harbors#space_avail': () => {
+    return H.space_avail;
   }
 });
 

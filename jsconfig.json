@@ -1,5 +1,8 @@
 {
   "include": [
     "./imports/**/*"
-  ]
+  ],
+  "vueCompilerOptions": {
+    "target": 2
+  }
 }
