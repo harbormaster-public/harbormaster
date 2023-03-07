@@ -33,8 +33,12 @@ H.check_avail_space = () => {
   let b = checkSync(H.depot_dir).available;
   return convert_bytes(b);
 };
-H.space_avail = H.check_avail_space();
-console.log(`${H.space_avail} available.`);
+
+H.update_avail_space = () => {
+  H.space_avail = H.check_avail_space();
+  console.log(`${H.space_avail} available.`);
+};
+H.update_avail_space();
 
 H.reload = () => {
   if (H.should_reload) {

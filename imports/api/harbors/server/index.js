@@ -162,6 +162,19 @@ Meteor.methods({
 
   'Harbors#space_avail': () => {
     return H.space_avail;
+  },
+
+  'Harbors#remove': (harbor) => {
+    try {
+      let depotpath = path.join(H.depot_dir, harbor._id);
+      console.log(`Removing ${depotpath}...`);
+      Harbors.remove(harbor);
+      fs.rmSync(depotpath, { recursive: true });
+      console.log(`Successfully removed harbor: ${harbor._id}`);
+      H.update_avail_space();
+      return true;
+    }
+    catch (err) { throw err }
   }
 });
 
