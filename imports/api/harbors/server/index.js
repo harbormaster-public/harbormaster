@@ -1,13 +1,16 @@
 import fs from 'fs';
 import path from 'path';
+import is_git_url from 'is-git-url';
 import { copySync } from 'fs-extra';
-// import { disk } from 'diskusage';
-// import { os } from 'os';
+import cp from 'child_process';
+import { promisify } from 'util';
 import { Harbors } from '..';
 import { Lanes } from '../../lanes';
 import { 
   LatestShipment,
 } from '../../shipments';
+
+const exec = promisify(cp.exec);
 
 Meteor.publish('Harbors', function () {
   return Harbors.find();
@@ -123,10 +126,9 @@ Meteor.methods({
   'Harbors#register': (harbor) => {
     harbor.registered = !harbor.registered;
     Harbors.update(harbor._id, harbor);
-    H.should_reload = false;
+    let files = [];
 
     if (harbor.registered) {
-      let registered_files = [];
       let depotpath = path.join(H.depot_dir, harbor._id);
       fs.readdirSync(depotpath).forEach(file => {
         if (
@@ -135,29 +137,28 @@ Meteor.methods({
             fs.statSync(path.join(depotpath, file)).isDirectory()
           ) ||
           file.match(`${harbor._id}.js`)
-        ) { registered_files.push(file); }
+        ) { files.push(file); }
       })
-      registered_files.forEach(file => {
+      files.forEach(file => {
         let filepath = path.join(depotpath, file);
         let registeredpath = path.join(H.harbors_dir, file);
         console.log(`Adding harbor "${file}" for registration...`)
         copySync(filepath, registeredpath, { overwrite: true });
-      })
+      });
     }
     else {
-      let deregistered_files = [];
       fs.readdirSync(H.harbors_dir).forEach(file => {
-        if (file.match(harbor._id)) { deregistered_files.push(file); }
+        if (file.match(harbor._id)) { files.push(file); }
       });
-      deregistered_files.forEach(file =>{
+      files.forEach(file =>{
         let filepath = path.join(H.harbors_dir, file);
         console.log(`Removing recursively: ${filepath}`);
         fs.rmSync(filepath, { recursive: true });
       });
     }
 
-    H.should_reload = true;
-    return H.reload();
+    if (files.length > 0) return H.reload();
+    else return 404;
   },
 
   'Harbors#space_avail': () => {
@@ -175,6 +176,26 @@ Meteor.methods({
       return true;
     }
     catch (err) { throw err }
+  },
+
+  'Harbors#add_harbor_to_depot': async (git_url) => {
+    if (! is_git_url(git_url)) return 400;
+    const clone_exec_opts = { cwd: H.depot_dir };
+    const git_clone_cmd = `git clone ${git_url}`;
+    const harbor_name_regex = /\/([a-zA-Z0-9-_]+)\.git/;
+    const harbor_name = git_url.match(harbor_name_regex)[1];
+    try {
+      const { 
+        stdout: clone_stdout, 
+        stderr: clone_stderr 
+      } = await exec(git_clone_cmd, clone_exec_opts);
+      console.log(clone_stdout);
+      console.warn(clone_stderr);
+      H.scan_depot(harbor_name);
+    } catch (err) {
+      return err;
+    }
+    return 200;
   }
 });
 

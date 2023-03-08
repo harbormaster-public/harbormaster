@@ -21,6 +21,7 @@
     "foundation-sites": "^6.7.5",
     "fs-extra": "^11.1.0",
     "get-folder-size": "^4.0.0",
+    "is-git-url": "^1.0.0",
     "jquery": "^3.6.3",
     "lodash": "^4.17.21",
     "meteor-node-stubs": "0.2.4",

@@ -88,11 +88,12 @@ pre {
 .container .new-lane,
 .container .edit-lane {
   width: 100%;
-  height: initial;
-  padding: 20px 0;
-  font-size: 50px;
-  line-height: 1em;
-  border: none;
+  /* height: initial; */
+  /* padding: 20px 0; */
+  /* height: 50px; */
+  /* line-height: 1em; */
+  border-color: #333;
+  border-right-color: transparent;
   text-align: center;
   color: #fff;
 }
@@ -103,6 +104,7 @@ pre {
 .container .show-lanes:active,
 .container .lane-charter:active,
 .container .new-lane:active,
+.container .back-to-lanes:active,
 .container .edit-lane:active {
   border-color: #fff;
   border-right-color: transparent;
@@ -118,6 +120,7 @@ pre {
   color: #333;
   border-color: #ffae00;
   border-right-color: transparent;
+  border-bottom: 25px solid #ffae00;
 }
 
 .start-shipment:hover {

@@ -17,7 +17,7 @@
       <input type="text" 
         required
         name="harbor_url"
-        placeholder="Git repo url (e.g. git@github.com:StrictlySkyler/harbormaster-sleep.git)"
+        placeholder="Git repo url (e.g. git@github.com:StrictlySkyler/harbormaster-timestamp.git)"
         class="add-new-harbor-input"
       >
       <button class="add-new-harbor-button">✔️</button>
@@ -149,6 +149,7 @@ ul {
 </style>
 
 <script>
+import is_git_url from 'is-git-url';
 import { Harbors } from '../../../api/harbors';
 import { Users } from '../../../api/users';
 
@@ -174,8 +175,24 @@ export default {
   
   methods: {
     add_new_harbor (evt) {
-      console.log(evt);
-      debugger;
+      const url = evt.target.elements.harbor_url.value;
+      let git_url_not_recognized = `The url:\n${url}\n`;
+      git_url_not_recognized += "Doesn't appear to be a proper git url."
+      let warn = `This will add the following Harbor to the Depot:\n\n${url}`;
+      warn += `\n\nThen the page will reload.  Ok?`;
+      if (! is_git_url(url)) return alert(git_url_not_recognized);
+      if (! confirm(warn)) return;
+      H.call('Harbors#add_harbor_to_depot', url, (err, res) => {
+        if (err) alert(err);
+        else if (res.stderr) alert(res.stderr);
+        else window.location.reload();
+      });
+      /* TODO:
+      - Validate git url
+      - pass to server
+      - clone down repo into depot
+      - reload page
+      */
     },
     currently_registered () { return Harbors.find({ registered: true }) },
     found_in_depot () { return Harbors.find({ in_depot: true }) },
@@ -193,13 +210,26 @@ export default {
     },
     register (harbor) {
       let warn = `Confirm you want to ${
-        (harbor.registered && 'de')
+        ((harbor.registered && 'de') || '')
       }register the "${harbor._id}" harbor?`
       warn += `\n\nThis will force the page to reload in a few moments.`;
 
       if (!confirm(warn)) return;
 
-      H.call('Harbors#register', harbor);
+      H.call('Harbors#register', harbor, (err, res) => {
+        let harbor_registration_error_msg = 'Error!\n\n';
+        harbor_registration_error_msg += 'Check the console for details.';
+        let harbor_file_not_found_msg = `Unable to (de)register harbor:\n\n${
+          harbor._id
+        }\n\n`;
+        harbor_file_not_found_msg += 'Make sure the harbor file is present, ';
+        harbor_file_not_found_msg += 'and named correctly.'
+        if (err) {
+          alert(harbor_registration_error_msg);
+          throw err;
+        }
+        if (res == 404) alert(harbor_file_not_found_msg);
+      });
       setTimeout(() => {
         // TODO Add server check for status code, reload on 200
         console.log('Reloading...');

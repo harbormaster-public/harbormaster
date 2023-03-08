@@ -3,7 +3,6 @@ import path from 'path';
 import expandTilde from 'expand-tilde';
 import mkdirp from 'mkdirp';
 import { checkSync } from 'diskusage';
-// import getFolderSize from 'get-folder-size';
 import { execSync } from 'child_process';
 import { Lanes } from '../../api/lanes';
 import { Users } from '../../api/users';
@@ -72,9 +71,12 @@ const setup_harbor_dirs = () => {
 };
 setup_harbor_dirs();
 
-const scan_depot = () => {
-  console.log(`Enumerating Harbors found in depot: ${depot_dir}`);
-  fs.readdirSync(depot_dir).forEach(file => {
+const scan_depot = (new_harbor) => {
+  if (new_harbor) console.log(`Adding new harbor: ${new_harbor}`);
+  else console.log(`Enumerating Harbors found in depot: ${depot_dir}`);
+
+  let harbor_list = new_harbor ? [new_harbor] : fs.readdirSync(depot_dir);
+  harbor_list.forEach(file => {
     let depot_path = path.join(depot_dir, file);
     let stats = fs.statSync(depot_path);
     let harbor_name = file;
@@ -108,7 +110,8 @@ const scan_depot = () => {
     Harbors.upsert({ _id: harbor_name }, harbor);
   });
 };
-scan_depot();
+H.scan_depot = scan_depot;
+H.scan_depot();
 
 const register_harbors = () => {
   console.log(`Registering Harbors from: ${harbors_dir}`);

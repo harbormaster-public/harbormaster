@@ -141,6 +141,21 @@ legend {
   border-right-color: transparent;
 }
 
+.harbor-button:active,
+.add-salvage-plan:active,
+.add-followup:active,
+.lane-done:active,
+.choose-harbor-type:active,
+.add-harbor:active,
+.save:active,
+#edit-lane-page .ship-lane:active,
+.new-lane:active,
+.back-to-lanes:active {
+  border: 25px solid #fff;
+  border-right-color: transparent;
+  color: #333;
+}
+
 @media all 
   and (min-device-width: 280px)
   and (max-device-width: 800px) {
