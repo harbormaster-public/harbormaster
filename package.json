@@ -1,6 +1,6 @@
 {
   "name": "harbormaster",
-  "version": "1.17.0",
+  "version": "1.17.1",
   "private": true,
   "scripts": {
     "test": "meteor test --port=4000 --once --driver-package meteortesting:mocha",

@@ -1,24 +1,25 @@
 <template>
   <div id="harbors-page">
     <h1 class="text-5xl my-2">Harbors</h1>
-    <h2 class="text-3xl my-2">Currently Registered:</h2>
-    <ul class="registered-list">
-      <li v-for="harbor in currently_registered()" :key="harbor._id">
-        <span>{{harbor._id}}</span>
-        <button 
+    <div v-if="is_harbormaster()" class="is-harbormaster">
+      <h2 class="text-3xl my-2">Currently Registered:</h2>
+      <ul class="registered-list">
+        <li v-for="harbor in currently_registered()" :key="harbor._id">
+          <span>{{harbor._id}}</span>
+          <button 
           v-on:click.prevent="register(harbor)" 
           class="deregister">✖️</button>
-      </li>
-    </ul>
-    <h2 class="text-3xl my-2">Add Harbor to Depot:</h2>
-    <form class="add-new-harbor-form"
+        </li>
+      </ul>
+      <h2 class="text-3xl my-2">Add Harbor to Depot:</h2>
+      <form class="add-new-harbor-form"
       v-on:submit.prevent="add_new_harbor"
-    >
+      >
       <input type="text" 
-        required
-        name="harbor_url"
-        placeholder="Git repo url (e.g. git@github.com:StrictlySkyler/harbormaster-timestamp.git)"
-        class="add-new-harbor-input"
+      required
+      name="harbor_url"
+      placeholder="Git repo url (e.g. git@github.com:StrictlySkyler/timestamp.git)"
+      class="add-new-harbor-input"
       >
       <button class="add-new-harbor-button">✔️</button>
     </form>
@@ -41,29 +42,38 @@
         <h5>Registered?</h5>
         <code>{{harbor.registered || 'false'}}</code>
         <button class="deregister"
-          v-on:click.prevent="register(harbor)"
-          :title="registration_button_title(harbor)"
+        v-on:click.prevent="register(harbor)"
+        :title="registration_button_title(harbor)"
         >{{((harbor.registered) && '➖') || '➕'}}
-        </button>
+      </button>
         <button class="remove-from-depot"
           :title="`Remove ${harbor._id} from Depot`"
           v-on:click.prevent="remove(harbor)"
-        >🗑️</button>
-      </li>
-    </ul>
+          >🗑️</button>
+        </li>
+      </ul>
+    </div>
+    <div v-else class="not-harbormaster">
+      <h2>Only Harbormasters are allowed to modify Harbor registrations and the Depot.</h2>
+    </div>
   </div>
-</template>
-
+  </template>
+  
 <style scoped>
+.add-new-harbor-form {
+  position: relative;
+}
+
 .add-new-harbor-input {
-  width: 90%;
+  width: 100%;
   border-radius: 3px;
 }
 
 .add-new-harbor-button {
-  width: 2em;
-  height: 2em;
+  padding: 5px;
   border-radius: 3px;
+  position: absolute;
+  right: 0;
 }
 
 .add-new-harbor-button:hover {
@@ -151,7 +161,7 @@ ul {
 <script>
 import is_git_url from 'is-git-url';
 import { Harbors } from '../../../api/harbors';
-import { Users } from '../../../api/users';
+import { is_harbormaster } from '../root/lib';
 
 const reload_timeout_ms = 10000;
 
@@ -174,6 +184,7 @@ export default {
   },
   
   methods: {
+    is_harbormaster,
     add_new_harbor (evt) {
       const url = evt.target.elements.harbor_url.value;
       let git_url_not_recognized = `The url:\n${url}\n`;
@@ -187,12 +198,6 @@ export default {
         else if (res.stderr) alert(res.stderr);
         else window.location.reload();
       });
-      /* TODO:
-      - Validate git url
-      - pass to server
-      - clone down repo into depot
-      - reload page
-      */
     },
     currently_registered () { return Harbors.find({ registered: true }) },
     found_in_depot () { return Harbors.find({ in_depot: true }) },

@@ -26,6 +26,8 @@ import {
   total_captains,
   total_harbormasters,
   total_shipments,
+  is_harbormaster,
+  is_captain,
 } from './lib';
 
 export default {
@@ -54,20 +56,8 @@ export default {
     get_version () {
       return H.VERSION;
     },
-
-    is_harbormaster () {
-      return Users.findOne({
-        _id: H.user().emails[0].address
-      }).harbormaster;
-    },
-
-    is_captain () {
-      let lanes_captained = Lanes.find({
-        captains: { $in: [H.user().emails[0].address] } 
-      }).count();
-      if (lanes_captained > 0) return true;
-      return false;
-    }
+    is_harbormaster,
+    is_captain,
   },
 
   mounted () {

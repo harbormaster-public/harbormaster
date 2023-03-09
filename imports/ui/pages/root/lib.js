@@ -38,10 +38,26 @@ const total_harbormasters = function () {
   return harbormasters.length.toLocaleString();
 };
 
+const is_harbormaster = function () {
+  return Users.findOne({
+    _id: H.user().emails[0].address
+  }).harbormaster;
+};
+
+const is_captain = function () {
+  let lanes_captained = Lanes.find({
+    captains: { $in: [H.user().emails[0].address] } 
+  }).count();
+  if (lanes_captained > 0) return true;
+  return false;
+};
+
 export {
   shipments_last_24_hours,
   latest_shipment,
   total_captains,
   total_harbormasters,
-  total_shipments
+  total_shipments,
+  is_harbormaster,
+  is_captain,
 }

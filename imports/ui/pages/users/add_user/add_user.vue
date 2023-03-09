@@ -69,12 +69,10 @@ export default {
 <style>
 .initial-sign-in,
 .send-invitation {
-  font-size: 50px;
+  height: 50px;
   line-height: 1;
-  height: initial;
   border-width: 0;
-  background: #0af;
-  padding: 20px 0;
+  background: #333;
   margin: 20px 0;
   position: relative;
   width: 100%;
@@ -88,25 +86,22 @@ export default {
   top: 0;
   border-color: transparent;
   border-right-color: #333;
-  border-width: 45px;
+  border-width: 25px;
 }
 
-.send-invitation {
-  border-color: #333;
-  border-right-color: transparent;
+.send-invitation:after {
+  border-right-color: #666;
 }
 
 .send-invitation:hover,
 .initial-sign-in:hover {
-  color: #fff;
-  border-color: #0af;
-  border-right-color: transparent;
+  color: #333;
+  background: #ffae00;
 }
 
 .send-invitation:active,
 .initial-sign-in:active {
-  border-color: #ffae00;
-  border-right-color: transparent;
+  background: #fff;
 }
 
 .email-user-invite {
@@ -121,6 +116,16 @@ export default {
 @media all 
   and (min-device-width: 280px)
   and (max-device-width: 800px) {
+
+  .initial-sign-in,
+  .send-invitation {
+    height: 100px;
+  }
+
+  .initial-sign-in:after,
+  .send-invitation:after {
+    border-width: 50px;
+  }
   
   #add-user-page {
     font-size: 50px;
