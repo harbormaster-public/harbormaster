@@ -209,6 +209,7 @@ tr.deleting .admin {
   border-color: #333;
   border-right-color: transparent;
   text-align: center;
+  color: #fff;
 }
 
 a#new-lane {

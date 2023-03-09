@@ -31,6 +31,7 @@ import {
   link_list,
   lane,
   graph_options,
+  handle_link_click,
 } from './lib';
 import './charter.css';
 
