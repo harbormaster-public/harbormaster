@@ -268,10 +268,6 @@ a#new-lane:after {
     margin: 0;
   }
 
-  #lanes-page .admin .edit-lane:after {
-    content: none;
-  }
-
   #lanes-page .admin .edit-lane {
     padding: 0;
     margin: 0;
@@ -353,6 +349,10 @@ a#new-lane:after {
     border-right-width: 1em;
     height: 100%;
     width: 1em;
+  }
+
+  .admin *::after {
+    background: red !important;
   }
 
   #edit-lane-page .choose-harbor-type,
