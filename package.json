@@ -1,6 +1,6 @@
 {
   "name": "harbormaster",
-  "version": "1.17.2",
+  "version": "1.18.0",
   "private": true,
   "scripts": {
     "test": "meteor test --port=4000 --once --driver-package meteortesting:mocha",
@@ -27,6 +27,7 @@
     "meteor-node-stubs": "0.2.4",
     "mkdirp": "^0.5.6",
     "node-sass": "^6.0.0",
+    "scroll-to-element": "^2.0.3",
     "ssh2": "^1.11.0",
     "tailwindcss": "^2.2.19",
     "tiny-json-http": "^7.5.0",

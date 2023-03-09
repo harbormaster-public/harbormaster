@@ -3,9 +3,9 @@
     <div v-if="this.$subReady.Lanes && lane">
       <h1 class="text-5xl my-2"><em>Ship to lane:</em>&nbsp;<strong>{{lane.name}}</strong></h1>
       <h2 class="text-2xl my-2 px-2">Let's review.  Ready to ship?</h2>
-      <a :href="'/lanes/'+lane.slug+'/edit'" class="rounded-sm my-2 block edit-lane">Edit this lane</a>
+      <a :href="`/lanes/${lane.slug}/edit`" class="rounded-sm my-2 block edit-lane">Edit this lane</a>
       <a href="/lanes/new/edit" class="rounded-sm my-2 block new-lane">New Lane</a>
-      <a :href="'/lanes/'+lane.slug+'/charter'" class="rounded-sm my-2 block lane-charter">Lane Charter</a>
+      <a :href="`/lanes/${lane.slug}/charter`" class="rounded-sm my-2 block lane-charter">Lane Charter</a>
     </div>
     <div v-else-if="this.$subReady.Lanes">
       <h1 class="text-5xl my-2">That lane doesn't exist.</h1>
@@ -32,15 +32,37 @@
     </div>
 
     <div v-if="lane">
-      <h3 class="text-xl my-2 px-2"><em>Harbor:</em>&nbsp;<strong>{{lane.type}}</strong></h3>
+      <h3 
+        id="harbor-title"
+        class="text-xl my-2 px-2"
+      ><em>Harbor:</em>&nbsp;<strong>{{lane.type}}</strong></h3>
 
-      <figure :class="'my-4 rounded-sm work-preview'+(active?'active':'')">
+      <figure 
+        id="work-preview"
+        name="work-preview"
+        :class="`my-4 rounded-sm work-preview ${active ? 'active' : ''}`"
+      >
         <figcaption class="work-caption">Work Preview</figcaption>
         <section id=work-preview v-html="work_preview"></section>
       </figure>
 
-      <figure :class="'my-4 rounded-sm work-output exit-code code-'+exit_code">
+      <figure 
+        id="work-output"
+        name="work-output"
+        :class="`my-4 rounded-sm work-output exit-code code-${exit_code}`"
+      >
         <figcaption class="work-caption">Work Output</figcaption>
+        <figcaption :class="`scroll-to-toggle ${
+          (scroll_to ? 'scrolling' : '')
+        }`">
+          Scroll to Bottom?
+          <input 
+            type="checkbox" 
+            name="scroll-to-bottom-checkbox"
+            @change="handle_scroll_change"
+            :checked="scroll_to"
+          >
+        </figcaption>
         <section>
             <div v-if="has_work_output() && work_output()">
               <div v-if="work_output().stdout && Object.keys(work_output().stdout).length">
@@ -71,6 +93,10 @@
             </div>
         </section>
       </figure>
+      <a 
+        href="#harbor-title" 
+        class="button hollow back-to-top"
+      >Back to top</a>
     </div>
 
     <div v-if="lane && lane.followup">
@@ -102,6 +128,7 @@
 </template>
 
 <script>
+import scroll_to from 'scroll-to-element';
 import ShippingLog from '../../../components/shipping_log';
 
 import {
@@ -133,6 +160,12 @@ export default {
   },
   created,
 
+  data () {
+    return {
+      scroll_to: false,
+    }
+  },
+
   methods: {
     any_active,
     reset_all_active,
@@ -142,6 +175,16 @@ export default {
     pretty_date,
     start_shipment,
     has_work_output,
+    handle_scroll_change: function (evt) {
+      this.$data.scroll_to = evt.target.checked;
+    }
+  },
+
+  updated () {
+    console.log(`Scrolling to Bottom?: ${this.$data.scroll_to}`);
+    if (this.$data.scroll_to) scroll_to('.work-output', {
+      align: 'bottom'
+    });
   },
 
   components: {

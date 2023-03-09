@@ -37,6 +37,7 @@ figure {
   border: 1px solid #ccc;
   padding: 20px 10px;
   background: #333;
+  position: relative;
 }
 
 pre {
@@ -60,6 +61,22 @@ pre {
   padding: 0 5px;
   color: #ffae00;
   border-radius: 2px;
+}
+
+.scroll-to-toggle {
+  position: absolute;
+  margin-top: -32.5px;
+  background: #666;
+  padding: 0 5px;
+  color: #ffae00;
+  border-radius: 2px;
+  right: 10px;
+}
+
+.scroll-to-toggle.scrolling {
+  position: fixed;
+  top: 50px;
+  right: 75px;
 }
 
 #ship-lane-page figure p {
@@ -88,12 +105,9 @@ pre {
 .container .new-lane,
 .container .edit-lane {
   width: 100%;
-  /* height: initial; */
-  /* padding: 20px 0; */
   height: 50px;
   line-height: 50px;
   background: #333;
-  /* border-right-color: transparent; */
   text-align: center;
   color: #fff;
   border: none;
@@ -108,9 +122,6 @@ pre {
 .edit-lane:hover {
   color: #333;
   background: #ffae00;
-  /* border-color: #ffae00;
-  border-right-color: transparent;
-  border-bottom: 25px solid #ffae00; */
 }
 
 .start-shipment:hover {
@@ -126,7 +137,6 @@ pre {
 .container .back-to-lanes:active,
 .container .edit-lane:active {
   background: #fff;
-  /* border-right-color: transparent; */
   color: #333;
 }
 
@@ -160,6 +170,28 @@ pre {
 @media all 
   and (min-device-width: 280px)
   and (max-device-width: 800px) {
+
+  .container .reset-all-active,
+  .container .start-shipment,
+  .container .reset-shipment,
+  .container .show-lanes,
+  .container .lane-charter,
+  .container .new-lane,
+  .container .edit-lane {
+    height: 100px;
+    line-height: 50px;
+  }
+
+  .container .reset-all-active:after,
+  .container .start-shipment:after,
+  .container .reset-shipment:after,
+  .container .show-lanes:after,
+  .container .lane-charter:after,
+  .container .new-lane:after,
+  .container .back-to-lanes:after,
+  .container .edit-lane:after {
+    border-width: 50px;
+  }
 
   #ship-lane-page figure {
     margin: 40px 0;
