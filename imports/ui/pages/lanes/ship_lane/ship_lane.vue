@@ -42,7 +42,9 @@
         name="work-preview"
         :class="`my-4 rounded-sm work-preview ${active ? 'active' : ''}`"
       >
-        <figcaption class="work-caption">Work Preview</figcaption>
+        <figcaption class="work-caption">
+          {{historical ? `Work Performed (Historical)` : `Work Preview`}}
+        </figcaption>
         <section id=work-preview v-html="work_preview"></section>
       </figure>
 
@@ -152,6 +154,10 @@ export default {
   meteor: {
     $subscribe: {
       'Lanes': function () { return [this.$route.params.slug] },
+      'Shipments': function () { return [{
+        slug: this.$route.params.slug,
+        date: this.$route.params.date,
+      }]},
     },
     lane,
     work_preview,
@@ -163,6 +169,7 @@ export default {
   data () {
     return {
       scroll_to: false,
+      historical: false,
     }
   },
 

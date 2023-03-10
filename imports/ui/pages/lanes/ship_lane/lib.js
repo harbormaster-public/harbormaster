@@ -38,6 +38,10 @@ const active = function () {
 // 🤷‍♂️
 const created = function () {
   const { user_id, token } = this.$route.query;
+  
+  if (this.$route.params.date) {
+    this.$data.historical = true;
+  }
 
   if (user_id && token) HTTP.post(this.$route.fullPath, (err, res) => {
     if (!err) console.log(`Shipment started.`);
@@ -60,6 +64,8 @@ const exit_code = function () {
 const work_preview = function () {
   let lane = get_lane(this.$route.params.slug);
   let harbor = Harbors.findOne(lane?.type);
+  let shipment;
+  let manifest;
   const harbor_not_ready_text = `
     <h4>This Harbor is not ready, or otherwise not fully configured.</h4>
     <p>Please "<a href="/lanes/${lane?.name}/edit">Edit this lane</a>" and complete its configuration.</p>
@@ -67,11 +73,18 @@ const work_preview = function () {
 
   if (not_found.get()) return not_found_text;
 
-  if (lane && harbor && harbor.lanes) {
-    let manifest = harbor.lanes[lane._id] ?
-      harbor.lanes[lane._id].manifest :
-      false
-    ;
+  if (this.$route.params.date) {
+    shipment = Shipments.findOne({
+      lane: lane._id,
+      start: this.$route.params.date,
+    });
+  }
+
+  if (lane && harbor?.lanes) {
+    manifest = (
+      shipment?.manifest || 
+      harbor.lanes[lane._id]?.manifest
+      ) || false;
 
     H.call(
       'Harbors#render_work_preview',
@@ -89,6 +102,9 @@ const work_preview = function () {
       }
     );
 
+    if (
+      this.$route.params.date && shipment?.rendered_work_preview
+    ) return shipment.rendered_work_preview;
     return lane.rendered_work_preview;
   }
 

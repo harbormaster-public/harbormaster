@@ -32,14 +32,14 @@ Shipments.rawCollection().createIndex(
   { start: 1, lane: 1 }, { background: true }
 );
 
-Meteor.publish('Shipments', function (lanes, options) {
-  options = options || {};
+Meteor.publish('Shipments', function (lanes, options = {}) {
   let query = {};
-  if (lanes && lanes._id) query.lane = lanes._id;
+  if (lanes?._id) query.lane = lanes._id;
+  if (lanes?.date) query.start = lanes.date;
   else if (lanes && lanes.length > 0 && lanes instanceof Array) {
     query = { lane: { $in: lanes }};
   }
-  else if (lanes && lanes.slug) { 
+  else if (lanes?.slug) {
     let lane = Lanes.findOne(lanes);
     query.lane = lane && lane._id; 
   }

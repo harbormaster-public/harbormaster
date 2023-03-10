@@ -7,7 +7,7 @@ import { promisify } from 'util';
 import { Harbors } from '..';
 import { Lanes } from '../../lanes';
 import { 
-  LatestShipment,
+  LatestShipment, Shipments,
 } from '../../shipments';
 
 const exec = promisify(cp.exec);
@@ -95,6 +95,14 @@ Meteor.methods({
         [lane.type]
         .render_work_preview(manifest, lane)
       ;
+      if (manifest.shipment_id) {
+        console.log(
+          `Updating rendered work for shipment: ${manifest.shipment_id}`
+        );
+        Shipments.update(manifest.shipment_id, {$set: {
+          rendered_work_preview: lane.rendered_work_preview
+        }});
+      }
       Lanes.update(lane._id, {$set: {
         rendered_work_preview: lane.rendered_work_preview
       }});

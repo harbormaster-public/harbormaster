@@ -147,7 +147,7 @@ pre {
 .container .lane-charter:after,
 .container .new-lane:after,
 .container .back-to-lanes:after,
-#ship-lane-page .container .edit-lane:after {
+#ship-lane-page .edit-lane:after {
   content: '';
   right: 0;
   top: 0;
