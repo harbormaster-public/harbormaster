@@ -189,7 +189,7 @@ pre {
   .container .lane-charter:after,
   .container .new-lane:after,
   .container .back-to-lanes:after,
-  .container .edit-lane:after {
+  #ship-lane-page .edit-lane:after {
     border-width: 50px;
   }
 

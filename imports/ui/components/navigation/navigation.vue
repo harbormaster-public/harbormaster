@@ -115,7 +115,7 @@ a:hover, .nav-item:hover {
       border-width: 5px;
       border-top-width: 10px;
       margin-top: -10px;
-      margin-left: -5px;
+      margin-right: -10px;
     }
 }
 </style>

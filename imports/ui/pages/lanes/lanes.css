@@ -352,7 +352,8 @@ a#new-lane:after {
   }
 
   .admin *::after {
-    background: red !important;
+    background: none;
+    border: none;
   }
 
   #edit-lane-page .choose-harbor-type,
