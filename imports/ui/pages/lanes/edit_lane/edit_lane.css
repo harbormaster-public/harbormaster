@@ -156,6 +156,10 @@ legend {
   color: #333;
 }
 
+#edit-lane-page .back-to-lanes:after {
+  display: none;
+}
+
 @media all 
   and (min-device-width: 280px)
   and (max-device-width: 800px) {

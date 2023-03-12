@@ -1,10 +1,10 @@
 {
   "name": "harbormaster",
-  "version": "1.19.2",
+  "version": "1.20.0",
   "private": true,
   "scripts": {
-    "test": "meteor test --port=4000 --once --driver-package meteortesting:mocha",
-    "test:watch": "TEST_WATCH=1 meteor test --port=4000 --driver-package meteortesting:mocha",
+    "test": "meteor test --port=4040 --once --driver-package meteortesting:mocha",
+    "test:watch": "TEST_WATCH=1 meteor test --port=4040 --driver-package meteortesting:mocha",
     "start": "meteor run",
     "test:e2e": "TEST_BROWSER_DRIVER=puppeteer npm run test",
     "test:e2e:watch": "TEST_BROWSER_DRIVER=puppeteer npm run test:watch"
