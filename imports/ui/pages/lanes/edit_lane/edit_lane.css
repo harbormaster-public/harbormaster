@@ -80,6 +80,7 @@ legend {
   border-radius: 2px;
 }
 
+.can-duplicate-lane:hover,
 .add-salvage-plan:hover,
 .add-harbor,
 .save,
@@ -91,6 +92,7 @@ legend {
   border-right-color: transparent;
 }
 
+.can-duplicate-lane,
 .harbor-button,
 .add-salvage-plan,
 .add-followup,
@@ -141,6 +143,7 @@ legend {
   border-right-color: transparent;
 }
 
+.can-duplicate-lane:active,
 .harbor-button:active,
 .add-salvage-plan:active,
 .add-followup:active,

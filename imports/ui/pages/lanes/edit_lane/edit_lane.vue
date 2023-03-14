@@ -99,6 +99,13 @@
             </div>
           </div>
         </fieldset>
+        <div v-if="current_lane.type && !validating_fields">
+          <button
+            id="duplicate-lane-button"
+            class="p-2 rounded-sm my-2 block can-duplicate-lane"
+            v-on:click.prevent="duplicate_lane"
+          >Duplicate This Lane</button>
+        </div>
 
         <div v-if="!no_followup">
           <button 
@@ -212,7 +219,10 @@ export default {
 
   meteor: {
     $subscribe: {
-      'Lanes': function () { return [get_lane(this.$route.params.slug)] },
+      'Lanes': function () {
+        let lane = get_lane(this.$route.params.slug);
+        return [lane];
+      },
       'Users': [],
       'Harbors': function () {
         const type = get_lane(this.$route.params.slug)?.type;
@@ -276,12 +286,21 @@ export default {
     add_salvage_plan () { return Session.set('choose_salvage_plan', true) },
     new_lane () { Session.set('lane', {})},
     get_lane_name,
+    duplicate_lane () {
+      const lane = get_lane(this.$route.params.slug);
+      const warn = `Duplicate this lane, and then edit the new lane?`
+      const router = this.$router;
+      if (!confirm(warn)) return;
+      H.call('Lanes#duplicate', lane, (err, res) => {
+        if (err) alert(err);
+        router.push(res);
+      });
+    },
   },
 
   mounted () {
     const name = this.$route.params.slug;
     const lane = get_lane(name);
-
     if (lane) Meteor.subscribe('Shipments', lane, options);
   },
 }

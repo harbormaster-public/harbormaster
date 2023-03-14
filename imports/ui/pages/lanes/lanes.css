@@ -42,8 +42,7 @@ table tbody tr:nth-child(odd) {
 }
 
 .lanes-table:after {
-  top: initial;
-  bottom: 0px
+  top: -1px;
 }
 
 .lanes-table th.active {
@@ -79,7 +78,7 @@ table tbody tr:nth-child(odd) {
 .lanes-table .admin {
   font-size: 10px;
   position: absolute;
-  width: 100%;
+  width: 120%;
   min-width: 185px;
   height: 25px;
   margin-top: -25px;
@@ -100,7 +99,7 @@ table tbody tr:nth-child(odd) {
   border-radius: 2px 2px 0 0;
   padding: 5px 2px;
   min-width: 45px;
-  width: 25%;
+  width: 20%;
   height: 25px;
   border-bottom-color: transparent;
   background: #666;
@@ -184,12 +183,12 @@ td.error {
   background: #ffae00;
 }
 
-tr.deleting {
+.lanes-table tr.deleting {
   background: #f0a;
   opacity: 0.5;
 }
 
-tr.deleting .admin {
+.lanes-table tr.deleting .admin {
   display: none;
 }
 

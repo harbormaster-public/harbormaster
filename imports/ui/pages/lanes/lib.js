@@ -172,6 +172,16 @@ const delete_lane = function (event, lane) {
   }
 };
 
+const duplicate_lane = function (event, lane) {
+  const warn = `Duplicate this lane, and then edit the new lane?`
+  const router = this.$router;
+  if (!confirm(warn)) return;
+  H.call('Lanes#duplicate', lane, (err, res) => {
+    if (err) alert(err);
+    router.push(res);
+  });
+};
+
 const ready = function () {
   if (
     this.$subReady.Lanes
@@ -288,6 +298,7 @@ export {
   loading_lanes,
   sort_by_header,
   delete_lane,
+  duplicate_lane,
   ready,
   active,
   can_ply,

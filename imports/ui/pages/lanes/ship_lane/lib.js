@@ -80,12 +80,17 @@ const work_preview = function () {
     });
   }
 
-  if (lane && harbor?.lanes) {
+  if (
+    this.$route.params.date && shipment?.rendered_work_preview
+  ) return shipment.rendered_work_preview;
+
+  if (lane && harbor?.lanes && !lane?.rendered_work_preview) {
     manifest = (
       shipment?.manifest || 
       harbor.lanes[lane._id]?.manifest
       ) || false;
-
+      
+    debugger
     H.call(
       'Harbors#render_work_preview',
       lane,
@@ -101,14 +106,12 @@ const work_preview = function () {
         });
       }
     );
-
-    if (
-      this.$route.params.date && shipment?.rendered_work_preview
-    ) return shipment.rendered_work_preview;
-    return lane.rendered_work_preview;
   }
 
-  return harbor_not_ready_text;
+  return lane.rendered_work_preview ? 
+    lane.rendered_work_preview : 
+    harbor_not_ready_text
+  ;
 };
 
 const has_work_output = function () {

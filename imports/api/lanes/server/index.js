@@ -52,8 +52,9 @@ H.publish('LatestShipment', function () {
 });
 
 Meteor.methods({
-  'Lanes#get_total': () => {
-    return Lanes.find().count();
+  'Lanes#get_total': async () => {
+    // return Lanes.find().count();  vvv supposed to be faster
+    return await Lanes.estimatedDocumentCount();
   },
 
   'Lanes#update_webhook_token': function (lane_id, user_id, remove) {
@@ -331,6 +332,10 @@ Meteor.methods({
 
   'Lanes#delete': function (lane) {
     Lanes.remove(lane);
+    const harbor = Harbors.findOne(lane.type);
+    delete harbor.lanes[lane._id];
+    Harbors.update(harbor._id, harbor);
+    console.log(`Deleted lane: ${lane.name}`);
     return H.call('Lanes#get_total');
   },
 
@@ -342,5 +347,45 @@ Meteor.methods({
 
     return true;
   },
+
+  'Lanes#duplicate': (lane) => {
+    const increment = get_increment(lane);
+    const harbor = Harbors.findOne(lane.type);
+    const manifest = harbor.lanes[lane._id].manifest;
+    const replacement_regex = /\d+$/g;
+    
+    console.log(`Duplicating lane ${lane.name}...`);
+    delete lane.last_shipment;
+    delete lane._id;
+    delete lane.tokens;
+    lane.shipment_count = 0;
+    lane.name = `${lane.name.replace(replacement_regex, '')} ${increment}`;
+    lane.slug = `${lane.slug.replace(replacement_regex, '')}-${increment}`;
+    const new_lane_id = Lanes.insert(lane);
+    harbor.lanes[new_lane_id] = { manifest };
+    Harbors.update(harbor._id, harbor);
+    console.log(`New lane created: ${lane.name}`);
+    return `/lanes/${lane.slug}/edit`;
+  },
 });
 
+const increment_regex = /(.*?)(\d+)$/;
+
+function get_increment(lane) {
+  let increment = 2;
+  let dupe_slug = `${lane.slug}-${increment}`;
+  const slug_match = lane.slug.match(increment_regex);
+  if (slug_match?.length) {
+    increment = parseInt(slug_match[2], 10);
+    increment += 1;
+    dupe_slug = `${slug_match[1]}${increment}`;
+  }
+  console.log(`Checking for exsting lane: ${dupe_slug}`);
+  let existing_dupe = Lanes.findOne({ slug: dupe_slug });
+  if (existing_dupe) {
+    console.log(`Lane ${dupe_slug} already exists.`);
+    return get_increment(existing_dupe);
+  }
+  console.log(`No duplicate found for ${dupe_slug}, using it.`);
+  return increment;
+}

@@ -21,24 +21,36 @@
           <th @click="sort_by_header" class="salvage-plan-header salvage-plan-column" data-value=salvage>Salvage Plan</th>
         </tr>
       </thead>
-      <tbody>
-
-        <tr v-if="empty" class="empty">
+      <tbody v-if="empty" class="empty">
+        <tr>
           <td colspan=9>No lanes found.  <router-link to="/lanes/new/edit">Create the first.</router-link></td>
         </tr>
-
-        <tr 
-          v-else-if="ready()" 
-          v-for="lane in lanes" 
-          :key="lane._id"
-        >
+      </tbody>
+      <tbody v-else-if="ready()">
+        <tr v-for="lane in lanes" :key="lane._id">
           <td class="name-column">
             <button @click="handle_opts_click" class="lane-options">⋯</button>
             <span v-if="can_ply(lane)" class="admin">
-              <router-link :to="'/lanes/'+lane.slug+'/charter'" class="charter">Charter</router-link>
-              <router-link :to="'/lanes/'+lane.slug+'/ship'" class="ship-lane">Ship</router-link>
-              <router-link :to="'/lanes/'+lane.slug+'/edit'" class="edit-lane">Edit</router-link>
-              <button @click="delete_lane($event, lane)" class="delete-lane">Delete</button>
+              <router-link 
+                :to="`/lanes/${lane.slug}/charter`"
+                class="charter"
+              >Charter</router-link>
+              <router-link 
+                :to="`/lanes/${lane.slug}/ship`" 
+                class="ship-lane"
+              >Ship</router-link>
+              <router-link 
+                :to="`/lanes/${lane.slug}/edit`" 
+                class="edit-lane"
+              >Edit</router-link>
+              <button 
+                @click="delete_lane($event, lane)"
+                class="delete-lane"
+              >Delete</button>
+              <button
+                @click="duplicate_lane($event, lane)"
+                class="duplicate-lane"
+              >Duplicate</button>
             </span>
             <span class="name">{{lane.name}}</span>
           </td>
@@ -46,18 +58,19 @@
           <td class="type-column">{{lane.type}}</td>
           <td class="last-shipped-column" width=125>
             <router-link 
-              v-if="latest_shipment(lane)"
-              :to="'/lanes/'+lane.slug+'/ship/'+latest_shipment(lane)">
-              {{last_shipped(lane)}}
-            </router-link>
+              v-if="latest_shipment(lane)" 
+              :to="`/lanes/${lane.slug}/ship/${latest_shipment(lane)}`"
+            >{{last_shipped(lane)}}</router-link>
           </td>
           <td class="total-shipments-column">{{lane.shipment_count || '0'}}</td>
           <td class="salvage-runs-column">{{lane.salvage_runs || '0'}}</td>
-          <td :class="'current-state-column '+current_state(lane)">{{current_state(lane)}}</td>
+          <td :class="`current-state-column ${current_state(lane)}`">{{current_state(lane)}}</td>
           <td class="followup-column">{{followup_name(lane)}}</td>
           <td class="salvage-plan-column">{{salvage_plan_name(lane)}}</td>
         </tr>
-        <tr v-else class="loading-text">
+      </tbody>
+      <tbody v-else>
+        <tr class="loading-text">
           <td colspan=9>Loading...</td>
         </tr>
       </tbody>
@@ -72,6 +85,7 @@ import {
   loading_lanes,
   sort_by_header,
   delete_lane,
+  duplicate_lane,
   ready,
   active,
   can_ply,
@@ -143,6 +157,7 @@ export default {
     loading_lanes,
     sort_by_header,
     delete_lane,
+    duplicate_lane,
     ready,
     active,
     can_ply,
