@@ -178,10 +178,7 @@ Meteor.methods({
     }
 
     if (exit_code && exit_code != 0) {
-      lane.salvage_runs = lane.salvage_runs >= 0 ? 
-        lane.salvage_runs + 1 : 
-        0
-      ;
+      lane.salvage_runs = lane.salvage_runs >= 0 ? lane.salvage_runs + 1 : 1;
     }
 
     let shipment_id = manifest.shipment_id;
@@ -204,7 +201,8 @@ Meteor.methods({
     lane.last_shipment = shipment;
     Lanes.update(lane._id, {
       $set: {
-        last_shipment: lane.last_shipment
+        last_shipment: lane.last_shipment,
+        salvage_runs: lane.salvage_runs
       }
     });
     

@@ -78,6 +78,10 @@ export default {
   width: 100%;
 }
 
+.initial-sign-in {
+  background: #666;
+}
+
 .initial-sign-in:after,
 .send-invitation:after {
   content: '';
