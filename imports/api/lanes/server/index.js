@@ -107,7 +107,7 @@ Meteor.methods({
 
     lane.shipment_count = lane.shipment_count >= 0 ? 
       lane.shipment_count + 1 
-      : 0
+      : 1
     ;
     manifest.shipment_start_date = shipment_start_date;
     manifest.shipment_id = shipment_id;
@@ -357,8 +357,9 @@ Meteor.methods({
     delete lane._id;
     delete lane.tokens;
     lane.shipment_count = 0;
-    lane.name = `${lane.name.replace(replacement_regex, '')} ${increment}`;
-    lane.slug = `${lane.slug.replace(replacement_regex, '')}-${increment}`;
+    lane.salvage_runs = 0;
+    lane.name = `${lane.name.replace(replacement_regex, '')}${increment}`;
+    lane.slug = `${lane.slug.replace(replacement_regex, '')}${increment}`;
     const new_lane_id = Lanes.insert(lane);
     harbor.lanes[new_lane_id] = { manifest };
     Harbors.update(harbor._id, harbor);

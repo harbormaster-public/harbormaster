@@ -14,7 +14,7 @@
           <th @click="sort_by_header" :class="'captains-column captains-header '+active('captains')" data-value=captains>Captains</th>
           <th @click="sort_by_header" :class="'type-header type-column '+active('type')" data-value=type>Type</th>
           <th @click="sort_by_header" :class="'last-shipped-header last-shipped-column '+active('shipped')" data-value=shipped>Last Shipped</th>
-          <th @click="sort_by_header" :class="'total-shipments-column total-shipments-header '+active('shipments')" data-value=shipments>Total Completed Shipments</th>
+          <th @click="sort_by_header" :class="'total-shipments-column total-shipments-header '+active('shipments')" data-value=shipments>Total Shipments</th>
           <th @click="sort_by_header" :class="'salvage-runs-column total-salvage-runs-header '+active('salvage-runs')" data-value=salvage-runs>Total Salvage Runs</th>
           <th @click="sort_by_header" class="current-state-header current-state-column" data-value=state>Current State</th>
           <th @click="sort_by_header" class="followup-header followup-column" data-value=followup>Followup</th>

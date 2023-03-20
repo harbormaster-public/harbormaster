@@ -40,8 +40,8 @@ Meteor.publish('Shipments', function (lanes, options = {}) {
     query = { lane: { $in: lanes }};
   }
   else if (lanes?.slug) {
-    let lane = Lanes.findOne(lanes);
-    query.lane = lane && lane._id; 
+    let lane = Lanes.findOne({slug: lanes.slug});
+    query.lane = lane?._id || null;
   }
   const shipments = Shipments.find(query, options);
   

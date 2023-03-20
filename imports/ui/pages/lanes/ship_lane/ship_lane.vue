@@ -40,7 +40,7 @@
       <figure 
         id="work-preview"
         name="work-preview"
-        :class="`my-4 rounded-sm work-preview ${active ? 'active' : ''}`"
+        :class="`my-4 rounded-sm work-preview ${any_active() ? 'active' : ''}`"
       >
         <figcaption class="work-caption">
           {{historical ? `Work Performed (Historical)` : `Work Preview`}}
@@ -49,9 +49,12 @@
       </figure>
 
       <figure 
+        :key="rerenders"
         id="work-output"
         name="work-output"
-        :class="`my-4 rounded-sm work-output exit-code code-${exit_code}`"
+        :class="`my-4 rounded-sm work-output ${
+          active ? 'active' : ''
+        } exit-code code-${exit_code}`"
       >
         <figcaption class="work-caption">Work Output</figcaption>
         <figcaption :class="`scroll-to-toggle ${
@@ -170,8 +173,9 @@ export default {
     return {
       scroll_to: false,
       historical: false,
+      rerenders: 0,
     }
-  },
+  }, 
 
   methods: {
     any_active,

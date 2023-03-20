@@ -7,7 +7,6 @@ import { history, get_lane } from '../lib/util';
 import { moment } from 'meteor/momentjs:moment';
 
 const not_found = new ReactiveVar(false);
-//TODO: Holdover from Blaze.  Componentize
 const not_found_text = `
   <p><strong>The harbor you're viewing hasn't been installed for this
     Harbormaster instance.</strong></p>
@@ -30,7 +29,7 @@ const active = function () {
   }).fetch();
 
   if (total.length == 1 && total[0].start == date) return true;
-  else return false;
+  return false;
 };
 
 // If we're GET for this, it's because we can't use POST due to platform
@@ -56,9 +55,10 @@ const exit_code = function () {
     Shipments.findOne({ start: date, lane: lane._id }) :
     false
   ;
-  let exit_code = shipment ? shipment.exit_code : '';
 
-  return exit_code;
+  if (!shipment || shipment?.active) return '';
+
+  return shipment.exit_code;
 };
 
 const work_preview = function () {
@@ -90,7 +90,7 @@ const work_preview = function () {
       harbor.lanes[lane._id]?.manifest
       ) || false;
       
-    debugger
+    
     H.call(
       'Harbors#render_work_preview',
       lane,
@@ -205,19 +205,20 @@ const start_shipment = function () {
   Session.set('working_lanes', working_lanes);
   if (! shipment || ! shipment.active) {
     console.log(`Starting shipment for lane: ${lane.name}`);
-    Meteor.call(
+    H.call(
       'Lanes#start_shipment',
       lane._id,
       manifest,
       shipment_start_date,
-      function (err, res) {
+      (err, res) => {
         if (err) throw err;
 
         working_lanes = Session.get('working_lanes');
         working_lanes[lane._id] = false;
         Session.set('working_lanes', working_lanes);
         console.log('Shipment started for lane:', lane.name);
-        $router.push('/lanes/'+lane.slug+'/ship/'+shipment_start_date);
+        $router.push(`/lanes/${lane.slug}/ship/${shipment_start_date}`);
+        this.$data.rerenders = this.$data.rerenders + 1;
 
         return res;
       }

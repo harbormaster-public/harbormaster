@@ -3,6 +3,7 @@ pre {
   overflow-x: auto;
 }
 
+.work-output.exit-code.active,
 .exit-code {
   background: rgba(255, 150, 0, 0.75);
   border-color: rgba(255, 150, 0, 0.75);
@@ -85,7 +86,7 @@ pre {
 }
 
 .work-preview.active {
-  background: #ffae00;
+  background: rgba(255, 150, 0, 0.75);
 }
 
 .work-output .result {

@@ -89,7 +89,8 @@ table tbody tr:nth-child(odd) {
 
 .lanes-table .admin.active {
   display: block;
-  box-shadow: 1px -2px 0px 2px #ffae00;
+  box-shadow: 1px -2px 0px 2px #ffae00, 
+              0 0px 3px 1px #333;
 }
 
 .lanes-table .admin a, 
