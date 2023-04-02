@@ -1,6 +1,6 @@
 {
   "name": "harbormaster",
-  "version": "1.21.1",
+  "version": "1.22.0",
   "private": true,
   "scripts": {
     "test": "meteor test --port=4040 --once --driver-package meteortesting:mocha",
@@ -41,6 +41,7 @@
   "devDependencies": {
     "@volar-plugins/vetur": "^0.1.0",
     "autoprefixer": "^10.4.13",
+    "mocha": "^10.2.0",
     "postcss": "^8.4.21",
     "postcss-import": "^14.1.0",
     "postcss-load-config": "^3.1.4",
