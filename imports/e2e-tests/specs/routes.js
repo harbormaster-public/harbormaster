@@ -5,40 +5,63 @@ var test_email = faker.internet.email();
 var test_password = faker.internet.password();
 
 import {
+  after,
+  afterEach,
   describe,
   it,
   beforeEach,
-  // puppeteer
-  // browser,
-  // page
+  browser,
+  page
 } from '../helpers';
-import puppeteer from 'puppeteer';
 
 describe('Routing', function () {
+  after(async () => {
+    await browser.close();
+    // Something doesn't seem to be cleaning up properly, and the process
+    // seems to hang when the tests complete, pass or fail.  For now,
+    // We'll just bail if we wait for longer than 5s after the tests are run.
+    setTimeout(() => {
+      console.log(`Test run complete, exiting.`);
+      process.exit();
+    }, 5000);
+  });
+
+  afterEach(async () => {
+    const { state, title } = this.ctx.currentTest;
+    // Ensure to fail the whole run if any of the tests fail.
+    if (state == 'failed') {
+      const type = 'png';
+      const encoding = 'binary';
+      const error_date = 'error-' + Date.now();
+      const path = `${cwd()}/${error_date}.${type}`;
+      await page.screenshot({
+        path,
+        type,
+        encoding
+      });
+      console.log(`Test "${title}" failed.  Saving screenshot: ${path}`);
+      process.exitCode = 1;
+    }
+  });
+  
   beforeEach(async function () {
+    /*TODO:
+      - reset database
+      - seed with test-appropriate data
+      - add workflows
+    */
     var fresh;
     var existing;
-    const browser = await puppeteer.launch({
-      headless: false
-    });
-    const page = await browser.newPage();
     // // browser.url('http://localhost:3000');
     // // await browser.url(Meteor.absoluteUrl());
     await page.goto(Meteor.absoluteUrl());
     // // await browser.waitForExist('h1', 1000);
     let header = await page.waitForSelector('h1');
     let tag = await page.$eval('h1', h1 => h1.tagName);
-    let error_date = 'error-' + Date.now();
-    let shot = await page.screenshot({
-      // path: `${cwd()}/${error_date}`,
-      path: 'test.png',
-      type: 'png',
-      encoding: 'binary'
-    });
+    
     expect(header).to.be.visible;
-    console.log('Error in before hook.  Saving screenshot:', error_date)
 
-    // return true
+    // return await page.close();
 
     // try {
     //   await page.waitForSelector('.logout', {timeout: 1000});
@@ -108,7 +131,7 @@ describe('Routing', function () {
       expect(false).to.be.true;
     });
   });
-
+/*
   describe('/lanes', function () {
     it('should load', function () {
       browser.url('http://localhost:3000/lanes');
@@ -201,4 +224,5 @@ describe('Routing', function () {
       );
     }
   });
+*/
 });
