@@ -33,7 +33,7 @@ setup({
       // ms to delay everything, 100 -> slow, 1000 -> very slow
       // Empirically, less than 50ms risks running too fast for the browser
       // Default is 10
-      slowMo: 100,
+      slowMo: 200,
       devtools: false,
       dumpio: false,
       handleSIGHUP: true,
