@@ -10,19 +10,19 @@
         <label class="px-2 text-4xl">Password:
           <input class="my-2" v-model=password type=password required>
         </label>
-        <button @click="password_login" class="rounded-rm block my-5 sign-in">Sign In</button>
-        <button @click="password_reset" class="rounded-rm block my-5 forgot-password">Forgot Password</button>
+        <button @click.prevent="password_login" class="rounded-rm block my-5 sign-in">Sign In</button>
+        <button @click.prevent="password_reset" class="rounded-rm block my-5 forgot-password">Forgot Password</button>
       </div>
       <div v-else-if="!reset_token()">
-        <h3 class="text-5xl my-2 px-2">Check your email for password reset instructions.</h3>
-        <button @click="password_reset" class="rounded-rm block my-5 forgot-password">Forgot Password</button>
+        <h3 class="text-5xl my-2 px-2 instructions">Check your email for password reset instructions.</h3>
+        <button @click.prevent="password_reset" class="rounded-rm block my-5 forgot-password">Forgot Password</button>
       </div>
       <div v-else>
         <h3 class="text-5xl my-2 px-2">Enter your new password.</h3>
         <label class="px-2 text-4xl">Password:
           <input class="my-2" v-model=password type=password required>
         </label>
-        <button @click="set_new_password" class="rounded-rm block my-2 forgot-password">Set New Password</button>
+        <button @click.prevent="set_new_password" class="rounded-rm block my-2 forgot-password">Set New Password</button>
       </div>
     </form>
   </div>
@@ -58,7 +58,9 @@ export default {
     },
 
     password_reset: function () {
-      const { email, password } = this;
+      const { email } = this;
+      const no_email_alert = 'An email must be provided for a password reset';
+      if (!email) return alert(no_email_alert);
       this.reset = true;
       H.call('Users#reset_password', email, err => {if (err) throw err});
     },

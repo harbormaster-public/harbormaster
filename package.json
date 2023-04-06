@@ -3,11 +3,11 @@
   "version": "1.22.0",
   "private": true,
   "scripts": {
-    "test": "meteor test --port=4040 --once --driver-package meteortesting:mocha",
-    "test:watch": "TEST_WATCH=1 meteor test --port=4040 --driver-package meteortesting:mocha",
-    "start": "meteor run",
-    "test:e2e": "TEST_BROWSER_DRIVER=puppeteer npm run test",
-    "test:e2e:watch": "TEST_BROWSER_DRIVER=puppeteer npm run test:watch"
+    "test": "MONGO_URL=\"\" NO_HMR=1 meteor test --port=4040 --once --driver-package meteortesting:mocha",
+    "test:watch": "MONGO_URL=\"\" NO_HMR=1 meteor test --port=4040 --driver-package meteortesting:mocha",
+    "start": "NO_HMR=1 meteor run",
+    "test:e2e": "MONGO_URL=\"\" HEADLESS=1 NO_HMR=1 TEST_BROWSER_DRIVER=puppeteer meteor test --port=4040 --once --full-app --driver-package universe:e2e --raw-logs",
+    "test:e2e:watch": "MONGO_URL=\"\" HEADLESS=0 NO_HMR=1 TEST_BROWSER_DRIVER=puppeteer meteor test --port=4040 --full-app --driver-package universe:e2e --raw-logs"
   },
   "dependencies": {
     "@babel/runtime": "^7.21.0",
