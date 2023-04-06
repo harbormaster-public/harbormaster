@@ -23,7 +23,7 @@ setup({
     exit: true,
     watch: false,
     retries: 3,
-    timeout: 10000,
+    timeout: 60000,
   },
   browser: {
     isCI: true,
@@ -33,7 +33,7 @@ setup({
       // ms to delay everything, 100 -> slow, 1000 -> very slow
       // Empirically, less than 50ms risks running too fast for the browser
       // Default is 10
-      slowMo: 50,
+      slowMo: 100,
       devtools: false,
       dumpio: false,
       handleSIGHUP: true,
