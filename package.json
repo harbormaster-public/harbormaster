@@ -3,7 +3,7 @@
   "version": "1.22.0",
   "private": true,
   "scripts": {
-    "test": "ROOT_URL=\"\" MONGO_URL=\"\" NO_HMR=1 meteor test --port=4040 --once --driver-package meteortesting:mocha",
+    "test": "NODE_OPTIONS='--trace-warnings' ROOT_URL='' MONGO_URL='' NO_HMR=1 meteor test --port=4040 --once --driver-package meteortesting:mocha",
     "test:watch": "ROOT_URL=\"\" MONGO_URL=\"\" NO_HMR=1 meteor test --port=4040 --driver-package meteortesting:mocha",
     "start": "NO_HMR=1 meteor run",
     "test:e2e": "ROOT_URL=\"\" MONGO_URL=\"\" HEADLESS=1 NO_HMR=1 TEST_BROWSER_DRIVER=puppeteer meteor test --port=4040 --once --full-app --driver-package universe:e2e --raw-logs",
