@@ -3,7 +3,7 @@ import Harbormasters from '.';
 
 var should = chai.should();
 
-describe('Harbormasters', function () {
+describe('Harbormasters collection', function () {
   it('should exist', function () {
     should.exist(Harbormasters);
   });

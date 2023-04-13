@@ -17,7 +17,49 @@ const trim_manifest = (manifest) => {
   return trimmed;
 };
 
-Meteor.publish('Lanes', function (lane = {}) {
+
+function collect_latest_shipments() {
+  console.log('Collecting latest shipments...');
+  
+  Lanes.find().forEach((lane) => {
+    console.log(`Finding latest shipment for ${lane.name}...`);
+    
+    if (!lane.last_shipment) {
+      let shipment = Shipments.findOne(
+        { lane: lane._id },
+        { sort: { actual: -1 } }
+        ) || { actual: 'Never', start: '' };
+        lane.last_shipment = shipment;
+        Lanes.update(lane._id, { $set: { last_shipment: lane.last_shipment } });
+        LatestShipment.upsert(lane._id, { shipment });
+      }
+    });
+    
+    console.log('Done collecting latest shipments.');
+  }
+  
+  
+function get_increment(lane, increment = 2) {
+  const increment_regex = /(.*?)(\d+)$/;
+  let dupe_slug = `${lane.slug}-${increment}`;
+  const slug_match = lane.slug.match(increment_regex);
+  if (slug_match?.length) {
+    increment = parseInt(slug_match[2], 10);
+    increment += 1;
+    dupe_slug = `${slug_match[1]}${increment}`;
+  }
+  console.log(`Checking for exsting lane: ${dupe_slug}`);
+  let existing_dupe = Lanes.findOne({ slug: dupe_slug });
+  if (existing_dupe) {
+    console.log(`Lane ${dupe_slug} already exists.`);
+    return get_increment(existing_dupe, increment);
+  }
+  console.log(`No duplicate found for ${dupe_slug}, using it.`);
+  return increment;
+}
+
+
+Meteor.publish('Lanes', function publish_lanes (lane = {}) {
   if (typeof lane == 'string') {
     const single = Lanes.find(
       { $or: [{ _id: lane }, { name: lane }, { slug: lane }] }
@@ -29,23 +71,7 @@ Meteor.publish('Lanes', function (lane = {}) {
   return Lanes.find(lane);
 });
 
-console.log('Collecting latest shipments...');
-
-Lanes.find().forEach((lane) => {
-  console.log(`Finding latest shipment for ${lane.name}...`);
-
-  if (!lane.last_shipment) {
-    let shipment = Shipments.findOne(
-      { lane: lane._id }, 
-      { sort: { actual: -1 } }
-    ) || { actual: 'Never', start: '' };
-    lane.last_shipment = shipment;
-    Lanes.update(lane._id, {$set:{ last_shipment: lane.last_shipment }});
-    LatestShipment.upsert(lane._id, { shipment });
-  }
-});
-
-console.log('Done collecting latest shipments.');
+collect_latest_shipments();
 
 H.publish('LatestShipment', function () {
   return LatestShipment.find();
@@ -367,24 +393,3 @@ Meteor.methods({
     return `/lanes/${lane.slug}/edit`;
   },
 });
-
-const increment_regex = /(.*?)(\d+)$/;
-
-function get_increment(lane) {
-  let increment = 2;
-  let dupe_slug = `${lane.slug}-${increment}`;
-  const slug_match = lane.slug.match(increment_regex);
-  if (slug_match?.length) {
-    increment = parseInt(slug_match[2], 10);
-    increment += 1;
-    dupe_slug = `${slug_match[1]}${increment}`;
-  }
-  console.log(`Checking for exsting lane: ${dupe_slug}`);
-  let existing_dupe = Lanes.findOne({ slug: dupe_slug });
-  if (existing_dupe) {
-    console.log(`Lane ${dupe_slug} already exists.`);
-    return get_increment(existing_dupe);
-  }
-  console.log(`No duplicate found for ${dupe_slug}, using it.`);
-  return increment;
-}
