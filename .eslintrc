@@ -70,7 +70,7 @@
  * ****************************************************************************/
 
 {
-  "parser": "babel-eslint",
+  "parser": "@babel/eslint-parser",
   "env": {
     "browser": true,
     "es6": true,
@@ -174,7 +174,7 @@
     "func-style": 1,
     "key-spacing": [2, {
         "afterColon": true,
-        "beforeColon": false,
+        "beforeColon": false
     }],
     "linebreak-style": [
       2,
