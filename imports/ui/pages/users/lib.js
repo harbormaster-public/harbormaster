@@ -11,10 +11,10 @@ const is_harbormaster = function (user) {
 const captain_lanes = function (user) {
   var pliable_lanes = Lanes.find({ $or: [
     {captains: { $in: [user._id] } },
-    { tokens: { $exists: true }}
+    { tokens: { $exists: true }},
   ]}).fetch();
   var lane_names = [];
-  
+
   if (user.harbormaster) { return 'All'; }
   _.each(pliable_lanes, function (lane) {
     if (
@@ -26,7 +26,7 @@ const captain_lanes = function (user) {
         lane_names.push(lane.name);
       }
     });
-  
+
   return lane_names.length ? lane_names.join(', ') : 'None';
 };
 
@@ -36,7 +36,7 @@ const expire_user = function (user) {
   if (window.confirm(confirm_message)) {
     H.call('Users#expire_user', user._id, (err, res) => {
       if (err) throw err;
-      
+
       console.log('User expired:', res);
       alert(`User expired: ${res}`);
     });
@@ -47,4 +47,4 @@ export {
   is_harbormaster,
   captain_lanes,
   expire_user,
-}
+};

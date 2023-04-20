@@ -16,43 +16,43 @@ const not_found_text = `
 `;
 
 const lane = function () {
-  let lane = get_lane(this.$route.params.slug) || false;
-  return lane;
+  let $lane = get_lane(this.$route.params.slug) || false;
+  return $lane;
 };
 
 const active = function () {
-  let lane = get_lane(this.$route.params.slug) || {};
+  let $lane = get_lane(this.$route.params.slug) || {};
   let date = this.$route.params.date;
   let total = Shipments.find({
-    active: true, 
-    lane: lane._id,
+    active: true,
+    lane: $lane._id,
   }).fetch();
 
   if (total.length == 1 && total[0].start == date) return true;
   return false;
 };
 
-// If we're GET for this, it's because we can't use POST due to platform
-// Gmail Android, for example, bans this; iOS treats it as GET anyway
+// If we're GET for this, it's because we can't use POST due to platform.
+// Gmail Android, for example, bans this; iOS treats it as GET anyway.
 // 🤷‍♂️
 const created = function () {
   const { user_id, token } = this.$route.query;
-  
+
   if (this.$route.params.date) {
     this.$data.historical = true;
   }
 
   if (user_id && token) HTTP.post(this.$route.fullPath, (err, res) => {
-    if (!err) console.log(`Shipment started.`);
+    if (!err && res) console.log(`Shipment started.`);
   });
 };
 
 const exit_code = function () {
-  let lane = get_lane(this.$route.params.slug) || {};
+  let $lane = get_lane(this.$route.params.slug) || {};
   let date = this.$route.params.date;
-  
-  let shipment = lane ?
-    Shipments.findOne({ start: date, lane: lane._id }) :
+
+  let shipment = $lane ?
+    Shipments.findOne({ start: date, lane: $lane._id }) :
     false
   ;
 
@@ -62,20 +62,24 @@ const exit_code = function () {
 };
 
 const work_preview = function () {
-  let lane = get_lane(this.$route.params.slug);
-  let harbor = Harbors.findOne(lane?.type);
   let shipment;
   let manifest;
-  const harbor_not_ready_text = `
+  let $lane = get_lane(this.$route.params.slug);
+  let harbor = Harbors.findOne($lane?.type);
+  const harbor_not_ready_header = `
     <h4>This Harbor is not ready, or otherwise not fully configured.</h4>
-    <p>Please "<a href="/lanes/${lane?.name}/edit">Edit this lane</a>" and complete its configuration.</p>
+  `;
+  const edit_lane = `<a href="/lanes/${$lane.name}/edit">Edit this lane</a>`;
+  const harbor_not_ready_text = `
+    ${harbor_not_ready_header}
+    <p>Please ${edit_lane} and complete its configuration.</p>
   `;
 
   if (not_found.get()) return not_found_text;
 
   if (this.$route.params.date) {
     shipment = Shipments.findOne({
-      lane: lane._id,
+      lane: $lane._id,
       start: this.$route.params.date,
     });
   }
@@ -84,16 +88,16 @@ const work_preview = function () {
     this.$route.params.date && shipment?.rendered_work_preview
   ) return shipment.rendered_work_preview;
 
-  if (lane && harbor?.lanes && !lane?.rendered_work_preview) {
+  if ($lane && harbor?.lanes && !$lane?.rendered_work_preview) {
     manifest = (
-      shipment?.manifest || 
-      harbor.lanes[lane._id]?.manifest
+      shipment?.manifest ||
+      harbor.lanes[$lane._id]?.manifest
       ) || false;
-      
-    
+
+
     H.call(
       'Harbors#render_work_preview',
-      lane,
+      $lane,
       manifest,
       function (err_preview, res_lane) {
         if (err_preview) throw err;
@@ -108,22 +112,22 @@ const work_preview = function () {
     );
   }
 
-  return lane.rendered_work_preview ? 
-    lane.rendered_work_preview : 
+  return lane.rendered_work_preview ?
+    lane.rendered_work_preview :
     harbor_not_ready_text
   ;
 };
 
 const has_work_output = function () {
-  let lane = get_lane(this.$route.params.slug);
+  let $lane = get_lane(this.$route.params.slug);
   let date = this.$route.params.date;
-  let shipment = Shipments.findOne({ lane: lane?._id, start: date });
-  let any_shipment = Shipments.findOne({ lane: lane?._id });
+  let shipment = Shipments.findOne({ lane: $lane?._id, start: date });
+  let any_shipment = Shipments.findOne({ lane: $lane?._id });
 
   if (
     shipment && (
-      Object.keys(shipment.stdout).length || 
-      Object.keys(shipment.stderr).length || 
+      Object.keys(shipment.stdout).length ||
+      Object.keys(shipment.stderr).length ||
       shipment.exit_code == 0
       ) ||
     any_shipment
@@ -135,16 +139,16 @@ const has_work_output = function () {
 };
 
 const work_output = function () {
-  let lane = get_lane(this.$route.params.slug);
+  let $lane = get_lane(this.$route.params.slug);
   let date = this.$route.params.date;
-  let shipment = lane.latest_shipment ? 
-    lane.latest_shipment :
-    Shipments.findOne({ 
-      lane: lane?._id, 
+  let shipment = $lane.latest_shipment ?
+    $lane.latest_shipment :
+    Shipments.findOne({
+      lane: $lane?._id,
       start: date,
     })
   ;
-  
+
   return shipment;
 };
 
@@ -164,8 +168,8 @@ const duration = function (shipment) {
 };
 
 const any_active = function () {
-  let lane = get_lane(this.$route.params.slug) || false;
-  let shipments = Shipments.find({ lane: lane._id, active: true });
+  let $lane = get_lane(this.$route.params.slug) || false;
+  let shipments = Shipments.find({ lane: $lane._id, active: true });
 
   if (shipments.count()) return true;
   return false;
@@ -182,7 +186,7 @@ const reset_shipment = function () {
 
 const reset_all_active = function () {
   const {slug} = this.$route.params;
-  
+
   H.call('Lanes#reset_all_active_shipments', slug, function (err, res) {
     if (err) throw err;
     console.log('Reset all active shipments response:', res);
@@ -190,42 +194,42 @@ const reset_all_active = function () {
 };
 
 const start_shipment = function () {
-  let { $router } = this;
+  let { $router, $data } = this;
   let working_lanes = Session.get('working_lanes') || {};
-  let lane = get_lane(this.$route.params.slug);
-  let harbor = Harbors.findOne(lane.type);
-  let manifest = harbor.lanes[lane._id].manifest;
+  let $lane = get_lane(this.$route.params.slug);
+  let harbor = Harbors.findOne($lane.type);
+  let manifest = harbor.lanes[$lane._id].manifest;
   let shipment_start_date = H.start_date();
   let shipment = Shipments.findOne({
     start: shipment_start_date,
-    lane: lane._id,
+    lane: $lane._id,
   });
 
-  working_lanes[lane._id] = true;
+  working_lanes[$lane._id] = true;
   Session.set('working_lanes', working_lanes);
   if (! shipment || ! shipment.active) {
-    console.log(`Starting shipment for lane: ${lane.name}`);
+    console.log(`Starting shipment for lane: ${$lane.name}`);
     H.call(
       'Lanes#start_shipment',
-      lane._id,
+      $lane._id,
       manifest,
       shipment_start_date,
       (err, res) => {
         if (err) throw err;
 
         working_lanes = Session.get('working_lanes');
-        working_lanes[lane._id] = false;
+        working_lanes[$lane._id] = false;
         Session.set('working_lanes', working_lanes);
-        console.log('Shipment started for lane:', lane.name);
-        $router.push(`/lanes/${lane.slug}/ship/${shipment_start_date}`);
-        this.$data.rerenders = this.$data.rerenders + 1;
+        console.log('Shipment started for lane:', $lane.name);
+        $router.push(`/lanes/${$lane.slug}/ship/${shipment_start_date}`);
+        $data.rerenders = this.$data.rerenders + 1;
 
         return res;
       }
     );
   }
 
-  return lane;
+  return $lane;
 };
 
 export {
@@ -238,11 +242,9 @@ export {
   any_active,
   reset_all_active,
   reset_shipment,
-  salvage_plan_name,
-  followup_name,
   has_work_output,
   work_output,
   duration,
   pretty_date,
   start_shipment,
-}
+};

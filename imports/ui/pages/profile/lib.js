@@ -5,7 +5,7 @@ const get_user_id = function (scope) {
   return scope.$route.params.user_id || H.user().emails[0].address;
 };
 
-const handle_change_from_webhook = function (event, lane) {
+const handle_change_from_webhook = function (event) {
   var lane_id = $(event.target).attr('data-lane-id');
   var user_id = get_user_id(this);
   let remove_token;
@@ -17,13 +17,13 @@ const handle_change_from_webhook = function (event, lane) {
   else {
     remove_token = true;
   }
-  
+
   H.call(
     'Lanes#update_webhook_token',
     lane_id, user_id, remove_token,
     function (err) {
     if (err) throw err;
-    render_lane_list()
+    render_lane_list();
   });
 };
 
@@ -63,7 +63,7 @@ const handle_change_is_harbormaster = function (event) {
 const user_email = function () {
   var user_id = get_user_id(this);
   var user = Users.findOne(user_id);
-  
+
   return user ? user._id : '';
 };
 
@@ -105,9 +105,9 @@ const can_ply = function (lane) {
 
   if (user && user.harbormaster) { return true; }
   if (lane.captains) {
-    let can_ply = _.contains(lane.captains, user_id);
+    const pliable = _.contains(lane.captains, user_id);
 
-    return can_ply;
+    return pliable;
   }
 
   return false;
@@ -141,7 +141,7 @@ const can_change_webhook = function () {
 
 const webhook_allowed = function (lane) {
   var user_id = get_user_id(this);
-  
+
   if (! lane?.tokens) { return false; }
 
   return _.find(lane.tokens, function (tokens) {
@@ -172,4 +172,4 @@ export {
   can_change_webhook,
   webhook_allowed,
   webhook_token,
-}
+};

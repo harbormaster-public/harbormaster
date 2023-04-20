@@ -1,4 +1,4 @@
 
 import NewHarbormaster from './new_harbormaster.vue';
 
-export default NewHarbormaster
+export default NewHarbormaster;

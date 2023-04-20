@@ -98,7 +98,9 @@ const lanes = function () {
       lane_list = Lanes.find({}, { sort: sort_by_total_salvage_runs });
       break;
     case 'state':
-      lane_list = Lanes.find({}, { sort: { 'last_shipment.exit_code': reverse } });
+      lane_list = Lanes.find(
+        {}, { sort: { 'last_shipment.exit_code': reverse } }
+      );
       break;
     case 'followup':
       lane_list = Lanes.find({}, { sort: { 'followup.name': reverse } });
@@ -110,7 +112,7 @@ const lanes = function () {
       lane_list = Lanes.find();
       break;
   }
-  
+
   return lane_list;
 };
 
@@ -153,8 +155,8 @@ const sort_by_header = function (event) {
   ;
   $(event.target).addClass('active');
 
-  if (sort_lane_table_reverse(sort_value)) { reverse_sort(event) }
-  else if (Session.get('lanes_table_sort_reverse')) { default_sort(event) }
+  if (sort_lane_table_reverse(sort_value)) { reverse_sort(event); }
+  else if (Session.get('lanes_table_sort_reverse')) { default_sort(event); }
 
   Session.set('lanes_table_sort_by', sort_value);
 };
@@ -173,7 +175,7 @@ const delete_lane = function (event, lane) {
 };
 
 const duplicate_lane = function (event, lane) {
-  const warn = `Duplicate this lane, and then edit the new lane?`
+  const warn = `Duplicate this lane, and then edit the new lane?`;
   const router = this.$router;
   if (!confirm(warn)) return;
   H.call('Lanes#duplicate', lane, (err, res) => {
@@ -214,10 +216,10 @@ const can_ply = function (lane) {
     let captain = _.find(lane.captains, function (email) {
       return email == H.user().emails[0].address;
     });
-    
+
     return captain ? true : false;
   }
-  
+
   if (lane?.tokens) {
     let token = _.find(_.invert(Object.keys(lane?.tokens)), function (email) {
       return email == H.user().emails[0].address;
@@ -233,7 +235,7 @@ const current_state = function (lane) {
   const text_na = 'N/A';
   const text_error = 'error';
   const text_ready = 'ready';
-  
+
   let active_shipments = Shipments.find({
     lane: lane._id,
     active: true,
@@ -244,7 +246,7 @@ const current_state = function (lane) {
 
   if (last_shipment?.exit_code) return text_error;
   if (last_shipment?.exit_code == 0) return text_ready;
-  
+
   return text_na;
 };
 
@@ -255,7 +257,7 @@ const followup_name = function (lane) {
 };
 
 const last_shipped = function (lane) {
-  
+
   let latest = LatestShipment.findOne(lane?._id).shipment;
   const actual = latest ? latest.actual : 'Loading...';
 
@@ -263,10 +265,10 @@ const last_shipped = function (lane) {
 };
 
 const latest_shipment = function (lane) {
-  
+
   let latest = LatestShipment.findOne(lane?._id)?.shipment;
   const start = latest ? latest.start : '';
-  
+
   return start;
 };
 
@@ -312,4 +314,4 @@ export {
   lane_ids,
   empty,
   lanes,
-}
+};

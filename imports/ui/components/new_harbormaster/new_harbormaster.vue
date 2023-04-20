@@ -2,8 +2,10 @@
   <div>
     <h1 class="text-5xl my-2">It's your Harbor!</h1>
     <h2 class="text-2xl my-2 px-2">It doesn't look like there are any Harbormasters yet.</h2>
-    <p>You'll be made the first Harbormaster.  You can change this, and add other Harbormasters, in the <router-link id="new-harbormaster-users-link" class="py-1 rounded-sm" v-on:click.prevent="onClick" to="/users">Users</router-link> settings.</p>
-    <button v-on:click.prevent="onClick" class="block rounded-2 my-4 acknowledge-new-harbormaster">Okay!</button>
+    <p>You'll be made the first Harbormaster. You can change this, and add other Harbormasters, in the <router-link
+        id="new-harbormaster-users-link" class="py-1 rounded-sm" v-on:click.prevent="on_click"
+        to="/users">Users</router-link> settings.</p>
+    <button v-on:click.prevent="on_click" class="block rounded-2 my-4 acknowledge-new-harbormaster">Okay!</button>
   </div>
 </template>
 
@@ -12,7 +14,7 @@ import { Users } from '../../../api/users';
 
 export default {
   methods: {
-    onClick () {
+    on_click() {
       var user_id = Meteor.user().emails[0].address;
       var user = Users.findOne(user_id);
 

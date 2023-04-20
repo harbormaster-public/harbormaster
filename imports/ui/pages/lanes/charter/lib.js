@@ -100,7 +100,7 @@ const assign_salvage = function (plan, target, parent_id, nodes, links) {
 const assign_children = (target, parent_id, nodes, links) => {
   let followup = Lanes.findOne(target.followup?._id);
   let plan = Lanes.findOne(target.salvage_plan?._id);
-  
+
   assign_followup(followup, target, parent_id, nodes, links);
 
   assign_salvage(plan, target, parent_id, nodes, links);
@@ -116,25 +116,25 @@ const assign_children = (target, parent_id, nodes, links) => {
 };
 
 const build_graph = function () {
-  let lane = get_lane(this.$route.params.slug);
+  let $lane = get_lane(this.$route.params.slug);
   let nodes = [];
   let links = [];
 
-  if (!lane) return false;
+  if (!$lane) return false;
 
-  lane.children = [];
-  lane.role = ROOT;
-  let last_shipment = Shipments.findOne({ lane: lane._id });
+  $lane.children = [];
+  $lane.role = ROOT;
+  let last_shipment = Shipments.findOne({ lane: $lane._id });
   let color = ROOT_COLOR;
   if (last_shipment && last_shipment.exit_code) color = FAIL_COLOR;
   else if (last_shipment && last_shipment.exit_code == 0) color = SUCCESS_COLOR;
 
   root_node.set({
-    id: lane._id,
-    name: lane.name,
+    id: $lane._id,
+    name: $lane.name,
     _color: color,
-    _cssClass: lane._id,
-    lane: lane,
+    _cssClass: $lane._id,
+    lane: $lane,
     _svgAttrs: {
       stroke: ROOT_COLOR,
       "stroke-width": STROKE_WIDTH,
@@ -143,24 +143,24 @@ const build_graph = function () {
   });
   nodes.push(root_node.get());
 
-  assign_children(lane, false, nodes, links);
+  assign_children($lane, false, nodes, links);
 
   node_list.set(nodes);
   link_list.set(links);
-  
+
   return node_list.get();
 };
 
 const lane = function () {
-  let lane = get_lane(this.$route.params.slug);
+  let $lane = get_lane(this.$route.params.slug);
 
-  return lane ? lane : {};
+  return $lane ? $lane : {};
 };
 
-handle_link_click = function (event, link) {
-  const { lane } = link.target;
-  let start = lane.shipment ? `/ship/${lane.shipment.start}` : "/charter";
-  let url = `/lanes/${lane.slug}${start}`;
+const handle_link_click = function (event, link) {
+  const { $lane } = link.target;
+  let start = $lane.shipment ? `/ship/${$lane.shipment.start}` : "/charter";
+  let url = `/lanes/${$lane.slug}${start}`;
 
   if (this.$route.path != url) this.$router.push(url);
   else console.log("Avoiding redundant navigation.");
@@ -200,4 +200,4 @@ export {
   handle_link_click,
   node_list,
   link_list,
-}
+};

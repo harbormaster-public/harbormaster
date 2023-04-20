@@ -1,4 +1,4 @@
-import Layout from './layout.vue';
+import Main from './layout.vue';
 
-export default Layout;
+export default Main;
 

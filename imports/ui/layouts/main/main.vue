@@ -1,5 +1,5 @@
 <template>
-  <div id=layout class="min-h-screen">
+  <div id=main class="min-h-screen">
     <div v-if="is_loaded()">
       <div v-if="no_users" class="p-5">
         <add-user v-bind:fresh="true"></add-user>
@@ -78,8 +78,7 @@ export default {
 </script>
 
 <style>
-
-#layout {
+#main {
   background-color: #333;
 }
 
@@ -112,21 +111,19 @@ html body a:hover {
   border-bottom: 1px dotted #ffae00;
 }
 
-@media all 
-  and (min-device-width: 280px)
-  and (max-device-width: 800px) {
-    html {
-      width: 100%;
-      min-width: fit-content;
-    }
-
-    #router-view {
-      max-width: 100%;
-    }
-
-    html body a,
-    html body a:visited {
-      border-bottom: 5px dotted #0af;
-    }
+@media all and (min-device-width: 280px) and (max-device-width: 800px) {
+  html {
+    width: 100%;
+    min-width: fit-content;
   }
+
+  #router-view {
+    max-width: 100%;
+  }
+
+  html body a,
+  html body a:visited {
+    border-bottom: 5px dotted #0af;
+  }
+}
 </style>

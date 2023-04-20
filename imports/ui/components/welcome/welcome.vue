@@ -4,9 +4,9 @@
     <h2 class="text-5xl my-5 px-2">Please log in.</h2>
     <form @submit.prevent class="login-form">
       <div v-if="!this.reset && !reset_token()">
-      <label class="px-2 text-4xl">Email:
-        <input class="my-2" v-model=email type=email required placeholder=you@example.com>
-      </label>
+        <label class="px-2 text-4xl">Email:
+          <input class="my-2" v-model=email type=email required placeholder=you@example.com>
+        </label>
         <label class="px-2 text-4xl">Password:
           <input class="my-2" v-model=password type=password required>
         </label>
@@ -36,7 +36,7 @@ Accounts.onResetPasswordLink(function (token, done) {
 });
 
 export default {
-  data () {
+  data() {
     return {
       email: '',
       password: '',
@@ -45,7 +45,7 @@ export default {
   },
 
   methods: {
-    password_login: function () {
+    password_login() {
       const { email, password } = this;
       H.loginWithPassword(email, password, err => {
         if (err?.error == 403) {
@@ -57,23 +57,23 @@ export default {
       });
     },
 
-    password_reset: function () {
+    password_reset() {
       const { email } = this;
       const no_email_alert = 'An email must be provided for a password reset';
       if (!email) return alert(no_email_alert);
       this.reset = true;
-      H.call('Users#reset_password', email, err => {if (err) throw err});
+      H.call('Users#reset_password', email, err => { if (err) throw err });
     },
 
-    reset_token: function () {
+    reset_token() {
       return Session.get('password_reset_token');
     },
 
-    set_new_password: function () {
+    set_new_password() {
       Accounts.resetPassword(
         Session.get('password_reset_token'),
         this.password,
-        err => {if (err) throw err},
+        err => { if (err) throw err },
       );
       Session.set('password_reset_token', null);
       this.reset = false;
