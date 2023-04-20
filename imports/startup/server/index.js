@@ -1,4 +1,4 @@
-import H from '../config/namespace'; // Loads into global namespace
+import '../config/namespace';
 import './userland';
 import './harbors';
 import './accounts';

@@ -1,11 +1,10 @@
-import { chai } from 'meteor/practicalmeteor:chai';
 import Shipments from '.';
+import chai from 'chai';
+const expect = chai.expect;
 
-var should = chai.should();
-
-describe('Shipments', function () {
+describe('Shipments collection', function () {
   it('should exist', function () {
 
-    should.exist(Shipments);
+    expect(Shipments).to.exist;
   });
 });

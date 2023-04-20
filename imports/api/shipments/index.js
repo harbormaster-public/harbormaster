@@ -7,4 +7,4 @@ class LatestShipmentCollection extends Mongo.Collection { }
 
 const LatestShipment = new LatestShipmentCollection('LatestShipment');
 
-export { Shipments, LatestShipment, };
+export { Shipments, LatestShipment };

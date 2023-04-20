@@ -1,15 +1,15 @@
-import { resetDatabase } from 'meteor/xolvio:cleaner';
+import { resetDatabase } from 'cleaner';
 import faker from 'faker';
 import '.';
 import { Lanes } from '..';
 
 var test_lane_id = faker.random.uuid();
-var test_start_date = faker.date.recent();
+// var test_start_date = faker.date.recent();
 var test_destinations = [];
 
 Factory.define('lane', Lanes, {
   _id: test_lane_id,
-  destinations: test_destinations
+  destinations: test_destinations,
 });
 
 describe('Lanes', function () {
@@ -23,7 +23,7 @@ describe('Lanes', function () {
   });
 
   describe('#get_increment', () => {
-    it('increments a given lane by 1 based on slug')
+    it('increments a given lane by 1 based on slug');
   });
 
   describe('publication', () => {
@@ -63,7 +63,7 @@ describe('Lanes', function () {
   describe('#reset_shipment', () => {
     it('sets a given shipment to inactive with exit code 1');
     it("updates the LatestShipment collection and Lane's last shipment");
-  })
+  });
 
   describe('#reset_all_Active_shipments', () => {
     it("sets all active shipments for a lane to false with exit code 1");

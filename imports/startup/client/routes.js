@@ -2,13 +2,14 @@ import Vue from 'vue';
 import VueRouter from 'vue-router';
 import VueMeteorTracker from 'vue-meteor-tracker';
 
-import Layout from '../../ui/layouts/main';
-import { 
-  Constraints,
-  is_valid_constraint,
-  add_rel,
-  add_script,
-} from '../../ui/layouts/main/lib';
+import Main from '../../ui/layouts/main';
+// TODO: Not yet sure if this applies here
+// import {
+//   Constraints,
+//   is_valid_constraint,
+//   add_rel,
+//   add_script,
+// } from '../../ui/layouts/main/lib';
 
 import '../../ui/components/welcome';
 import '../../ui/components/new_harbormaster';
@@ -88,7 +89,7 @@ const router = new VueRouter({
 
 Meteor.startup(() => {
   Vue.use(VueMeteorTracker);
-  new Vue({ router, render: (h) => h(Layout) }).$mount('#app');
+  new Vue({ router, render: (h) => h(Main) }).$mount('#app');
 });
 
 export default router;

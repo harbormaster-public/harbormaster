@@ -11,13 +11,13 @@ let post_hooks = Picker.filter(function (req) {
   return req.method == 'POST';
 });
 
-const respondNotAllowed = (res) => {
+export const respond_not_allowed = (res) => {
   console.log('Request not allowed.  Responding with 401.');
   res.statusCode = 401;
   return res.end();
 };
 
-const setCorsHeaders = (res) => {
+export const set_cors_headers = (res) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader('Access-Control-Allow-Methods', 'GET,HEAD,OPTIONS,POST,PUT');
   res.setHeader(
@@ -28,14 +28,13 @@ const setCorsHeaders = (res) => {
   return res;
 };
 
-// eslint-disable-next-line
 WebApp.rawConnectHandlers.use(function (req, res, next) {
-  setCorsHeaders(res);
+  set_cors_headers(res);
 
   return next();
 });
 
-post_hooks.route('/lanes/:slug/ship', async function (params, req, res) {
+export const route_lane_ship_rpc = async function (params, req, res) {
 
   let results;
   let query = require('url').parse(req.url, true).query;
@@ -44,26 +43,26 @@ post_hooks.route('/lanes/:slug/ship', async function (params, req, res) {
   let token = query ? query.token : false;
 
   let lane = get_lane(lane_name);
-  if (! lane) return respondNotAllowed(res);
+  if (!lane) return respond_not_allowed(res);
 
   let harbor = Harbors.findOne(lane.type);
   let manifest = harbor.lanes[lane._id].manifest;
   let shipment_start_date = H.start_date();
   let shipment = Shipments.findOne({
     start: shipment_start_date,
-    lane: lane._id
+    lane: lane._id,
   });
   let prior_manifest = req.body;
 
-  setCorsHeaders(res);
+  set_cors_headers(res);
 
   if (
-    ! user_id ||
-    ! token ||
-    ! lane.tokens ||
+    !user_id ||
+    !token ||
+    !lane.tokens ||
     lane.tokens[token] != user_id
   ) {
-    return respondNotAllowed(res);
+    return respond_not_allowed(res);
   }
 
   console.log('Shipping via RPC to lane:', lane.name, 'with user:', user_id);
@@ -81,10 +80,10 @@ post_hooks.route('/lanes/:slug/ship', async function (params, req, res) {
     res.statusCode = 303;
     return res.end(
       req.headers.host +
-        '/lanes/' +
-        encodeURI(lane_name) +
-        '/ship/' +
-        shipment.start
+      '/lanes/' +
+      encodeURI(lane_name) +
+      '/ship/' +
+      shipment.start
     );
 
   }
@@ -100,4 +99,6 @@ post_hooks.route('/lanes/:slug/ship', async function (params, req, res) {
   res.setHeader("Content-Type", "application/json");
   return res.end(JSON.stringify(results));
 
-});
+};
+
+post_hooks.route('/lanes/:slug/ship', route_lane_ship_rpc);

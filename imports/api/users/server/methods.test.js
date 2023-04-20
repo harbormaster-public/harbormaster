@@ -1,42 +1,58 @@
-import { resetDatabase } from 'meteor/xolvio:cleaner';
-import faker from 'faker';
-import '.';
-import { Users } from '..';
-import { Meteor } from 'meteor/meteor';
+import { resetDatabase } from "cleaner";
+import faker from "faker";
+import ".";
+import { Users } from "..";
+import chai from "chai";
+// import { "Users#invite_user" as invite_user } from './methods';
 
+const { expect } = chai;
 const test_email = faker.internet.email();
 
-Factory.define('user', Users, {
-  _id: test_email
+Factory.define("user", Users, {
+  _id: test_email,
 });
 
-describe('Users#invite_user', function () {
+describe("Users#invite_user", function () {
   beforeEach(function () {
-    resetDatabase();
+    resetDatabase(null);
   });
 
-  it('should create a new User and Account', function () {
-    var invited_user = Meteor.call('Users#invite_user', test_email);
+  it("creates a new User and Account", function () {
+    var invited_user = H.call("Users#invite_user", test_email);
     var user = Users.findOne(test_email);
-    var account = Meteor.users.findOne({ _id: invited_user._id });
+    var account = H.users.findOne({ _id: invited_user._id });
 
-    user._id.should.equal(test_email);
-    account._id.should.equal(invited_user._id);
-    account.emails[0].address.should.equal(test_email);
+    expect(user._id).to.equal(test_email);
+    expect(account._id).to.equal(invited_user._id);
+    expect(account.emails[0].address).to.equal(test_email);
   });
 
-  it('should return the user account if it already exists', function () {
-    var user = Factory.create('user');
-    var invited_user = Meteor.call('Users#invite_user', test_email);
+  it("returns the user account if it already exists", function () {
+    var user = Factory.create("user");
+    var invited_user = H.call("Users#invite_user", test_email);
     var existing_user = Users.findOne(user._id);
 
-    invited_user._id.should.equal(user._id);
-    existing_user._id.should.equal(user._id);
+    expect(invited_user._id).to.equal(user._id);
+    expect(existing_user._id).to.equal(user._id);
   });
 
-  it('should return false if no email is passed', function () {
-    let results = Meteor.call('Users#invite_user');
+  it("returns false if no email is passed", function () {
+    let results = H.call("Users#invite_user");
 
-    results.should.be.false;
+    expect(results).to.be.false;
   });
+});
+
+describe("Users#expire_user", () => {
+  it("expires the password associated with the email given");
+  it("returns the email of the account associated with the expiry");
+  it("sets the user to expired status");
+});
+
+describe("Users#update", () => {
+  it("updates a user by looking up their email");
+});
+
+describe("Users#reset_password", () => {
+  it("returns the email of the account reset");
 });

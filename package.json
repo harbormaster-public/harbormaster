@@ -1,6 +1,6 @@
 {
   "name": "harbormaster",
-  "version": "1.23.0",
+  "version": "1.23.1",
   "private": true,
   "scripts": {
     "test": "BROWSERSLIST_IGNORE_OLD_DATA=1 NODE_OPTIONS='--trace-warnings' ROOT_URL='' MONGO_URL='' NO_HMR=1 meteor test --port=4040 --once --driver-package meteortesting:mocha",
