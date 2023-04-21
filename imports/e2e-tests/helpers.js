@@ -1,11 +1,11 @@
 import {Users} from '../../imports/api/users';
-import {cwd} from 'process';
 import { Accounts } from 'meteor/accounts-base';
 import {
   page,
 } from 'meteor/universe:e2e';
 
 export * from 'meteor/universe:e2e';
+export {expect} from 'chai';
 import $H from '../startup/config/namespace';
 
 export const H = $H;
@@ -18,7 +18,7 @@ export const reset_users = Meteor.bindEnvironment(async () => {
 });
 
 export const create_test_user = Meteor.bindEnvironment(async (
-    email, 
+    email,
     password,
     should_log,
   ) => {
@@ -31,7 +31,7 @@ export const create_test_user = Meteor.bindEnvironment(async (
   return this;
 });
 
-export async function test_user_login(email, password, log = false) {
+export const test_user_login = async function (email, password, log = false) {
   await page.type('.login-form input[type="email"]', email);
   await page.type('.login-form input[type="password"]', password);
   await page.click('button.sign-in');
@@ -39,25 +39,35 @@ export async function test_user_login(email, password, log = false) {
   try {
     await page.click('.acknowledge-new-harbormaster');
     if (log) console.log('New Harbormaster page acknowledged during login.');
-  } catch (e) {
+  }
+ catch (e) {
     if (log) console.log('Existing Harbormasters detected.');
-  } finally {
+  }
+ finally {
     if (log) console.log(`Logged in with credentials:\n${email}\n${password}`);
   }
-}
+};
 
-export async function screenshot(filename, title) {
+export const screenshot = async function (filename, title) {
   const type = 'png';
   const encoding = 'binary';
-  const path = `${cwd()}/${filename}.${type}`;
+  const path = `${process.env.HOME}/screenshot-${filename}.${type}`;
   const fail_string = title ? `Test "${title}" failed.  ` : '';
   await page.screenshot({
     path,
     type,
-    encoding
+    encoding,
   });
-  
+
   console.log(`${fail_string}Saving screenshot:\n${path}`);
 
   return path;
-}
+};
+
+export const wait_for_selector = async (selector) => {
+  const opts = {
+    visible: true,
+    timeout: 5000,
+  };
+  return await page.waitForSelector(selector, opts);
+};

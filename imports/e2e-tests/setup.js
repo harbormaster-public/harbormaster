@@ -1,18 +1,18 @@
 import {setup} from 'meteor/universe:e2e';
 
-function maybe_run_headless () {
+const maybe_run_headless = function () {
   let should_be = process.env.HEADLESS || true;
-  
+
   if (
     should_be === 0 ||
     should_be === '0' ||
     should_be === false ||
     should_be === 'false'
     ) should_be = false;
-    
+
   console.log(`Should run in headless mode? ${should_be}`);
   return should_be;
-}
+};
 
 const width = 1024;
 const height = 768;
@@ -32,8 +32,8 @@ setup({
       headless: maybe_run_headless(),
       // ms to delay everything, 100 -> slow, 1000 -> very slow
       // Empirically, less than 50ms risks running too fast for the browser
-      // Default is 10
-      slowMo: 200,
+      // Default is 10, 50 works well for UI debugging, 200 for headless CI
+      slowMo: maybe_run_headless() ? 200 : 50,
       devtools: false,
       dumpio: false,
       handleSIGHUP: true,
@@ -74,8 +74,8 @@ setup({
         '--enable-features=NetworkService,NetworkServiceInProcess',
         '--force-color-profile=srgb',
         '--metrics-recording-only',
-        '--mute-audio'
-      ]
-    }
-  }
+        '--mute-audio',
+      ],
+    },
+  },
 }).catch(console.error);

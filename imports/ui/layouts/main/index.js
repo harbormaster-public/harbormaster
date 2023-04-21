@@ -1,4 +1,4 @@
-import Main from './layout.vue';
+import Main from './main.vue';
 
 export default Main;
 

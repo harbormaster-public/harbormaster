@@ -54,9 +54,6 @@ meteor-base@1.5.1
 meteorhacks:inject-initial@1.0.5
 meteorhacks:picker@1.0.3
 meteorhacks:zones@1.6.0
-meteortesting:browser-tests@1.4.2
-meteortesting:mocha@2.1.0
-meteortesting:mocha-core@8.0.1
 minifier-js@2.7.5
 minimongo@1.9.2
 mobile-experience@1.1.0
