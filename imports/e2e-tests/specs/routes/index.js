@@ -44,11 +44,11 @@ describe('Routes', function () {
       process.exitCode = 1;
     }
   });
-  
+
   beforeEach(async function () {
     await page.goto(H.absoluteUrl());
     let header = await page.waitForSelector('h1');
-    
+
     expect(header).to.exist.and.be.visible;
   });
 
@@ -59,8 +59,8 @@ describe('Routes', function () {
     });
 
     it('show the Welcome Page', async function () {
-      const add_user_page = await page.$('#add-user-page')
-      const new_instance_form = await page.$('#new-instance')
+      const add_user_page = await page.$('#add-user-page');
+      const new_instance_form = await page.$('#new-instance');
 
       expect([add_user_page, new_instance_form]).to.exist.and.be.visible;
     });
@@ -99,7 +99,7 @@ describe('Routes', function () {
 
       expect(instructions).to.exist.and.be.visible;
     });
-  })
+  });
 
   describe('for logged in users', () => {
     const lanes_route = 'lanes';
@@ -201,7 +201,7 @@ describe('Routes', function () {
       expect(users_list).to.exist.and.be.visible;
       expect(users_list.length);
     });
-    
+
     it('allow inviting a new User', async () => {
       await page.goto(users_url);
       await page.click('.invite-user');
@@ -217,7 +217,7 @@ describe('Routes', function () {
       const users_page = page.$('#users-page');
       expect(users_page).to.exist.and.be.visible;
       expect(await page.$('#add-user-page')).to.not.exist;
-      
+
       expect(page.url()).to.eq(users_url);
     });
 
