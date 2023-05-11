@@ -3,16 +3,16 @@ import { Users } from '../../../api/users';
 import { Shipments } from '../../../api/shipments';
 import { LatestShipment } from '../../../api/shipments';
 
-let lane_ids = new ReactiveVar([]);
+let lane_ids = new H.ReactiveVar([]);
 
 const empty = function () {
   return (
-    Session.get('total_lanes') === 0 && ! Lanes.find().count()
+    H.Session.get('total_lanes') === 0 && ! Lanes.find().count()
   );
 };
 
 const sort_by_shipped_date = function (lane1, lane2) {
-  let reverse = Session.get('lanes_table_sort_reverse') ? -1 : 1;
+  let reverse = H.Session.get('lanes_table_sort_reverse') ? -1 : 1;
   let lane1_shipments = Shipments.find({ lane: lane1._id }).fetch();
   let lane2_shipments = Shipments.find({ lane: lane2._id }).fetch();
 
@@ -34,7 +34,7 @@ const sort_by_shipped_date = function (lane1, lane2) {
 };
 
 const sort_by_total_shipments = function (lane1, lane2) {
-  let reverse = Session.get('lanes_table_sort_reverse') ? -1 : 1;
+  let reverse = H.Session.get('lanes_table_sort_reverse') ? -1 : 1;
   let lane1_shipments = Shipments.find({ lane: lane1._id }).fetch();
   let lane2_shipments = Shipments.find({ lane: lane2._id }).fetch();
   let sort_order = 0;
@@ -51,7 +51,7 @@ const sort_by_total_shipments = function (lane1, lane2) {
 };
 
 const sort_by_total_salvage_runs = function (lane1, lane2) {
-  let reverse = Session.get('lanes_table_sort_reverse') ? -1 : 1;
+  let reverse = H.Session.get('lanes_table_sort_reverse') ? -1 : 1;
   let lane1_shipments = Shipments.find({
     lane: lane1._id,
     exit_code: { $ne: 0 },
@@ -75,8 +75,8 @@ const sort_by_total_salvage_runs = function (lane1, lane2) {
 
 const lanes = function () {
   let lane_list;
-  let sort_by = Session.get('lanes_table_sort_by');
-  let reverse = Session.get('lanes_table_sort_reverse') ? -1 : 1;
+  let sort_by = H.Session.get('lanes_table_sort_by');
+  let reverse = H.Session.get('lanes_table_sort_reverse') ? -1 : 1;
 
   switch (sort_by) {
     case 'name':
@@ -117,7 +117,7 @@ const lanes = function () {
 };
 
 const loading_lanes = function () {
-  let total = Session.get('total_lanes');
+  let total = H.Session.get('total_lanes');
   let current = Lanes.find().count();
 
   if (total !== 0 && ! total || current < total) return true;
@@ -127,20 +127,20 @@ const loading_lanes = function () {
 
 const sort_lane_table_reverse = function (sort_value) {
   return (
-    sort_value == Session.get('lanes_table_sort_by') &&
-    !Session.get('lanes_table_sort_reverse')
+    sort_value == H.Session.get('lanes_table_sort_by') &&
+    !H.Session.get('lanes_table_sort_reverse')
   );
 };
 
 const reverse_sort = function (event) {
-  Session.set('lanes_table_sort_reverse', true);
+  H.Session.set('lanes_table_sort_reverse', true);
   $(event.target).addClass('reverse');
 
   return event;
 };
 
 const default_sort = function (event) {
-  Session.set('lanes_table_sort_reverse', false);
+  H.Session.set('lanes_table_sort_reverse', false);
   $(event.target).removeClass('reverse');
 
   return event;
@@ -156,9 +156,9 @@ const sort_by_header = function (event) {
   $(event.target).addClass('active');
 
   if (sort_lane_table_reverse(sort_value)) { reverse_sort(event); }
-  else if (Session.get('lanes_table_sort_reverse')) { default_sort(event); }
+  else if (H.Session.get('lanes_table_sort_reverse')) { default_sort(event); }
 
-  Session.set('lanes_table_sort_by', sort_value);
+  H.Session.set('lanes_table_sort_by', sort_value);
 };
 
 const delete_lane = function (event, lane) {
@@ -169,7 +169,7 @@ const delete_lane = function (event, lane) {
     $row.addClass('deleting');
     H.call('Lanes#delete', lane, (err, res) => {
       if (err) throw err;
-      Session.set('total_lanes', res);
+      H.Session.set('total_lanes', res);
     });
   }
 };
@@ -195,11 +195,11 @@ const ready = function () {
 const active = function (header) {
   let active_string = '';
 
-  if (header == Session.get('lanes_table_sort_by')) {
+  if (header == H.Session.get('lanes_table_sort_by')) {
     active_string += 'active';
   }
 
-  if (Session.get('lanes_table_sort_reverse')) {
+  if (H.Session.get('lanes_table_sort_reverse')) {
     active_string += ' reverse';
   }
 

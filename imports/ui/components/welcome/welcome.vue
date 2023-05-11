@@ -32,7 +32,7 @@
 import { Accounts } from 'meteor/accounts-base';
 
 Accounts.onResetPasswordLink(function (token, done) {
-  Session.set('password_reset_token', token);
+  H.Session.set('password_reset_token', token);
 });
 
 export default {
@@ -66,16 +66,16 @@ export default {
     },
 
     reset_token() {
-      return Session.get('password_reset_token');
+      return H.Session.get('password_reset_token');
     },
 
     set_new_password() {
       Accounts.resetPassword(
-        Session.get('password_reset_token'),
+        H.Session.get('password_reset_token'),
         this.password,
         err => { if (err) throw err },
       );
-      Session.set('password_reset_token', null);
+      H.Session.set('password_reset_token', null);
       this.reset = false;
     },
   }

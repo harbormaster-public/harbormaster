@@ -18,14 +18,12 @@ const get_lane = (string) => {
   if (string) lane = Lanes.findOne({
     $or: [{ name: string }, { slug: string }],
   });
-  if (!lane) lane = Session.get('lane');
+  if (!lane) lane = H.Session.get('lane');
   if (lane && (
     lane.name == string || lane.slug == string || lane._id == string
   )) return lane;
   if (lane && !string) return lane;
   return {};
-  // if (lane && string && lane.name != string && lane.slug != string) return {};
-  // return lane ? lane : {};
 };
 
 export { count, history, get_lane };

@@ -8,7 +8,6 @@ import { Shipments } from '../../../../api/shipments';
 import chai from 'chai';
 import faker from 'faker';
 import _ from 'lodash';
-import { Session } from 'meteor/session';
 const { expect } = chai;
 
 describe('pages/lanes/lib/util', function () {
@@ -90,30 +89,28 @@ describe('pages/lanes/lib/util', function () {
   describe('#get_lane', function () {
     let test_session_lane_id;
 
-    if (H.isClient) {
-      before(() => {
-        test_session_lane_id = faker.random.uuid();
-        Session.set('lane', {
-          _id: test_session_lane_id,
-        });
+    before(() => {
+      test_session_lane_id = faker.random.uuid();
+      H.Session.set('lane', {
+        _id: test_session_lane_id,
       });
+    });
 
-      it('returns a lane by client Session with id', () => {
-        const test_lane_by_session = get_lane(test_session_lane_id);
-        expect(test_lane_by_session._id).to.eq(test_session_lane_id);
-      });
+    it('returns a lane by client Session with id', () => {
+      const test_lane_by_session = get_lane(test_session_lane_id);
+      expect(test_lane_by_session._id).to.eq(test_session_lane_id);
+    });
 
-      it('returns a lane by client Session without id', () => {
-        const test_lane_no_arg = get_lane();
-        expect(test_lane_no_arg._id).to.eq(test_session_lane_id);
-      });
+    it('returns a lane by client Session without id', () => {
+      const test_lane_no_arg = get_lane();
+      expect(test_lane_no_arg._id).to.eq(test_session_lane_id);
+    });
 
-      it('returns an empty object if no lane is found', () => {
-        const test_not_found_lane_id = 'non-existant';
-        const test_non_existant_lane = get_lane(test_not_found_lane_id);
-        expect(_.isEmpty(test_non_existant_lane)).to.eq(true);
-      });
-    }
+    it('returns an empty object if no lane is found', () => {
+      const test_not_found_lane_id = 'non-existant';
+      const test_non_existant_lane = get_lane(test_not_found_lane_id);
+      expect(_.isEmpty(test_non_existant_lane)).to.eq(true);
+    });
 
     it('returns a lane by name', () => {
       const test_lane_by_name = get_lane('One Shipment');

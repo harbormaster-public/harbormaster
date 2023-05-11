@@ -1,8 +1,7 @@
-import { ReactiveVar } from "meteor/reactive-var";
 import { Harbors } from "../../../api/harbors";
 import { Users } from '../../../api/users';
 
-let Constraints = new ReactiveVar({
+let Constraints = new H.ReactiveVar({
   global: [],
   root: [],
   edit_lane: [],

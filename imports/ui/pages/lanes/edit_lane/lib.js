@@ -1,18 +1,15 @@
-import { ReactiveVar } from 'meteor/reactive-var';
-
 import { Lanes } from '../../../../api/lanes';
 import { Users } from '../../../../api/users';
-import { Session } from 'meteor/session';
 import { Harbors } from '../../../../api/harbors';
 import { count, history, get_lane } from '../lib/util';
 
-const not_found = new ReactiveVar(false);
+const not_found = new H.ReactiveVar(false);
 
 const update_harbor = function () {
   // Capture the user form values from component-agnostic rendering
   let inputs = $('.harbor').find('input, textarea');
   let values = {};
-  let $lane = Session.get('lane');
+  let $lane = H.Session.get('lane');
   const {refresh_harbor} = this;
 
   _.each(inputs, function (element) {
@@ -36,18 +33,18 @@ const update_harbor = function () {
     $lane,
     values,
     function update_harbor_method (err, res) {
-      let validating_fields = Session.get('validating_fields');
+      let validating_fields = H.Session.get('validating_fields');
       if (err) throw err;
 
       if (! res.success && validating_fields) alert('Invalid values.');
 
-      Session.set({
+      H.Session.set({
         lane: res.lane,
         validating_fields: false,
       });
       refresh_harbor();
 
-      return Session.get('lane');
+      return H.Session.get('lane');
     }
   );
 };
@@ -57,17 +54,17 @@ const update_lane = ($lane) => {
     if (err) throw err;
     console.log(`Lane "${$lane.name}" updated: ${res}`);
 
-    Session.set('lane', $lane);
+    H.Session.set('lane', $lane);
     return res;
   });
 };
 
 const change_lane_name = function (event) {
-  let $lane = Session.get('lane') || {};
+  let $lane = H.Session.get('lane') || {};
   $lane.name = event.target.value;
 
   if (Lanes.findOne($lane._id)) update_lane($lane);
-  Session.set('lane', $lane);
+  H.Session.set('lane', $lane);
   const new_path = '/lanes/' + $lane.name + '/edit';
 
   if (new_path != this.$route.path) this.$router.push(
@@ -146,7 +143,7 @@ const no_followup = function () {
 
   return Lanes.find().count() < 2 ||
     $lane && $lane.followup ||
-    Session.get('choose_followup') ||
+    H.Session.get('choose_followup') ||
     false;
 };
 
@@ -155,20 +152,20 @@ const no_salvage = function () {
 
   return Lanes.find().count() < 2 ||
     $lane && $lane.salvage_plan ||
-    Session.get('choose_salvage_plan') ||
+    H.Session.get('choose_salvage_plan') ||
     false;
 };
 
 const choose_followup = function () {
   let $lane = get_lane(this.$route.params.slug);
 
-  return Session.get('choose_followup') || $lane && $lane.followup;
+  return H.Session.get('choose_followup') || $lane && $lane.followup;
 };
 
 const choose_salvage_plan = function () {
   let $lane = get_lane(this.$route.params.slug);
 
-  return Session.get('choose_salvage_plan') || $lane && $lane.salvage_plan;
+  return H.Session.get('choose_salvage_plan') || $lane && $lane.salvage_plan;
 };
 
 const can_ply = function (user, $lane) {
@@ -180,7 +177,7 @@ const can_ply = function (user, $lane) {
 };
 
 const captain_list = function () {
-  const $lane = Session.get('lane') || {};
+  const $lane = H.Session.get('lane') || {};
   const users = Users.find({expired: {$not: {$exists: true}}}).fetch();
   const you = Users.findOne(H.userId);
   const captains = users.map(user => ({
@@ -193,7 +190,7 @@ const captain_list = function () {
 };
 
 const plying = function () {
-  var $lane = Session.get('lane');
+  var $lane = H.Session.get('lane');
   var user = Users.findOne(Meteor.user().emails[0].address);
 
   if (user && user.harbormaster) { return true; }
@@ -217,14 +214,14 @@ const harbors = function () {
 
 const current_lane = function () {
   let name = this.$route.params.slug;
-  let $lane = Session.get('lane') || get_lane(name);
+  let $lane = H.Session.get('lane') || get_lane(name);
 
   return $lane || { type: false };
 };
 
 const lane_type = function () {
   let name = this.$route.params.slug;
-  let $lane = Session.get('lane') || get_lane(name);
+  let $lane = H.Session.get('lane') || get_lane(name);
 
   return $lane && $lane.type;
 };
@@ -239,7 +236,7 @@ const render_harbor = function () {
   `;
   const loading_text = 'Loading...';
   let name = this.$route.params.slug;
-  let $lane = get_lane(name) || Session.get('lane');
+  let $lane = get_lane(name) || H.Session.get('lane');
   if (!$lane) return false;
   let harbor = $lane.type ? Harbors.findOne($lane.type) : {};
   let harbor_lane_reference = harbor?.lanes ?
@@ -259,7 +256,7 @@ const render_harbor = function () {
       if (err) throw err;
       if (active_lane == 404) return not_found.set(true);
 
-      if (active_lane) return Session.set('lane', active_lane);
+      if (active_lane) return H.Session.set('lane', active_lane);
       return false;
   });
 
@@ -295,7 +292,7 @@ const chosen_salvage_plan = function (salvage_lane) {
 };
 
 const submit_form = function () {
-  let $lane = get_lane(this.$route.params.slug) || Session.get('lane');
+  let $lane = get_lane(this.$route.params.slug) || H.Session.get('lane');
   if (!$lane) return false;
 
   if (
@@ -305,7 +302,7 @@ const submit_form = function () {
   ) {
 
     slug($lane, this.$route.params.slug);
-    Session.set('validating_fields', true);
+    H.Session.set('validating_fields', true);
 
     return this.update_harbor();
   }
@@ -365,13 +362,13 @@ const change_captains = function (event) {
 };
 
 const back_to_lanes = function () {
-  Session.set('lane', null);
+  H.Session.set('lane', null);
   return this.$router.push('/lanes');
 };
 
 const choose_harbor_type = function (event) {
   let type = $(event.target).attr('data-type');
-  let $lane = Session.get('lane');
+  let $lane = H.Session.get('lane');
   if (!$lane) return false;
 
   $lane.type = type;
@@ -380,15 +377,15 @@ const choose_harbor_type = function (event) {
   return H.call('Lanes#upsert', $lane, (err, res) => {
     if (err) throw err;
     console.log(`Lane ${$lane.name} added: ${res}`);
-    Session.set('lane', $lane);
+    H.Session.set('lane', $lane);
     return res;
   });
 };
 
 const get_lane_name = function () {
   var name = this.$route.params.slug;
-  var $lane = get_lane(name) || Session.get('lane') || { };
-  Session.set('lane', $lane);
+  var $lane = get_lane(name) || H.Session.get('lane') || { };
+  H.Session.set('lane', $lane);
 
   return $lane.name == 'New' ? '' : $lane.name;
 };

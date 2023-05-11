@@ -1,12 +1,10 @@
-import { Session } from 'meteor/session';
-import { ReactiveVar } from 'meteor/reactive-var';
 import { HTTP } from 'meteor/http';
 import { Harbors } from '../../../../api/harbors';
 import { Shipments } from '../../../../api/shipments';
 import { history, get_lane } from '../lib/util';
 import { moment } from 'meteor/momentjs:moment';
 
-const not_found = new ReactiveVar(false);
+const not_found = new H.ReactiveVar(false);
 const not_found_text = `
   <p><strong>The harbor you're viewing hasn't been installed for this
     Harbormaster instance.</strong></p>
@@ -106,7 +104,7 @@ const work_preview = function () {
         return H.call('Lanes#upsert', lane, (err_update, res_success) => {
           if (err_update) throw err_update;
           console.log(`Lane "${lane.name}" updated: ${res_success}`);
-          return Session.set('lane', res_lane);
+          return H.Session.set('lane', res_lane);
         });
       }
     );
@@ -195,7 +193,7 @@ const reset_all_active = function () {
 
 const start_shipment = function () {
   let { $router, $data } = this;
-  let working_lanes = Session.get('working_lanes') || {};
+  let working_lanes = H.Session.get('working_lanes') || {};
   let $lane = get_lane(this.$route.params.slug);
   let harbor = Harbors.findOne($lane.type);
   let manifest = harbor.lanes[$lane._id].manifest;
@@ -206,7 +204,7 @@ const start_shipment = function () {
   });
 
   working_lanes[$lane._id] = true;
-  Session.set('working_lanes', working_lanes);
+  H.Session.set('working_lanes', working_lanes);
   if (! shipment || ! shipment.active) {
     console.log(`Starting shipment for lane: ${$lane.name}`);
     H.call(
@@ -217,9 +215,9 @@ const start_shipment = function () {
       (err, res) => {
         if (err) throw err;
 
-        working_lanes = Session.get('working_lanes');
+        working_lanes = H.Session.get('working_lanes');
         working_lanes[$lane._id] = false;
-        Session.set('working_lanes', working_lanes);
+        H.Session.set('working_lanes', working_lanes);
         console.log('Shipment started for lane:', $lane.name);
         $router.push(`/lanes/${$lane.slug}/ship/${shipment_start_date}`);
         $data.rerenders = this.$data.rerenders + 1;

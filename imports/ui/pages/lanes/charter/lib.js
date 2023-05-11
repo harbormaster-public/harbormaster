@@ -1,25 +1,24 @@
-import { ReactiveVar } from "meteor/reactive-var";
 import { Lanes } from "../../../../api/lanes";
 import { Shipments } from "../../../../api/shipments";
 import { get_lane } from "../lib/util";
 
-const ROOT = "ROOT";
-const FOLLOWUP = "FOLLOWUP ➡";
-const SALVAGE = "SALVAGE ➡";
-const FOLLOWUP_COLOR = "#0af";
-const SALVAGE_COLOR = "#fa0";
-const ROOT_COLOR = "#f0a";
-const SUCCESS_COLOR = "#3adb76";
-const FAIL_COLOR = "red";
+export const ROOT = "ROOT";
+export const FOLLOWUP = "FOLLOWUP ➡";
+export const SALVAGE = "SALVAGE ➡";
+export const FOLLOWUP_COLOR = "#0af";
+export const SALVAGE_COLOR = "#fa0";
+export const ROOT_COLOR = "#f0a";
+export const SUCCESS_COLOR = "#3adb76";
+export const FAIL_COLOR = "red";
 const TOP_PADDING = 225;
-const STROKE_WIDTH = 5;
+export const STROKE_WIDTH = 5;
 
-const root_node = new ReactiveVar();
-const node_list = new ReactiveVar([]);
-const link_list = new ReactiveVar([]);
+export const root_node = new H.ReactiveVar();
+const node_list = new H.ReactiveVar([]);
+const link_list = new H.ReactiveVar([]);
 
 const assign_followup = function (followup, target, parent_id, nodes, links) {
-  if (followup && !target.recursive && followup._id != parent_id) {
+  if (followup && !target?.recursive && followup?._id != parent_id) {
     let last_shipment = Shipments.findOne({ lane: followup._id });
     let color = FOLLOWUP_COLOR;
     let followup_id = followup._id;
@@ -55,7 +54,11 @@ const assign_followup = function (followup, target, parent_id, nodes, links) {
       _color: FOLLOWUP_COLOR,
       name: FOLLOWUP,
     });
+
+    return true;
   }
+
+  return false;
 };
 
 const assign_salvage = function (plan, target, parent_id, nodes, links) {
@@ -94,7 +97,11 @@ const assign_salvage = function (plan, target, parent_id, nodes, links) {
       _color: SALVAGE_COLOR,
       name: SALVAGE,
     });
+
+    return true;
   }
+
+  return false;
 };
 
 const assign_children = (target, parent_id, nodes, links) => {
@@ -108,7 +115,7 @@ const assign_children = (target, parent_id, nodes, links) => {
   target.children.forEach((child) => {
     child.children = [];
 
-    if (!child.recursive && child._id != root_node.get().id)
+    if (!child.recursive && child._id != root_node?.get()?.id)
       assign_children(child, target._id, nodes, links);
   });
 
@@ -120,7 +127,7 @@ const build_graph = function () {
   let nodes = [];
   let links = [];
 
-  if (!$lane) return false;
+  if (!$lane._id || !$lane.name) return false;
 
   $lane.children = [];
   $lane.role = ROOT;
@@ -151,25 +158,22 @@ const build_graph = function () {
   return node_list.get();
 };
 
-const lane = function () {
-  let $lane = get_lane(this.$route.params.slug);
-
-  return $lane ? $lane : {};
-};
+const lane = () => get_lane(this.$route?.params.slug);
 
 const handle_link_click = function (event, link) {
-  const { $lane } = link.target;
+  const $lane = link.target.lane;
   let start = $lane.shipment ? `/ship/${$lane.shipment.start}` : "/charter";
   let url = `/lanes/${$lane.slug}${start}`;
 
   if (this.$route.path != url) this.$router.push(url);
   else console.log("Avoiding redundant navigation.");
+  return url;
 };
 
 const graph_options = function () {
   return {
     canvas: false,
-    size: { h: window.innerHeight - TOP_PADDING },
+    size: { h: this.window ? this.window.innerHeight - TOP_PADDING : 0 },
     offset: { x: 0, y: 0 },
     force: 50000,
     forces: {

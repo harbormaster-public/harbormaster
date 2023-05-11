@@ -3,35 +3,25 @@
     <div class="container mx-auto pt-2">
       <ul class=menu>
         <li>
-          <router-link 
-            class="p-2 border-2 inline-block rounded-sm nav-item"
-            to="/">Overview</router-link>
+          <router-link class="p-2 border-2 inline-block rounded-sm nav-item" to="/">Overview</router-link>
         </li>
         <li>
-          <router-link 
-            class="p-2 border-2 inline-block rounded-sm nav-item"
-            @click.native="handle_click_lanes" to="/lanes">Lanes</router-link>
+          <router-link class="p-2 border-2 inline-block rounded-sm nav-item" @click.native="handle_click_lanes"
+            to="/lanes">Lanes</router-link>
         </li>
         <li>
-          <router-link 
-            class="p-2 border-2 inline-block rounded-sm nav-item"
-            @click.native="handle_click_lanes" to="/harbors">Harbors</router-link>
+          <router-link class="p-2 border-2 inline-block rounded-sm nav-item" @click.native="handle_click_lanes"
+            to="/harbors">Harbors</router-link>
         </li>
         <li>
-          <router-link 
-            class="p-2 border-2 inline-block rounded-sm nav-item"
-            to="/users">Users</router-link>
+          <router-link class="p-2 border-2 inline-block rounded-sm nav-item" to="/users">Users</router-link>
         </li>
         <li>
-          <router-link 
-            class="p-2 border-2 my-auto inline-block rounded-sm nav-item"
-            to="/profile">My Profile</router-link>
+          <router-link class="p-2 border-2 my-auto inline-block rounded-sm nav-item" to="/profile">My
+            Profile</router-link>
         </li>
         <li class="float-right">
-          <button
-            @click="handle_click_logout" 
-            class="logout p-2 border-2 rounded-sm nav-item"
-          >Logout
+          <button @click="handle_click_logout" class="logout p-2 border-2 rounded-sm nav-item">Logout
           </button>
         </li>
       </ul>
@@ -44,8 +34,8 @@ export default {
   methods: {
     handle_click_logout () { Accounts.logout(err => { if (err) throw err }) },
     handle_click_lanes () {
-      Session.set('choose_followup', false);
-      Session.set('choose_salvage_plan', false);
+      H.Session.set('choose_followup', false);
+      H.Session.set('choose_salvage_plan', false);
     },
   }
 }
@@ -76,7 +66,8 @@ export default {
   background: none;
 }
 
-a:hover, .nav-item:hover {
+a:hover,
+.nav-item:hover {
   color: #ffae00;
   border-color: #ffae00;
   border-bottom-color: transparent;
@@ -90,8 +81,8 @@ a:hover, .nav-item:hover {
   color: #07c;
 }
 
-.container .nav-item:active, 
-.admin .button:active { 
+.container .nav-item:active,
+.admin .button:active {
   border-color: #aa7a00;
   border-bottom-color: transparent;
   color: #aa7a00;
@@ -102,20 +93,18 @@ a:hover, .nav-item:hover {
   border-bottom: 10px solid #fff;
 }
 
-@media all 
-  and (min-device-width: 280px)
-  and (max-device-width: 800px) {
-    #navigation .container {
-      max-width: 100%;
-      font-size: 40px;
-      margin-bottom: -2px;
-    }
+@media all and (min-device-width: 280px) and (max-device-width: 800px) {
+  #navigation .container {
+    max-width: 100%;
+    font-size: 40px;
+    margin-bottom: -2px;
+  }
 
-    .menu .nav-item {
-      border-width: 5px;
-      border-top-width: 10px;
-      margin-top: -10px;
-      margin-right: -10px;
-    }
+  .menu .nav-item {
+    border-width: 5px;
+    border-top-width: 10px;
+    margin-top: -10px;
+    margin-right: -10px;
+  }
 }
 </style>
