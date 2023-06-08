@@ -282,6 +282,7 @@ describe('Charter Page', () => {
   });
 
   describe('#lane', () => {
+    before(() => H.Session.set('lane', undefined));
     it(
       'returns the active lane based on slug or Session, or an empty object',
       () => {

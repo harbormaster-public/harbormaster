@@ -169,14 +169,15 @@ import {
   plying,
   lane_type,
   not_found,
+  refresh_harbor,
 } from './lib';
 import ShippingLog from '../../../components/shipping_log';
 
 const options = { sort: { actual: -1 }, limit: H.AMOUNT_SHOWN };
 
 export default {
-  components: { 
-    ShippingLog 
+  components: {
+    ShippingLog
   },
 
   meteor: {
@@ -196,7 +197,7 @@ export default {
     lanes,
     lane_count,
     shipment_history,
-    shipping_log_amount_shown () { return H.AMOUNT_SHOWN },
+    shipping_log_amount_shown() { return H.AMOUNT_SHOWN },
     no_followup,
     no_salvage,
     choose_followup,
@@ -204,15 +205,15 @@ export default {
     captain_list,
     plying,
     harbors,
-    choose_type () { return H.Session.get('choose_type') },
+    choose_type() { return H.Session.get('choose_type') },
     current_lane,
     lane_type,
     render_harbor,
-    validating_fields () { return H.Session.get('validating_fields') },
-    can_save () { return not_found.get() ? 'disabled' : '' },
+    validating_fields() { return H.Session.get('validating_fields') },
+    can_save() { return not_found.get() ? 'disabled' : '' },
   },
 
-  data () {
+  data() {
     return {
       harbor_refresh: 0,
       lane_name: this.get_lane_name(),
@@ -220,16 +221,16 @@ export default {
   },
 
   methods: {
-    refresh_harbor () { this.harbor_refresh += 1 },
+    refresh_harbor,
     validate_done,
     chosen_followup,
     chosen_salvage_plan,
-    duration (shipment) {
+    duration(shipment) {
       return moment
         .duration(shipment?.finished - shipment?.actual)
         .humanize();
     },
-    pretty_date (date) { return new Date(date).toLocaleString() },
+    pretty_date(date) { return new Date(date).toLocaleString() },
     update_harbor,
     submit_form,
     change_followup_lane,
@@ -237,18 +238,18 @@ export default {
     change_lane_name,
     lane,
     slug,
-    prevent_enter_key (event) {
+    prevent_enter_key(event) {
       if (event.key == 'Enter') event.preventDefault();
     },
     change_captains,
-    add_destination () { return H.Session.set('choose_type', true) },
+    add_destination() { return H.Session.set('choose_type', true) },
     back_to_lanes,
     choose_harbor_type,
-    add_followup_lane () { return H.Session.set('choose_followup', true) },
-    add_salvage_plan () { return H.Session.set('choose_salvage_plan', true) },
-    new_lane () { H.Session.set('lane', {})},
+    add_followup_lane() { return H.Session.set('choose_followup', true) },
+    add_salvage_plan() { return H.Session.set('choose_salvage_plan', true) },
+    new_lane() { H.Session.set('lane', {}) },
     get_lane_name,
-    duplicate_lane () {
+    duplicate_lane() {
       const lane = get_lane(this.$route.params.slug);
       const warn = `Duplicate this lane, and then edit the new lane?`
       const router = this.$router;
@@ -260,7 +261,7 @@ export default {
     },
   },
 
-  mounted () {
+  mounted() {
     const name = this.$route.params.slug;
     const lane = get_lane(name);
     if (lane) Meteor.subscribe('Shipments', lane, options);

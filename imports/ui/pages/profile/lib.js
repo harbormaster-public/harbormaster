@@ -6,7 +6,7 @@ const get_user_id = function (scope) {
 };
 
 const handle_change_from_webhook = function (event) {
-  var lane_id = $(event.target).attr('data-lane-id');
+  var lane_id = H.$(event.target).attr('data-lane-id');
   var user_id = get_user_id(this);
   let remove_token;
   const {render_lane_list} = this;
@@ -28,7 +28,7 @@ const handle_change_from_webhook = function (event) {
 };
 
 const handle_change_can_ply = function (event) {
-  var lane_id = $(event.target).attr('data-lane-id');
+  var lane_id = H.$(event.target).attr('data-lane-id');
   var user_id = get_user_id(this);
   var lane = Lanes.findOne(lane_id);
 

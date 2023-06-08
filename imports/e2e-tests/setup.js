@@ -1,18 +1,18 @@
 import {setup} from 'meteor/universe:e2e';
 
-function maybe_run_headless () {
+const maybe_run_headless = function () {
   let should_be = process.env.HEADLESS || true;
-  
+
   if (
     should_be === 0 ||
     should_be === '0' ||
     should_be === false ||
     should_be === 'false'
-    ) should_be = false;
-    
+  ) should_be = false;
+
   console.log(`Should run in headless mode? ${should_be}`);
   return should_be;
-}
+};
 
 const width = 1024;
 const height = 768;
@@ -74,8 +74,8 @@ setup({
         '--enable-features=NetworkService,NetworkServiceInProcess',
         '--force-color-profile=srgb',
         '--metrics-recording-only',
-        '--mute-audio'
-      ]
-    }
-  }
+        '--mute-audio',
+      ],
+    },
+  },
 }).catch(console.error);
