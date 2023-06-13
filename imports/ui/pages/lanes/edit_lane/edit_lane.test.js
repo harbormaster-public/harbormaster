@@ -59,10 +59,10 @@ describe('Edit Lane Page', function () {
       H.call = () => { };
       const values = update_harbor();
       expect(typeof values.timestamp).to.eq('number');
-      expect(values['foo']).to.eq('foo');
-      expect(values['bar']).to.eq('bar');
-      expect(values['baz']).to.eq(undefined);
-      expect(values['qux']).to.eq('qux');
+      expect(values.foo).to.eq('foo');
+      expect(values.bar).to.eq('bar');
+      expect(values.baz).to.eq(undefined);
+      expect(values.qux).to.eq('qux');
     });
     it('updates the saved record for the lane', () => {
       let called = false;
@@ -99,7 +99,7 @@ describe('Edit Lane Page', function () {
         lane: { name: 'test' },
         success: true,
       });
-      expect(H.Session.get('validating_fields')).to.eq(false);
+      expect(H.Session.get('validating_fields')).to.eq(undefined);
     });
     it('refreshes the harbor view', () => {
       H.Session.set('lane', false);
@@ -157,7 +157,7 @@ describe('Edit Lane Page', function () {
     });
 
     it('updates the lane with the new name', () => {
-      expect(H.Session.get('lane')).to.eq(false);
+      expect(H.Session.get('lane')).to.eq(undefined);
       const test_event = { target: { value: 'test' } };
       change_lane_name.bind(this)(test_event);
       expect(H.Session.get('lane').name).to.eq('test');
@@ -647,7 +647,7 @@ describe('Edit Lane Page', function () {
       H.Session.set('lanes', { _id: 'test' });
       this.$router = [];
       back_to_lanes.bind(this)();
-      expect(H.Session.get('lane')).to.eq(false);
+      expect(H.Session.get('lane')).to.eq(undefined);
     });
     it('navigates to the Lanes Page', () => {
       H.Session.set('lanes', { _id: 'test' });

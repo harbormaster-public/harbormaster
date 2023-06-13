@@ -4,6 +4,7 @@ import { Session } from 'meteor/session';
 import { ReactiveVar } from "meteor/reactive-var";
 import { $ } from 'meteor/jquery';
 import { start_date } from '../../api/dates';
+import { Accounts } from 'meteor/accounts-base';
 
 // Global namespace
 H = $H = Meteor;
@@ -29,7 +30,7 @@ if (H.isServer && H.isTest) {
   if (!Session) Session = {
     store: {},
     get (key) {
-      return key && this.store[key] ? this.store[key] : false;
+      return key && this.store[key] ? this.store[key] : undefined;
     },
     set (key, data) {
       this.store[key] = data;
@@ -70,12 +71,22 @@ if (H.isServer && H.isTest) {
        },
     };
   };
+
+  if (!Accounts.onResetPasswordLink) Accounts.onResetPasswordLink = () => { };
+  if (!Accounts.resetPassword) Accounts.resetPassword = () => { };
 }
 
 H.Session = Session;
 H.ReactiveVar = ReactiveVar;
 H.$ = $;
 H.alert = H.isClient ? alert : console.warn;
-H.window = H.isClient ? window : { location: { host: 'localhost:4040' } };
+H.window = H.isClient ? window : {
+  location: { host: 'localhost:4040' },
+  document: {
+    createElement: () => ({}),
+    body: { appendChild: () => { } },
+    head: { appendChild: () => { } },
+  },
+};
 
 export default H;

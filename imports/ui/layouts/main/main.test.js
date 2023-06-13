@@ -1,3 +1,4 @@
+import { expect } from 'chai';
 import {
   is_loaded,
   no_harbormasters,
@@ -9,41 +10,121 @@ import {
   add_rel,
   add_script,
 } from './lib';
+import { Harbors } from '../../../api/harbors';
 
 describe('Main Layout', () => {
   describe('#is_loaded', () => {
-    it('returns true if Harbors subscription is ready and not logging in');
+    const logging_in_method = H.loggingIn;
+    const test_logging_in_method = () => false;
+    it(
+      'returns true if Harbors subscription is ready and not logging in',
+      () => {
+        H.loggingIn = test_logging_in_method;
+        this.$subReady = { Harbors: false };
+        expect(is_loaded()).to.eq(false);
+        this.$subReady = { Harbors: true };
+        expect(is_loaded()).to.eq(true);
+        H.loggingIn = logging_in_method;
+    });
   });
 
   describe('#no_users', () => {
-    it('returns true if there are no Users found');
+    it('returns true if there are no Users found', () => {
+      expect(no_users()).to.eq(true);
+    });
   });
 
   describe('#logged_in', () => {
-    it('returns the user data object');
+    it('returns the user data object', () => {
+      const user_method = H.user;
+      const test_user_method = () => ({});
+      H.user = test_user_method;
+      expect(typeof logged_in()).to.eq('object');
+      H.user = user_method;
+    });
   });
 
   describe('#no_harbormasters', () => {
-    it('returns true if there are no harbormasters');
+    it('returns true if there are no harbormasters', () => {
+      expect(no_harbormasters()).to.eq(true);
+    });
   });
 
   describe('#set_constraints', () => {
-    it('tracks the constraints set by a harbor');
-    it('returns the links and scripts for the constraints');
+    const harbors_find_method = Harbors.find;
+    const test_harbors_find_method = () => ([
+      {
+        constraints: { global: ['foo'] },
+      },
+    ]);
+
+    before(() => Harbors.find = test_harbors_find_method);
+    after(() => Harbors.find = harbors_find_method);
+
+    it('tracks the constraints set by a harbor', () => {
+      for (const list of Object.values(Constraints.get())) {
+        expect(list.length).to.eq(0);
+      }
+      this.$route = { name: 'test' };
+      set_constraints();
+      expect(Constraints.get().global.length).to.eq(1);
+    });
   });
 
   describe('#is_valid_constraint', () => {
-    it('throws for an invalid constraint');
+    it('throws for an invalid constraint', () => {
+      const id = 'test_id';
+      const rel = 'test_rel';
+      const src = 'test_src';
+      const text = 'test_text';
+      expect(() => is_valid_constraint({})).to.throw();
+      expect(() => is_valid_constraint({ id })).to.throw();
+      expect(() => is_valid_constraint({ id, rel })).to.not.throw();
+      expect(() => is_valid_constraint({ id, src })).to.not.throw();
+      expect(() => is_valid_constraint({ id, text })).to.not.throw();
+    });
   });
 
   describe('#add_script', () => {
-    it('creates a script tag and adds it to the document body');
-    it('throws if it lacks a src or text property');
-    it('returns the script created');
+    let called = false;
+    const test_body_append_child = () => called = true;
+    const append_child_method = H.window.document.body.appendChild;
+
+    before(() => H.window.document.body.appendChild = test_body_append_child);
+    after(() => H.window.document.body.appendChild = append_child_method);
+
+    it('creates a script tag and adds it to the document body', () => {
+      add_script({ id: 'test', src: 'test' });
+      expect(called).to.eq(true);
+    });
+    it('throws if it lacks a src or text property', () => {
+      expect(() => add_script({ id: 'test' })).to.throw();
+      expect(() => add_script({ id: 'test', src: 'test' })).to.not.throw();
+      expect(() => add_script({ id: 'test', text: 'test' })).to.not.throw();
+    });
+    it('returns the script created', () => {
+      const script = add_script({ id: 'test', src: 'test' });
+      expect(script.id).to.eq('test');
+      expect(script.src).to.eq('test');
+      expect(script.async).to.eq(false);
+    });
   });
 
   describe('#add_rel', () => {
-    it('creates a link tag and adds it to the document head');
-    it('returns the link created');
+    let called = false;
+    const test_head_append_child = () => called = true;
+    const append_child_method = H.window.document.head.appendChild;
+
+    before(() => H.window.document.head.appendChild = test_head_append_child);
+    after(() => H.window.document.head.appendChild = append_child_method);
+
+    it('creates a link tag and adds it to the document head', () => {
+      add_rel({});
+      expect(called).to.eq(true);
+    });
+    it('returns the link created', () => {
+      const link = add_rel({ id: 'test' });
+      expect(link.id).to.eq('test');
+    });
   });
 });

@@ -40,19 +40,21 @@ const set_constraints = function () {
     if (harbor.constraints) {
       for (const [scope, list] of Object.entries(harbor.constraints)) {
         parsed[scope] = parsed[scope] ? parsed[scope].concat(list) : list;
+        if (scope == name && parsed[scope].length) {
+          parsed[name].forEach(constraint => {
+            if (is_valid_constraint(constraint) && constraint.rel) {
+              return add_rel(constraint);
+            }
+            else if (is_valid_constraint(constraint)) {
+              return add_script(constraint);
+            }
+          });
+        }
       }
     }
   });
 
   Constraints.set(parsed);
-  //TODO: merge this into the loop above
-  if (parsed[name]?.length) parsed[name].forEach(constraint => {
-    is_valid_constraint(constraint);
-    if (constraint.rel) {
-      return add_rel(constraint);
-    }
-    return add_script(constraint);
-  });
 };
 
 const is_valid_constraint = function (constraint) {
@@ -69,22 +71,22 @@ const is_valid_constraint = function (constraint) {
 };
 
 const add_script = function (constraint) {
-  const script = document.createElement('script');
+  const script = H.window.document.createElement('script');
   script.async = constraint.async || false;
   script.id = constraint.id;
   if (constraint.src) script.src = constraint.src;
   else if (constraint.text) script.text = constraint.text;
   else throw new Error('A "src" or "text" field must be supplied!');
-  document.body.appendChild(script);
+  H.window.document.body.appendChild(script);
   return script;
 };
 
 const add_rel = function (constraint) {
-  const link = document.createElement('link');
+  const link = H.window.document.createElement('link');
   link.rel = constraint.rel;
   link.href = constraint.href;
   link.id = constraint.id;
-  document.head.appendChild(link);
+  H.window.document.head.appendChild(link);
   return link;
 };
 

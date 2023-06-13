@@ -30,6 +30,7 @@
 
 <script>
 import { Accounts } from 'meteor/accounts-base';
+import H from '../../../startup/config/namespace';
 
 Accounts.onResetPasswordLink(function (token, done) {
   H.Session.set('password_reset_token', token);
@@ -51,7 +52,7 @@ export default {
         if (err?.error == 403) {
           const invalid_msg = 'Invalid credentials.';
           console.error(invalid_msg);
-          alert(invalid_msg);
+          H.alert(invalid_msg);
         }
         else if (err) throw err;
       });
@@ -60,7 +61,7 @@ export default {
     password_reset() {
       const { email } = this;
       const no_email_alert = 'An email must be provided for a password reset';
-      if (!email) return alert(no_email_alert);
+      if (!email) return H.alert(no_email_alert);
       this.reset = true;
       H.call('Users#reset_password', email, err => { if (err) throw err });
     },
@@ -75,7 +76,7 @@ export default {
         this.password,
         err => { if (err) throw err },
       );
-      H.Session.set('password_reset_token', null);
+      H.Session.set('password_reset_token', undefined);
       this.reset = false;
     },
   }

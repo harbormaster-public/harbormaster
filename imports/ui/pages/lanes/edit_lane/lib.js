@@ -207,7 +207,7 @@ const plying = function () {
 
   if (user && user.harbormaster) { return true; }
 
-  if ($lane.captains && $lane.captains.length) {
+  if ($lane?.captains && $lane?.captains?.length) {
     let captain = _.find($lane.captains, function (email) {
       return email == H.user().emails[0].address;
     });

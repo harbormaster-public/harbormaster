@@ -15,12 +15,12 @@ import { Users } from '../../../api/users';
 export default {
   methods: {
     on_click() {
-      var user_id = Meteor.user().emails[0].address;
+      var user_id = H.user().emails[0].address;
       var user = Users.findOne(user_id);
 
       user.harbormaster = true;
 
-      Meteor.call('Users#update', user_id, user, (err, res) => {
+      H.call('Users#update', user_id, user, (err, res) => {
         if (err) throw err;
         console.log(`User ${user_id} updated: ${res}`);
       });
