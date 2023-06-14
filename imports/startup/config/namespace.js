@@ -80,8 +80,12 @@ H.Session = Session;
 H.ReactiveVar = ReactiveVar;
 H.$ = $;
 H.alert = H.isClient ? alert : console.warn;
+H.confirm = H.isClient ? confirm : console.warn;
 H.window = H.isClient ? window : {
-  location: { host: 'localhost:4040' },
+  location: {
+    host: 'localhost:4040',
+    reload: () => { },
+  },
   document: {
     createElement: () => ({}),
     body: { appendChild: () => { } },
