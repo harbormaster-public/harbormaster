@@ -14,7 +14,10 @@ const not_found_text = `
 `;
 
 const lane = function () {
-  let $lane = get_lane(this.$route.params.slug) || false;
+  let $lane = this.$route?.params?.slug ?
+    get_lane(this.$route.params.slug) :
+    false
+    ;
   return $lane;
 };
 
@@ -49,10 +52,10 @@ const exit_code = function () {
   let $lane = get_lane(this.$route.params.slug) || {};
   let date = this.$route.params.date;
 
-  let shipment = $lane ?
+  let shipment = $lane._id ?
     Shipments.findOne({ start: date, lane: $lane._id }) :
     false
-  ;
+    ;
 
   if (!shipment || shipment?.active) return '';
 
@@ -63,15 +66,13 @@ const work_preview = function () {
   let shipment;
   let manifest;
   let $lane = get_lane(this.$route.params.slug);
-  let harbor = Harbors.findOne($lane?.type);
-  const harbor_not_ready_header = `
-    <h4>This Harbor is not ready, or otherwise not fully configured.</h4>
-  `;
+  let harbor = Harbors.findOne($lane.type);
   const edit_lane = `<a href="/lanes/${$lane.name}/edit">Edit this lane</a>`;
-  const harbor_not_ready_text = `
-    ${harbor_not_ready_header}
-    <p>Please ${edit_lane} and complete its configuration.</p>
-  `;
+  let harbor_not_ready_header = `<h4>This Harbor is not ready`;
+  harbor_not_ready_header += `, or otherwise not fully configured.</h4>`;
+  let harbor_not_ready_text = `${harbor_not_ready_header}\n`;
+  harbor_not_ready_text += `<p>Please ${edit_lane}`;
+  harbor_not_ready_text += ` and complete its configuration.</p >`;
 
   if (not_found.get()) return not_found_text;
 
@@ -90,9 +91,9 @@ const work_preview = function () {
     manifest = (
       shipment?.manifest ||
       harbor.lanes[$lane._id]?.manifest
-      ) || false;
+    ) || false;
 
-
+    //TODO Refactor this to make the upsert happen server-side
     H.call(
       'Harbors#render_work_preview',
       $lane,
@@ -110,10 +111,10 @@ const work_preview = function () {
     );
   }
 
-  return lane.rendered_work_preview ?
-    lane.rendered_work_preview :
+  return $lane.rendered_work_preview ?
+    $lane.rendered_work_preview :
     harbor_not_ready_text
-  ;
+    ;
 };
 
 const has_work_output = function () {
@@ -124,10 +125,10 @@ const has_work_output = function () {
 
   if (
     shipment && (
-      Object.keys(shipment.stdout).length ||
-      Object.keys(shipment.stderr).length ||
+      (shipment.stdout && Object.keys(shipment.stdout).length) ||
+      (shipment.stderr && Object.keys(shipment.stderr).length) ||
       shipment.exit_code == 0
-      ) ||
+    ) ||
     any_shipment
   ) {
     return true;
@@ -145,7 +146,7 @@ const work_output = function () {
       lane: $lane?._id,
       start: date,
     })
-  ;
+    ;
 
   return shipment;
 };
@@ -167,6 +168,7 @@ const duration = function (shipment) {
 
 const any_active = function () {
   let $lane = get_lane(this.$route.params.slug) || false;
+  if (!$lane) return false;
   let shipments = Shipments.find({ lane: $lane._id, active: true });
 
   if (shipments.count()) return true;
@@ -183,7 +185,7 @@ const reset_shipment = function () {
 };
 
 const reset_all_active = function () {
-  const {slug} = this.$route.params;
+  const { slug } = this.$route.params;
 
   H.call('Lanes#reset_all_active_shipments', slug, function (err, res) {
     if (err) throw err;
@@ -205,7 +207,7 @@ const start_shipment = function () {
 
   working_lanes[$lane._id] = true;
   H.Session.set('working_lanes', working_lanes);
-  if (! shipment || ! shipment.active) {
+  if (!shipment || !shipment.active) {
     console.log(`Starting shipment for lane: ${$lane.name}`);
     H.call(
       'Lanes#start_shipment',
@@ -218,7 +220,7 @@ const start_shipment = function () {
         working_lanes = H.Session.get('working_lanes');
         working_lanes[$lane._id] = false;
         H.Session.set('working_lanes', working_lanes);
-        console.log('Shipment started for lane:', $lane.name);
+        if (!H.isTest) console.log('Shipment started for lane:', $lane.name);
         $router.push(`/lanes/${$lane.slug}/ship/${shipment_start_date}`);
         $data.rerenders = this.$data.rerenders + 1;
 
@@ -245,4 +247,6 @@ export {
   duration,
   pretty_date,
   start_shipment,
+  not_found,
+  not_found_text,
 };
