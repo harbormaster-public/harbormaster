@@ -25,11 +25,11 @@ const update_harbor = function () {
     let checked = element.checked;
     let name = element.name;
 
-    if (! values[name]) {
+    if (!values[name]) {
       values[name] = type == 'checkbox' || type == 'radio' ?
         (checked && (value || checked)) || values[name] :
         value
-      ;
+        ;
     }
   });
 
@@ -39,7 +39,7 @@ const update_harbor = function () {
     'Harbors#update',
     $lane,
     values,
-    () => update_harbor_method.bind(this)(),
+    (err, res) => update_harbor_method.bind(this)(err, res),
   );
 
   return values;
@@ -50,8 +50,7 @@ const update_harbor_method = function (err, res) {
   if (err) throw err;
 
   if (!res.success && validating_fields) H.alert('Invalid values.');
-
-  H.Session.set('lane', res.lane);
+  update_lane(res.lane);
   H.Session.set('validating_fields', false);
   this.harbor_refresh += 1;
 
@@ -82,7 +81,7 @@ const change_lane_name = function (event) {
   );
 };
 
-const slug = function ($lane) {
+const slug = function ($lane, render_only) {
   const a = 'àáäâãåèéëêìíïîòóöôùúüûñçßÿœæŕśńṕẃǵǹḿǘẍźḧ·/_,:;';
   const b = 'aaaaaaeeeeiiiioooouuuuncsyoarsnpwgnmuxzh------';
   const p = new RegExp(a.split('').join('|'), 'g');
@@ -90,11 +89,11 @@ const slug = function ($lane) {
   $lane = $lane && $lane.name && $lane.name != 'new' ?
     $lane :
     get_lane($lane)
-  ;
+    ;
 
   if ($lane.name) {
     const $slug = $lane.name.toLowerCase()
-    // https://gist.github.com/matthagemann/382adfc57adbd5af078dc93feef01fe1
+      // https://gist.github.com/matthagemann/382adfc57adbd5af078dc93feef01fe1
       .replace(/\s+/g, '-') // Replace spaces with -
       .replace(p, c => b.charAt(a.indexOf(c))) // Replace special characters
       .replace(/&/g, '-and-') // Replace & with 'and'
@@ -102,15 +101,12 @@ const slug = function ($lane) {
       .replace(/\-\-+/g, '-') // Replace multiple - with single -
       .replace(/^-+/, '') // Trim - from start of text
       .replace(/-+$/, '') // Trim - from end of text
-    ;
+      ;
 
     $lane.slug = $slug;
-    H.call('Lanes#update_slug', $lane, (err, res) => {
-      if (err) throw err;
-
-      H.Session.set('lane', $lane);
-      console.log(`Lane slug ${$lane.slug} updated: ${res}`);
-    });
+    if (!render_only) {
+      update_lane($lane);
+    }
 
     return `${H.window.location.host}/lanes/${$slug}/ship`;
   }
@@ -241,16 +237,16 @@ const lane_type = function () {
 const render_harbor = function () {
   let name = this.$route?.params?.slug;
   let $lane = get_lane(name) || H.Session.get('lane');
-  if (!$lane._id) return false;
+  if (!$lane._id && !$lane.name) return 'Assign a Name first!';
   let harbor = $lane.type ? Harbors.findOne($lane.type) : {};
   let harbor_lane_reference = harbor?.lanes ?
     harbor.lanes[$lane._id] :
     false
-  ;
+    ;
   let manifest = harbor_lane_reference ?
     harbor_lane_reference.manifest :
     false
-  ;
+    ;
 
   H.call(
     'Harbors#render_input',
@@ -262,7 +258,7 @@ const render_harbor = function () {
 
       if (active_lane) return H.Session.set('lane', active_lane);
       return false;
-  });
+    });
 
   if (not_found.get()) return not_found_text;
   if ($lane.rendered_input) return $lane.rendered_input;
@@ -283,7 +279,7 @@ const chosen_followup = function (followup) {
   return followup._id && $lane ?
     followup._id == $lane.followup?._id :
     false
-  ;
+    ;
 };
 
 const chosen_salvage_plan = function (salvage_lane) {
@@ -292,12 +288,12 @@ const chosen_salvage_plan = function (salvage_lane) {
   return salvage_lane._id && $lane ?
     salvage_lane._id == $lane.salvage_plan?._id :
     false
-  ;
+    ;
 };
 
 const submit_form = function () {
   let $lane = get_lane(this.$route?.params?.slug) || H.Session.get('lane');
-  if (!$lane._id) return false;
+  if (!$lane._id && !$lane.name) return false;
 
   if (
     $lane.name &&
@@ -306,7 +302,8 @@ const submit_form = function () {
     $lane.type
   ) {
 
-    slug($lane, this.$route?.params?.slug);
+    $lane.slug = slug($lane, true);
+    H.Session.set('lane', $lane);
     H.Session.set('validating_fields', true);
 
     return update_harbor();
@@ -386,7 +383,7 @@ const choose_harbor_type = function (event) {
 
 const get_lane_name = function () {
   var name = this.$route.params.slug;
-  var $lane = get_lane(name) || H.Session.get('lane') || { };
+  var $lane = get_lane(name) || H.Session.get('lane') || {};
   H.Session.set('lane', $lane);
 
   return $lane.name == 'New' ? '' : ($lane.name || '');

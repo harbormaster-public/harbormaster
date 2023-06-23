@@ -21,6 +21,7 @@ import { expect } from 'chai';
 import { HTTP } from 'meteor/http';
 import { Shipments } from '../../../../api/shipments';
 import { Harbors } from '../../../../api/harbors';
+import { Lanes } from '../../../../api/lanes';
 
 const shipments_find = Shipments.find;
 const shipments_find_one = Shipments.findOne;
@@ -28,7 +29,7 @@ const harbors_find_one = Harbors.findOne;
 const http_post = HTTP.post;
 const call_method = H.call;
 
-describe.only('Ship Lane View', () => {
+describe('Ship Lane View', () => {
   describe('#lane', () => {
     it('returns the current lane by slug, or false', () => {
       this.$route = { params: { slug: 'test' } };
@@ -139,6 +140,8 @@ describe.only('Ship Lane View', () => {
         name: 'test',
         rendered_work_preview: '<p>test</p>',
       });
+      Harbors.findOne = () => { };
+      Lanes.findOne = () => { };
       this.$route = { params: { slug: 'test', manifest: {} } };
       not_found.set(false);
       expect(work_preview()).to.eq('<p>test</p>');
@@ -309,12 +312,14 @@ describe.only('Ship Lane View', () => {
       H.call = (method, id, manifest, date_string, callback) => callback();
       start_shipment();
       expect(H.Session.get('working_lanes')[test_id]).to.eq(false);
+      H.call = call_method;
     });
     it('navigates to the active shipment', () => {
       H.call = (method, id, manifest, date_string, callback) => callback();
       this.$router = [];
       start_shipment();
       expect(this.$router.length).to.eq(1);
+      H.call = call_method;
     });
   });
 

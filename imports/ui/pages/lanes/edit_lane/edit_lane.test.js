@@ -72,7 +72,7 @@ describe('Edit Lane Page', function () {
         expect(_.isEmpty($lane)).to.eq(true);
         expect(Object.keys(values).length).to.eq(5);
         expect(callback.toString()).to.eq(
-          (() => update_harbor_method.bind(this)()).toString()
+          ((err, res) => update_harbor_method.bind(this)(err, res)).toString()
         );
       };
       update_harbor();
@@ -94,12 +94,15 @@ describe('Edit Lane Page', function () {
     });
     it('updates the Session lane and validation state', () => {
       H.Session.set('lane', false);
-      H.Session.set('validating_fields', false);
+      H.Session.set('validating_fields', undefined);
+      H.call = (method, $lane, callback) => callback();
       update_harbor_method(null, {
         lane: { name: 'test' },
         success: true,
       });
-      expect(H.Session.get('validating_fields')).to.eq(undefined);
+      expect(H.Session.get('validating_fields')).to.eq(false);
+      expect(H.Session.get('lane').name).to.eq('test');
+      H.call = call_method;
     });
     it('refreshes the harbor view', () => {
       H.Session.set('lane', false);
@@ -412,7 +415,7 @@ describe('Edit Lane Page', function () {
 
   describe('#plying', function () {
     before(() => {
-      H.user = () => ({ emails: [{ address: 'test@harbormaster.io' } ] });
+      H.user = () => ({ emails: [{ address: 'test@harbormaster.io' }] });
     });
     it('returns true if the user is a harbormaster', () => {
       Users.findOne = () => ({ harbormaster: true });
@@ -490,8 +493,8 @@ describe('Edit Lane Page', function () {
       Harbors.findOne = harbors_find_one;
     });
 
-    it('returns false if unable to find a lane', () => {
-      expect(render_harbor()).to.eq(false);
+    it('returns assign name text if unable to find a lane', () => {
+      expect(render_harbor()).to.eq('Assign a Name first!');
     });
     it('renders input if a harbor manifest is found', () => {
       H.call = render_harbor_test_method;
@@ -600,7 +603,7 @@ describe('Edit Lane Page', function () {
         const $lane = { _id: 'test', name: 'test', type: 'test' };
         H.Session.set('lane', $lane);
         expect(change_followup_lane()).to.eq($lane);
-    });
+      });
     it('returns false if no update is made', () => {
       H.Session.set('lane', { _id: 'test_no_update' });
       expect(change_followup_lane()).to.eq(false);
@@ -624,7 +627,7 @@ describe('Edit Lane Page', function () {
 
   describe('#change_captains', function () {
     it('updates the list of captains based on the event data given', () => {
-      H.call = (name, lane_to_update, callback) => {
+      H.call = (name, lane_to_update) => {
         H.Session.set('lane', lane_to_update);
       };
       const $lane = {

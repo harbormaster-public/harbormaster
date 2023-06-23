@@ -110,7 +110,6 @@ const work_preview = function () {
       }
     );
   }
-
   return $lane.rendered_work_preview ?
     $lane.rendered_work_preview :
     harbor_not_ready_text
@@ -208,7 +207,7 @@ const start_shipment = function () {
   working_lanes[$lane._id] = true;
   H.Session.set('working_lanes', working_lanes);
   if (!shipment || !shipment.active) {
-    console.log(`Starting shipment for lane: ${$lane.name}`);
+    if (!H.isTest) console.log(`Starting shipment for lane: ${$lane.name}`);
     H.call(
       'Lanes#start_shipment',
       $lane._id,

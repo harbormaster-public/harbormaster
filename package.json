@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "test": "WARN_WHEN_USING_OLD_API=1 BROWSERSLIST_IGNORE_OLD_DATA=1 NODE_OPTIONS='--trace-warnings' ROOT_URL='' MONGO_URL='' NO_HMR=1 meteor test --port=4040 --once --driver-package meteortesting:mocha",
-    "test:watch": "WARN_WHEN_USING_OLD_API=1 BROWSERSLIST_IGNORE_OLD_DATA=1 NODE_OPTIONS='--trace-warnings' ROOT_URL=\"\" MONGO_URL=\"\" NO_HMR=1 meteor test --port=4040 --driver-package meteortesting:mocha",
+    "test:watch": "WHEN_USING_OLD_API=1 BROWSERSLIST_IGNORE_OLD_DATA=1 NODE_OPTIONS='--trace-warnings' ROOT_URL=\"\" MONGO_URL=\"\" NO_HMR=1 meteor test --port=4040 --driver-package meteortesting:mocha",
     "start": "NO_HMR=1 meteor run",
     "test:e2e": "ROOT_URL=\"\" MONGO_URL=\"\" HEADLESS=1 NO_HMR=1 TEST_BROWSER_DRIVER=puppeteer meteor test --port=4040 --once --full-app --driver-package universe:e2e --raw-logs",
     "test:e2e:watch": "ROOT_URL=\"\" MONGO_URL=\"\" HEADLESS=0 NO_HMR=1 TEST_BROWSER_DRIVER=puppeteer meteor test --port=4040 --full-app --driver-package universe:e2e --raw-logs"

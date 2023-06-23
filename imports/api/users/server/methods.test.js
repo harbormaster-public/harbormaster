@@ -1,16 +1,10 @@
 import { resetDatabase } from "cleaner";
-import faker from "faker";
 import ".";
 import { Users } from "..";
 import chai from "chai";
-// import { "Users#invite_user" as invite_user } from './methods';
 
 const { expect } = chai;
-const test_email = faker.internet.email();
-
-Factory.define("user", Users, {
-  _id: test_email,
-});
+const test_email = require("faker").internet.email();
 
 describe("Users#invite_user", function () {
   beforeEach(function () {
@@ -28,7 +22,7 @@ describe("Users#invite_user", function () {
   });
 
   it("returns the user account if it already exists", function () {
-    var user = Factory.create("user");
+    var user = Factory.create("user", { _id: test_email });
     var invited_user = H.call("Users#invite_user", test_email);
     var existing_user = Users.findOne(user._id);
 

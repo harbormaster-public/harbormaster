@@ -12,7 +12,7 @@ import {
 } from './lib';
 import { Harbors } from '../../../api/harbors';
 
-describe('Main Layout', () => {
+describe('Primary Layout', () => {
   describe('#is_loaded', () => {
     const logging_in_method = H.loggingIn;
     const test_logging_in_method = () => false;
@@ -25,7 +25,7 @@ describe('Main Layout', () => {
         this.$subReady = { Harbors: true };
         expect(is_loaded()).to.eq(true);
         H.loggingIn = logging_in_method;
-    });
+      });
   });
 
   describe('#no_users', () => {

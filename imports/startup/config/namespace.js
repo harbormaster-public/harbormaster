@@ -5,6 +5,9 @@ import { ReactiveVar } from "meteor/reactive-var";
 import { $ } from 'meteor/jquery';
 import { start_date } from '../../api/dates';
 import { Accounts } from 'meteor/accounts-base';
+import { Lanes } from '../../api/lanes';
+import { Users } from '../../api/users';
+import { LatestShipment, Shipments } from '../../api/shipments';
 
 // Global namespace
 H = $H = Meteor;
@@ -26,11 +29,13 @@ H.bind = H.bindEnvironment;
 
 // Test fixtures
 if (H.isServer && H.isTest) {
+  const test_email = require("faker").internet.email();
   // eslint-disable-next-line no-native-reassign
   if (!Session) Session = {
     store: {},
     get (key) {
-      return key && this.store[key] ? this.store[key] : undefined;
+      if (this.store[key] || this.store[key] == 0) return this.store[key];
+      return undefined;
     },
     set (key, data) {
       this.store[key] = data;
@@ -47,7 +52,7 @@ if (H.isServer && H.isTest) {
   };
 
   // eslint-disable-next-line no-native-reassign
-  if (!$) $ = function () {
+  if (!$) $ = function (target) {
     return {
       find (selector) {
         switch (selector) {
@@ -67,13 +72,53 @@ if (H.isServer && H.isTest) {
           default:
           case 'data-type':
             return 'test_type';
+          case 'data-value':
+            return 'test_value';
         }
-       },
+      },
+      addClass (className) {
+        target[className] = true;
+        return this;
+      },
+      removeClass (className) {
+        target[className] = false;
+        return this;
+      },
+      siblings () { return H.$(target.siblings); },
+      parents () { return H.$(target.parents); },
     };
   };
 
   if (!Accounts.onResetPasswordLink) Accounts.onResetPasswordLink = () => { };
   if (!Accounts.resetPassword) Accounts.resetPassword = () => { };
+
+  Factory.define('lane', Lanes, {
+    _id: '',
+    name: '',
+    captains: [],
+    type: '',
+    actual: new Date(),
+    last_shipment: { exit_code: 1 },
+    followup: { name: '' },
+    salvage_plan: { name: '' },
+  });
+
+  Factory.define("user", Users, {
+    _id: test_email,
+  });
+
+  Factory.define('shipment', Shipments, {
+    _id: '',
+    lane: '',
+    actual: new Date(),
+  });
+
+  Factory.define('latest_shipment', LatestShipment, {
+    _id: '',
+    shipment: {},
+  });
+
+  H.user = () => ({ emails: [{ address: 'test@harbormaster.io' }] });
 }
 
 H.Session = Session;

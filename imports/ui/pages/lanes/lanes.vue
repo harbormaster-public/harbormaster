@@ -79,7 +79,6 @@ import {
   latest_shipment,
   salvage_plan_name,
   total_captains,
-  total_stops,
   lane_ids,
   empty,
   lanes,
@@ -150,7 +149,6 @@ export default {
     latest_shipment,
     salvage_plan_name,
     total_captains,
-    total_stops,
   },
 
   created () {

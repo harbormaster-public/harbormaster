@@ -20,7 +20,7 @@
             <input 
               type=text 
               disabled 
-              :value="slug(this.$route.params.slug)"
+              :value="slug(this.$route.params.slug, true)"
               class="slug"
             >
           </label>
@@ -169,7 +169,6 @@ import {
   plying,
   lane_type,
   not_found,
-  refresh_harbor,
 } from './lib';
 import ShippingLog from '../../../components/shipping_log';
 
@@ -221,7 +220,6 @@ export default {
   },
 
   methods: {
-    refresh_harbor,
     validate_done,
     chosen_followup,
     chosen_salvage_plan,
