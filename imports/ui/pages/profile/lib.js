@@ -9,7 +9,7 @@ const handle_change_from_webhook = function (event) {
   var lane_id = H.$(event.target).attr('data-lane-id');
   var user_id = get_user_id(this);
   let remove_token;
-  const {render_lane_list} = this;
+  const { render_lane_list } = this;
 
   if (event.target.checked) {
     remove_token = false;
@@ -22,9 +22,9 @@ const handle_change_from_webhook = function (event) {
     'Lanes#update_webhook_token',
     lane_id, user_id, remove_token,
     function (err) {
-    if (err) throw err;
-    render_lane_list();
-  });
+      if (err) throw err;
+      render_lane_list();
+    });
 };
 
 const handle_change_can_ply = function (event) {
@@ -54,9 +54,8 @@ const handle_change_is_harbormaster = function (event) {
 
   user.harbormaster = event.target.checked;
 
-  return H.call('Users#update', user_id, user, (err, res) => {
+  H.call('Users#update', user_id, user, (err, res) => {
     console.log(`User ${user_id} updated: ${res}`);
-    return res;
   });
 };
 
@@ -81,11 +80,11 @@ const not_harbormaster = function () {
   var current_harbormaster = Users.findOne(current_user) ?
     Users.findOne(current_user).harbormaster :
     false
-  ;
+    ;
 
   if (current_harbormaster) { return false; }
 
-  return user ? ! user.harbormaster : true;
+  return user ? !user.harbormaster : true;
 };
 
 const is_captain = function () {
@@ -94,7 +93,7 @@ const is_captain = function () {
   var pliable_lanes = user ?
     Lanes.find({ captains: { $in: [user._id] } }).fetch() :
     []
-  ;
+    ;
 
   return pliable_lanes.length ? true : false;
 };
@@ -104,7 +103,7 @@ const can_ply = function (lane) {
   var user = Users.findOne(user_id);
 
   if (user && user.harbormaster) { return true; }
-  if (lane.captains) {
+  if (lane?.captains) {
     const pliable = _.contains(lane.captains, user_id);
 
     return pliable;
@@ -120,13 +119,15 @@ const can_change_plying = function () {
   var current_harbormaster = Users.findOne(current_user) ?
     Users.findOne(current_user).harbormaster :
     false
-  ;
+    ;
 
   if (user_id == current_user || user && user.harbormaster) { return true; }
 
   if (current_harbormaster) { return false; }
 
-  if (! user || ! user.harbormaster) { return true; }
+  if (!user || !user.harbormaster) { return true; }
+
+  return false;
 };
 
 const can_change_webhook = function () {
@@ -134,25 +135,25 @@ const can_change_webhook = function () {
   var current_harbormaster = Users.findOne(current_user) ?
     Users.findOne(current_user).harbormaster :
     false
-  ;
+    ;
 
-  return ! current_harbormaster;
+  return !current_harbormaster;
 };
 
 const webhook_allowed = function (lane) {
   var user_id = get_user_id(this);
 
-  if (! lane?.tokens) { return false; }
+  if (!lane?.tokens) { return false; }
 
-  return _.find(lane.tokens, function (tokens) {
-    return tokens == user_id;
+  return _.find(Object.keys(lane.tokens), function (token) {
+    return lane.tokens[token] == user_id;
   });
 };
 
 const webhook_token = function (lane) {
   var user_id = get_user_id(this);
 
-  if (! lane?.tokens) { return ''; }
+  if (!lane?.tokens) { return ''; }
 
   const token = _.invert(lane.tokens)[user_id];
 
@@ -160,6 +161,7 @@ const webhook_token = function (lane) {
 };
 
 export {
+  get_user_id,
   handle_change_from_webhook,
   handle_change_can_ply,
   handle_change_is_harbormaster,

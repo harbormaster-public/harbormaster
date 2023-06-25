@@ -74,6 +74,8 @@ if (H.isServer && H.isTest) {
             return 'test_type';
           case 'data-value':
             return 'test_value';
+          case 'data-lane-id':
+            return 'test';
         }
       },
       addClass (className) {

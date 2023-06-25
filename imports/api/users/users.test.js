@@ -4,6 +4,6 @@ const expect = chai.expect;
 
 describe('Users collection', function () {
   it('should exist', function () {
-    expect(Users);
+    expect(Users).to.not.eq(undefined);
   });
 });

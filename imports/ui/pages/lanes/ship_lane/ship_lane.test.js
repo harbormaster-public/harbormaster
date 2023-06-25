@@ -22,14 +22,18 @@ import { HTTP } from 'meteor/http';
 import { Shipments } from '../../../../api/shipments';
 import { Harbors } from '../../../../api/harbors';
 import { Lanes } from '../../../../api/lanes';
+import { resetDatabase } from 'cleaner';
 
 const shipments_find = Shipments.find;
 const shipments_find_one = Shipments.findOne;
 const harbors_find_one = Harbors.findOne;
+const lanes_find_one = Lanes.findOne;
 const http_post = HTTP.post;
 const call_method = H.call;
 
 describe('Ship Lane View', () => {
+  before(() => resetDatabase(null));
+
   describe('#lane', () => {
     it('returns the current lane by slug, or false', () => {
       this.$route = { params: { slug: 'test' } };
@@ -102,6 +106,7 @@ describe('Ship Lane View', () => {
     after(() => {
       Harbors.findOne = harbors_find_one;
       Shipments.findOne = shipments_find_one;
+      Lanes.findOne = lanes_find_one;
       H.call = call_method;
     });
 
