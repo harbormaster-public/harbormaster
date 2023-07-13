@@ -8,6 +8,7 @@ import { Accounts } from 'meteor/accounts-base';
 import { Lanes } from '../../api/lanes';
 import { Users } from '../../api/users';
 import { LatestShipment, Shipments } from '../../api/shipments';
+import { Harbors } from '../../api/harbors';
 
 // Global namespace
 H = $H = Meteor;
@@ -102,7 +103,10 @@ if (H.isServer && H.isTest) {
     actual: new Date(),
     last_shipment: { exit_code: 1 },
     followup: { name: '' },
-    salvage_plan: { name: '' },
+    salvage_plan: {
+      name: '',
+      _id: '',
+    },
   });
 
   Factory.define("user", Users, {
@@ -118,6 +122,11 @@ if (H.isServer && H.isTest) {
   Factory.define('latest_shipment', LatestShipment, {
     _id: '',
     shipment: {},
+  });
+
+  Factory.define('harbor', Harbors, {
+    _id: '',
+    lanes: {},
   });
 
   H.user = () => ({ emails: [{ address: 'test@harbormaster.io' }] });

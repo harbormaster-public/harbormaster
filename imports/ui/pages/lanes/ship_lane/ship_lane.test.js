@@ -193,12 +193,12 @@ describe('Ship Lane View', () => {
 
   describe('#work_output', () => {
     it('returns the latest shipment for a lane', () => {
-      const test_lane = { slug: 'test', latest_shipment: { _id: 'foo' } };
+      const test_lane = { slug: 'test', last_shipment: { _id: 'foo' } };
       H.Session.set('lane', test_lane);
       this.$route = { params: { slug: 'test', date: 'test' } };
       expect(work_output()._id).to.eq('foo');
       H.Session.set('lane', undefined);
-      Shipments.findOne = () => test_lane.latest_shipment;
+      Shipments.findOne = () => test_lane.last_shipment;
       expect(work_output()._id).to.eq('foo');
       Shipments.findOne = shipments_find_one;
     });
@@ -246,6 +246,7 @@ describe('Ship Lane View', () => {
       this.$route = { params: { slug: 'test' } };
       Shipments.find = () => ({ count: () => true });
       expect(any_active()).to.eq(true);
+      Shipments.find = shipments_find;
     });
   });
 

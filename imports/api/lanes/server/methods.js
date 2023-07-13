@@ -16,10 +16,10 @@ const trim_manifest = (manifest) => {
 };
 
 const collect_latest_shipments = function () {
-  console.log('Collecting latest shipments...');
+  if (!H.isTest) console.log('Collecting latest shipments...');
 
   Lanes.find().forEach((lane) => {
-    console.log(`Finding latest shipment for ${lane.name}...`);
+    if (!H.isTest) console.log(`Finding latest shipment for ${lane.name}...`);
 
     if (!lane.last_shipment) {
       let shipment = Shipments.findOne(
@@ -32,7 +32,7 @@ const collect_latest_shipments = function () {
     }
   });
 
-  console.log('Done collecting latest shipments.');
+  if (!H.isTest) console.log('Done collecting latest shipments.');
 };
 
 const get_increment = function (lane, increment = 2) {
@@ -44,13 +44,13 @@ const get_increment = function (lane, increment = 2) {
     increment += 1;
     dupe_slug = `${slug_match[1]}${increment}`;
   }
-  console.log(`Checking for exsting lane: ${dupe_slug}`);
+  if (!H.isTest) console.log(`Checking for exsting lane: ${dupe_slug}`);
   let existing_dupe = Lanes.findOne({ slug: dupe_slug });
   if (existing_dupe) {
     console.log(`Lane ${dupe_slug} already exists.`);
     return get_increment(existing_dupe, increment);
   }
-  console.log(`No duplicate found for ${dupe_slug}, using it.`);
+  if (!H.isTest) console.log(`No duplicate found for ${dupe_slug}, using it.`);
   return increment;
 };
 
@@ -95,8 +95,8 @@ const start_shipment = async function (id, manifest, shipment_start_date) {
     !shipment_start_date
   ) {
     throw new TypeError(
-      'Improper arguments for "Lanes#start_shipment" method!', '\n',
-      'The first argument must be a String; the _id of the lane.', '\n',
+      'Improper arguments for "Lanes#start_shipment" method!\n' +
+      'The first argument must be a String; the _id of the lane.\n' +
       'The second argument, if present, must be an object;' +
       'parameters to pass to the Harbor.\n' +
       'The third argument must be the shipment start date.'
@@ -129,12 +129,14 @@ const start_shipment = async function (id, manifest, shipment_start_date) {
 
   if (!H.isTest) console.log('Starting shipment for lane:', lane.name);
   try {
-    new_manifest = await H.bindEnvironment(
-      H.harbors[lane.type].work(lane, manifest)
+    const work_method = H.bindEnvironment(
+      H.harbors[lane.type].work,
+      (err) => { throw err; },
     );
+    new_manifest = await work_method(lane, manifest);
   }
   catch (err) {
-    console.error(
+    if (!H.isTest) console.error(
       'Shipment failed with error:\n',
       err + '\n',
       'for lane:\n',
@@ -177,21 +179,21 @@ const start_shipment = async function (id, manifest, shipment_start_date) {
 
 const end_shipment = async function (lane, exit_code, manifest) {
   if (
-    typeof lane._id != 'string' ||
+    lane && typeof lane._id != 'string' ||
     (typeof exit_code != 'string' && typeof exit_code != 'number') ||
     (manifest && typeof manifest != 'object')
   ) {
     throw new TypeError(
-      'Invalid arguments for "Lanes#end_shipment" method!', '\n',
-      'The first argument must be a reference to a lane object.', '\n',
+      'Invalid arguments for "Lanes#end_shipment" method!\n' +
+      'The first argument must be a reference to a lane object.\n' +
       'The second argument must be the exit code of the finished work; ' +
-      'An Integer or String representing one.', '\n',
+      'An Integer or String representing one.\n' +
       'The third argument, if present, must be an object;' +
       'The (modified) manifest object originally passed to the Harbor.'
     );
   }
 
-  if (exit_code && exit_code != 0) {
+  if (exit_code && exit_code != '0') {
     lane.salvage_runs = lane.salvage_runs >= 0 ? lane.salvage_runs + 1 : 1;
   }
 
@@ -224,7 +226,7 @@ const end_shipment = async function (lane, exit_code, manifest) {
   manifest.stdout = shipment.stdout;
   manifest.stderr = shipment.stderr;
 
-  console.log(
+  if (!H.isTest) console.log(
     'Shipping completed for lane:',
     lane.name,
     'with shipment:',
@@ -288,7 +290,7 @@ const reset_shipment = function (slug, date) {
     $set: {
       active: false,
       exit_code: 1,
-    }
+    },
   });
 
   LatestShipment.upsert(
@@ -298,10 +300,7 @@ const reset_shipment = function (slug, date) {
 
   lane.last_shipment = shipment ?
     Shipments.findOne(shipment._id) :
-    Shipments.findOne(
-      { lane: lane._id },
-      { sort: { actual: -1 } },
-    )
+    Shipments.findOne({ lane: lane._id }, { sort: { actual: -1 } })
     ;
 
   Lanes.update(lane._id, { $set: { last_shipment: lane.last_shipment } });
@@ -318,30 +317,23 @@ const reset_all_active_shipments = function (name) {
       $set: {
         active: false,
         exit_code: 1,
-      }
+      },
     },
     { multi: true }
   );
 
-  lane.latest_shipment = Shipments.findOne(
+  lane.last_shipment = Shipments.findOne(
     { lane: lane._id },
     { sort: { actual: -1 } },
   );
-  LatestShipment.upsert(lane._id, { shipment: lane.latest_shipment });
+  LatestShipment.upsert(lane._id, { shipment: lane.last_shipment });
   Lanes.update(lane._id, { $set: { last_shipment: lane.last_shipment } });
 
   return lane;
 };
 
 const update_slug = (lane) => {
-  Lanes.update(
-    { _id: lane._id },
-    {
-      $set: {
-        slug: lane.slug,
-      }
-    }
-  );
+  Lanes.update({ _id: lane._id }, { $set: { slug: lane.slug } });
 
   return true;
 };
@@ -351,7 +343,7 @@ const delete_lane = function (lane) {
   const harbor = Harbors.findOne(lane.type);
   delete harbor.lanes[lane._id];
   Harbors.update(harbor._id, harbor);
-  console.log(`Deleted lane: ${lane.name}`);
+  if (!H.isTest) console.log(`Deleted lane: ${lane.name}`);
   return H.call('Lanes#get_total');
 };
 
@@ -370,7 +362,7 @@ const duplicate = (lane) => {
   const manifest = harbor.lanes[lane._id].manifest;
   const replacement_regex = /\d+$/g;
 
-  console.log(`Duplicating lane ${lane.name}...`);
+  if (!H.isTest) console.log(`Duplicating lane ${lane.name}...`);
   delete lane.last_shipment;
   delete lane._id;
   delete lane.tokens;
@@ -381,7 +373,7 @@ const duplicate = (lane) => {
   const new_lane_id = Lanes.insert(lane);
   harbor.lanes[new_lane_id] = { manifest };
   Harbors.update(harbor._id, harbor);
-  console.log(`New lane created: ${lane.name}`);
+  if (!H.isTest) console.log(`New lane created: ${lane.name}`);
   return `/lanes/${lane.slug}/edit`;
 };
 
@@ -389,6 +381,7 @@ export {
   collect_latest_shipments,
   publish_lanes,
   get_total,
+  get_increment,
   update_webhook_token,
   start_shipment,
   end_shipment,

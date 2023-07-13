@@ -139,8 +139,8 @@ const has_work_output = function () {
 const work_output = function () {
   let $lane = get_lane(this.$route.params.slug);
   let date = this.$route.params.date;
-  let shipment = $lane.latest_shipment ?
-    $lane.latest_shipment :
+  let shipment = $lane.last_shipment ?
+    $lane.last_shipment :
     Shipments.findOne({
       lane: $lane?._id,
       start: date,
