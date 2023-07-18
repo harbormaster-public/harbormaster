@@ -11,6 +11,7 @@ import {
   add_script,
 } from './lib';
 import { Harbors } from '../../../api/harbors';
+import { resetDatabase } from 'cleaner';
 
 describe('Primary Layout', () => {
   describe('#is_loaded', () => {
@@ -30,6 +31,7 @@ describe('Primary Layout', () => {
 
   describe('#no_users', () => {
     it('returns true if there are no Users found', () => {
+      resetDatabase(null);
       expect(no_users()).to.eq(true);
     });
   });

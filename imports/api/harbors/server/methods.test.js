@@ -33,7 +33,7 @@ describe('Harbors', () => {
   });
   describe('#register', () => {
     it("adds a registered harbor's files to the Harbors dir");
-    it("removes an unregistered harbors' files from the Harbors dir")
+    it("removes an unregistered harbors' files from the Harbors dir");
     it("reloads the application if files were modified");
     it("returns 404 if no files were modified");
   });
