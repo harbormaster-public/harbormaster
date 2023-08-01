@@ -41,6 +41,7 @@ import { Shipments } from '../../../../api/shipments';
 import { Lanes } from '../../../../api/lanes';
 import { Users } from '../../../../api/users';
 import { Harbors } from '../../../../api/harbors';
+import { resetDatabase } from 'cleaner';
 
 const call_method = H.call;
 const lanes_find = Lanes.find;
@@ -438,6 +439,7 @@ describe('Edit Lane Page', function () {
 
   describe('#harbors', function () {
     it('returns a list of registered harbors', () => {
+      resetDatabase(null);
       expect(harbors().length).to.eq(0);
     });
   });

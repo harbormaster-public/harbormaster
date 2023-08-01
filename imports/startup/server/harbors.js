@@ -3,7 +3,7 @@ import path from "path";
 import expandTilde from "expand-tilde";
 import mkdirp from "mkdirp";
 import { checkSync } from "diskusage";
-import { execSync } from "child_process";
+import child_process from "child_process";
 import { Lanes } from "../../api/lanes";
 import { Users } from "../../api/users";
 import { Harbors } from "../../api/harbors";
@@ -36,46 +36,48 @@ H.check_avail_space = () => {
 
 H.update_avail_space = () => {
   H.space_avail = H.check_avail_space();
-  console.log(`${H.space_avail} available.`);
+  if (!H.isTest) console.log(`${H.space_avail} available.`);
 };
-H.update_avail_space();
+if (!H.isTest) H.update_avail_space();
 
 H.reload = () => {
   if (H.should_reload) {
-    console.log("Harbors changed, exiting.");
+    if (!H.isTest) console.log("Harbors changed, exiting.");
     process.exit(reload_exit_code);
   }
 };
 
 export const setup_harbor_dirs = () => {
   if (!fs.existsSync(harbors_dir)) {
-    console.log(`No harbors directory found at: ${harbors_dir}`);
+    if (!H.isTest) console.log(`No harbors directory found at: ${harbors_dir}`);
     mkdirp.sync(harbors_dir);
-    console.log("Harbors directory created.");
+    if (!H.isTest) console.log("Harbors directory created.");
   }
 
   if (!fs.existsSync(depot_dir)) {
-    console.log(`No depot directory found at ${depot_dir}`);
+    if (!H.isTest) console.log(`No depot directory found at ${depot_dir}`);
     mkdirp.sync(depot_dir);
-    console.log("Depot directory created.");
+    if (!H.isTest) console.log("Depot directory created.");
   }
 
   // https://nodejs.org/docs/latest/api/fs.html#fs_caveats
   try {
     fs.watch(harbors_dir, { recursive: true }, H.reload);
-    console.log(`Watching ${harbors_dir} recursively...`);
+    if (!H.isTest) console.log(`Watching ${harbors_dir} recursively...`);
   }
   catch (err) {
     // console.warn(err);
     fs.watch(harbors_dir, { recursive: false }, H.reload);
-    console.log(`Watching ${harbors_dir} *non*-recursively...`);
+    if (!H.isTest) console.log(`Watching ${harbors_dir} *non*-recursively...`);
   }
 };
-setup_harbor_dirs();
+if (!H.isTest) setup_harbor_dirs();
 
 const scan_depot = (new_harbor) => {
-  if (new_harbor) console.log(`Adding new harbor: ${new_harbor}`);
-  else console.log(`Enumerating Harbors found in depot: ${depot_dir}`);
+  if (new_harbor && !H.isTest) console.log(`Adding new harbor: ${new_harbor}`);
+  else if (!H.isTest) console.log(
+    `Enumerating Harbors found in depot: ${depot_dir}`
+  );
 
   let harbor_list = new_harbor ? [new_harbor] : fs.readdirSync(depot_dir);
   harbor_list.forEach((file) => {
@@ -87,7 +89,7 @@ const scan_depot = (new_harbor) => {
     let url = false;
     harbor.in_depot = true;
 
-    console.log(`Harbor "${harbor_name}" found in depot.`);
+    if (!H.isTest) console.log(`Harbor "${harbor_name}" found in depot.`);
     if (stats.isDirectory()) {
       try {
         const version_check_cmd = `git rev-parse --short HEAD`;
@@ -96,11 +98,13 @@ const scan_depot = (new_harbor) => {
           cwd: depot_path,
           stdio: ["pipe", "pipe", "ignore"], //in, out, err
         };
-        version = execSync(version_check_cmd, options)
+        version = child_process.execSync(version_check_cmd, options)
           .toString()
           .replace("\n", "");
-        url = execSync(origin_check_cmd, options).toString().replace("\n", "");
-        console.log(`Version ${version} found from ${url}`);
+        url = child_process.execSync(origin_check_cmd, options)
+          .toString()
+          .replace("\n", "");
+        if (!H.isTest) console.log(`Version ${version} found from ${url}`);
       }
       catch (err) {
         const warning = `Unable to determine origin for "${harbor_name}"
@@ -116,10 +120,10 @@ const scan_depot = (new_harbor) => {
   });
 };
 H.scan_depot = scan_depot;
-H.scan_depot();
+if (!H.isTest) H.scan_depot();
 
 export const register_harbors = () => {
-  console.log(`Registering Harbors from: ${harbors_dir}`);
+  if (!H.isTest) console.log(`Registering Harbors from: ${harbors_dir}`);
   fs.readdirSync(harbors_dir).forEach(function (file) {
     let harbor_path = path.join(harbors_dir, file);
     let stats = fs.statSync(harbor_path);
@@ -139,28 +143,30 @@ export const register_harbors = () => {
           ? register.name
           : register;
 
-      if (typeof harbor_name !== "string")
-        throw new Error(`Unable to register harbor name: ${harbor_name}`);
+      if (typeof harbor_name !== "string") throw new Error(
+        `Unable to register harbor name: ${harbor_name}`
+      );
 
-      console.log(`Registering packages for "${harbor_name}"...`);
+      if (!H.isTest) console.log(
+        `Registering packages for "${harbor_name}"...`
+      );
       if (register.pkgs instanceof Array) {
         register.pkgs.forEach((pkg) => {
           try {
-            console.log(`Checking for: ${pkg}...`);
+            if (!H.isTest) console.log(`Checking for: ${pkg}...`);
             require(pkg);
-            console.log(`Found: ${pkg}`);
+            if (!H.isTest) console.log(`Found: ${pkg}`);
           }
           catch (e) {
-            console.log(`Missing: ${pkg}`);
+            if (!H.isTest) console.log(`Missing: ${pkg}`);
             packages.push(pkg);
           }
         });
       }
-
       if (packages.length) {
         packages = packages.join(" ");
-        console.log(`Installing packages: ${packages}`);
-        execSync(`meteor npm i -S ${packages}`);
+        if (!H.isTest) console.log(`Installing packages: ${packages}`);
+        child_process.execSync(`meteor npm i -S ${packages}`);
       }
 
       let harbor = Harbors.findOne(harbor_name) || {};
@@ -170,13 +176,15 @@ export const register_harbors = () => {
       harbor.constraints = entrypoint.constraints && entrypoint.constraints();
       harbor.registered = true;
       Harbors.upsert({ _id: harbor_name }, harbor);
-      console.log(`Harbor registered: ${file}`);
+      if (!H.isTest) console.log(`Harbor registered: ${file}`);
     }
     catch (err) {
-      console.error(`Warning!  Unable to register Harbor: ${file}`);
+      if (!H.isTest) console.error(
+        `Warning!  Unable to register Harbor: ${file}`
+      );
       console.error(err);
     }
   });
-  console.log("All harbors registered.");
+  if (!H.isTest) console.log("All harbors registered.");
 };
-register_harbors();
+if (!H.isTest) register_harbors();
