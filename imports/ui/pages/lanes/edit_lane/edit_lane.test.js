@@ -56,6 +56,7 @@ describe('Edit Lane Page', function () {
   });
 
   describe('#update_harbor', function () {
+    beforeEach(() => resetDatabase(null));
     it('collects values from the form input objects with a timestamp', () => {
       H.call = () => { };
       const values = update_harbor();

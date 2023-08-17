@@ -23,6 +23,7 @@ import { Shipments } from "../../../../api/shipments";
 import { Lanes } from "../../../../api/lanes";
 import chai from 'chai';
 import _ from 'lodash';
+import { resetDatabase } from 'cleaner';
 
 const { expect } = chai;
 const test_shipments_find_one = function (options) {
@@ -282,7 +283,10 @@ describe('Charter Page', () => {
   });
 
   describe('#lane', () => {
-    before(() => H.Session.set('lane', undefined));
+    before(() => {
+      resetDatabase(null);
+      H.Session.set('lane', undefined);
+    });
     it(
       'returns the active lane based on slug or Session, or an empty object',
       () => {
@@ -291,7 +295,7 @@ describe('Charter Page', () => {
         expect(lane()).to.eq(H.Session.get('lane'));
         H.Session.set('lane', undefined);
         expect(_.isEmpty(lane())).to.eq(true);
-    });
+      });
   });
 
   describe('#graph_options', () => {

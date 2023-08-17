@@ -201,8 +201,9 @@ describe('Harbors', () => {
   });
   describe('#remove', () => {
     let called;
-    const harbor = Factory.create('harbor', { _id: 'test' });
+    let harbor;
     beforeEach(() => {
+      harbor = Factory.create('harbor', { _id: 'test' });
       fs.rmSync = () => { };
       H.update_avail_space = () => { };
     });

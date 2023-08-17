@@ -156,7 +156,7 @@ const register = function (harbor) {
     files.forEach(file => {
       let filepath = path.join(depotpath, file);
       let registeredpath = path.join(H.harbors_dir, file);
-      console.log(`Adding harbor "${file}" for registration...`);
+      if (!H.isTest) console.log(`Adding harbor "${file}" for registration...`);
       H.copySync(filepath, registeredpath, { overwrite: true });
     });
   }
@@ -166,7 +166,7 @@ const register = function (harbor) {
     });
     files.forEach(file => {
       let filepath = path.join(H.harbors_dir, file);
-      console.log(`Removing recursively: ${filepath}`);
+      if (!H.isTest) console.log(`Removing recursively: ${filepath}`);
       fs.rmSync(filepath, { recursive: true });
     });
   }
@@ -181,7 +181,7 @@ const remove = function (harbor) {
     console.log(`Removing ${depotpath}...`);
     Harbors.remove(harbor);
     fs.rmSync(depotpath, { recursive: true });
-    console.log(`Successfully removed harbor: ${harbor._id}`);
+    if (!H.isTest) console.log(`Successfully removed harbor: ${harbor._id}`);
     H.update_avail_space();
     return true;
   }

@@ -18,7 +18,7 @@ export const load_userland = function (file) {
   try {
     let string = fs.readFileSync(file_path).toString();
     eval(string);
-    console.log('Startup file loaded:', file);
+    if (!H.isTest) console.log('Startup file loaded:', file);
   }
   catch (err) {
     console.error('Warning!  Unable to load userland startup file:', file);
@@ -27,7 +27,7 @@ export const load_userland = function (file) {
 };
 
 if (fs.existsSync(startup_dir)) {
-  console.log('Loading userland startup files...');
+  if (!H.isTest) console.log('Loading userland startup files...');
   fs.readdirSync(startup_dir).forEach(load_userland);
 }
 

@@ -20,7 +20,9 @@ describe('Root Page (/)', () => {
 
   describe('#latest_shipment', function () {
     it('returns a loading object if no shipment is available', () => {
+      H.call = () => { };
       expect(latest_shipment().locale).to.eq('loading...');
+      H.call = call_method;
     });
     it('gets the latest shipment date and saves it in Session', () => {
       H.call = (method) => expect(method).to.eq('Shipments#get_latest_date');
