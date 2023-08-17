@@ -34,10 +34,11 @@ H.check_avail_space = () => {
   return convert_bytes(b);
 };
 
-H.update_avail_space = () => {
+export const update_avail_space = () => {
   H.space_avail = H.check_avail_space();
   if (!H.isTest) console.log(`${H.space_avail} available.`);
 };
+H.update_avail_space = update_avail_space;
 if (!H.isTest) H.update_avail_space();
 
 H.reload = () => {
@@ -66,14 +67,13 @@ export const setup_harbor_dirs = () => {
     if (!H.isTest) console.log(`Watching ${harbors_dir} recursively...`);
   }
   catch (err) {
-    // console.warn(err);
     fs.watch(harbors_dir, { recursive: false }, H.reload);
     if (!H.isTest) console.log(`Watching ${harbors_dir} *non*-recursively...`);
   }
 };
 if (!H.isTest) setup_harbor_dirs();
 
-const scan_depot = (new_harbor) => {
+export const scan_depot = (new_harbor) => {
   if (new_harbor && !H.isTest) console.log(`Adding new harbor: ${new_harbor}`);
   else if (!H.isTest) console.log(
     `Enumerating Harbors found in depot: ${depot_dir}`

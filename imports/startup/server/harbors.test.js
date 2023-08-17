@@ -5,6 +5,8 @@ import {
   convert_bytes,
   setup_harbor_dirs,
   register_harbors,
+  update_avail_space,
+  scan_depot,
 } from "./harbors";
 import expandTilde from 'expand-tilde';
 import mkdirp from 'mkdirp';
@@ -42,9 +44,10 @@ describe("Harbors startup", () => {
     });
   });
 
-  describe("H.update_avail_space", () => {
+  describe("#update_avail_space", () => {
     it("updates the space recorded as available", () => {
-      H.update_avail_space();
+      console.error(update_avail_space);
+      update_avail_space();
       expect(H.space_avail).to.eq(H.check_avail_space());
     });
   });
@@ -102,7 +105,7 @@ describe("Harbors startup", () => {
     });
   });
 
-  describe("H.scan_depot", () => {
+  describe("#scan_depot", () => {
 
     afterEach(() => {
       fs.readdirSync = fs_readdir_sync;
@@ -130,7 +133,7 @@ describe("Harbors startup", () => {
         else cmd2 = cmd;
         return '';
       };
-      H.scan_depot('test');
+      scan_depot('test');
       expect(depot_path).to.eq(path.join(depot_dir, 'test'));
       expect(cwd).to.eq(path.join(depot_dir, 'test'));
       expect(cmd1).to.eq('git rev-parse --short HEAD');
@@ -143,7 +146,7 @@ describe("Harbors startup", () => {
       fs.statSync = () => ({ isDirectory: () => true });
       child_process.execSync = () => { throw new Error(); };
       console.log = (warning) => called = warning;
-      H.scan_depot('test');
+      scan_depot('test');
       expect(called.length).to.eq(expected_length);
       console.log = console_log;
     });
@@ -151,7 +154,7 @@ describe("Harbors startup", () => {
       resetDatabase(null);
       fs.statSync = () => ({ isDirectory: () => true });
       child_process.execSync = () => '';
-      H.scan_depot('test');
+      scan_depot('test');
       expect(Harbors.findOne('test')._id).to.eq('test');
     });
   });

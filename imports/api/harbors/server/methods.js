@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import is_git_url from 'is-git-url';
-import { copySync } from 'fs-extra';
+import fse from 'fs-extra';
 import cp from 'child_process';
 import { promisify } from 'util';
 import { Harbors } from '..';
@@ -10,12 +10,14 @@ import {
   LatestShipment, Shipments,
 } from '../../shipments';
 
+H.copySync = fse.copySync;
+
 const not_found = (err) => {
-  console.error(err);
+  if (!H.isTest) console.error(err);
   return 404;
 };
 
-const exec = promisify(cp.exec);
+H.exec = promisify(cp.exec);
 
 const update_harbor = async function (lane, values) {
   try {
@@ -27,7 +29,7 @@ const update_harbor = async function (lane, values) {
         manifest: values,
       };
       await Harbors.update(harbor._id, harbor);
-      lane = await Meteor.call('Harbors#render_work_preview', lane, values);
+      lane = await H.call('Harbors#render_work_preview', lane, values);
       lane.minimum_complete = success;
     }
 
@@ -41,7 +43,7 @@ const update_harbor = async function (lane, values) {
 
       LatestShipment.upsert(
         lane._id,
-        {shipment: lane.last_shipment}
+        { shipment: lane.last_shipment }
       );
     }
 
@@ -51,26 +53,29 @@ const update_harbor = async function (lane, values) {
 
   }
   catch (err) {
-    console.error(err);
+    if (!H.isTest) console.error(err);
     throw err;
   }
 };
 
 const render_input = async function (lane, manifest) {
   const new_lane_name = 'New';
-  if (lane.name == new_lane_name || !lane.type) return false;
 
   try {
+    if (lane.name == new_lane_name || !lane.type) return false;
+
     lane.rendered_input = H.harbors[lane.type].render_input(manifest, lane);
     lane.rendered_work_preview = await H
       .harbors
-      [lane.type]
+    [lane.type]
       .render_work_preview(manifest, lane)
-    ;
-    Lanes.update(lane._id, {$set: {
-      rendered_input: lane.rendered_input,
-      rendered_work_preview: lane.rendered_work_preview,
-    }});
+      ;
+    Lanes.update(lane._id, {
+      $set: {
+        rendered_input: lane.rendered_input,
+        rendered_work_preview: lane.rendered_work_preview,
+      },
+    });
 
     return lane;
 
@@ -83,24 +88,27 @@ const render_input = async function (lane, manifest) {
 const render_work_preview = async function (
   lane, manifest
 ) {
-  if (! H.harbors[lane.type]) return 404;
+  if (!H.harbors[lane?.type]) return 404;
   try {
     lane.rendered_work_preview = await H
-      .harbors
-      [lane.type]
+      .harbors[lane.type]
       .render_work_preview(manifest, lane)
-    ;
-    if (manifest.shipment_id) {
-      console.log(
+      ;
+    if (manifest?.shipment_id) {
+      if (!H.isTest) console.log(
         `Updating rendered work for shipment: ${manifest.shipment_id}`
       );
-      Shipments.update(manifest.shipment_id, {$set: {
-        rendered_work_preview: lane.rendered_work_preview,
-      }});
+      Shipments.update(manifest.shipment_id, {
+        $set: {
+          rendered_work_preview: lane.rendered_work_preview,
+        },
+      });
     }
-    Lanes.update(lane._id, {$set: {
-      rendered_work_preview: lane.rendered_work_preview,
-    }});
+    Lanes.update(lane._id, {
+      $set: {
+        rendered_work_preview: lane.rendered_work_preview,
+      },
+    });
 
     return lane;
   }
@@ -113,10 +121,13 @@ const get_constraints = function (name) {
     global: [],
     [name]: [],
   };
-  Harbors.find({ $or: [
-    { 'constraints.global': { $exists: true } },
-    { [key]: { $exists: true } },
-  ] }).forEach((doc) => {
+  constraints[name] = [];
+  Harbors.find({
+    $or: [
+      { 'constraints.global': { $exists: true } },
+      { [key]: { $exists: true } },
+    ],
+  }).forEach((doc) => {
     if (doc.constraints.global)
       constraints.global = constraints.global.concat(doc.constraints.global);
     if (doc.constraints[name])
@@ -146,14 +157,14 @@ const register = function (harbor) {
       let filepath = path.join(depotpath, file);
       let registeredpath = path.join(H.harbors_dir, file);
       console.log(`Adding harbor "${file}" for registration...`);
-      copySync(filepath, registeredpath, { overwrite: true });
+      H.copySync(filepath, registeredpath, { overwrite: true });
     });
   }
   else {
     fs.readdirSync(H.harbors_dir).forEach(file => {
       if (file.match(harbor._id)) { files.push(file); }
     });
-    files.forEach(file =>{
+    files.forEach(file => {
       let filepath = path.join(H.harbors_dir, file);
       console.log(`Removing recursively: ${filepath}`);
       fs.rmSync(filepath, { recursive: true });
@@ -178,7 +189,7 @@ const remove = function (harbor) {
 };
 
 const add_harbor_to_depot = async function (git_url) {
-  if (! is_git_url(git_url)) return 400;
+  if (!is_git_url(git_url)) return 400;
   const clone_exec_opts = { cwd: H.depot_dir };
   const git_clone_cmd = `git clone ${git_url}`;
   const harbor_name_regex = /\/([a-zA-Z0-9-_]+)\.git/;
@@ -187,23 +198,25 @@ const add_harbor_to_depot = async function (git_url) {
     const {
       stdout: clone_stdout,
       stderr: clone_stderr,
-    } = await exec(git_clone_cmd, clone_exec_opts);
-    console.log(clone_stdout);
-    console.warn(clone_stderr);
+    } = await H.exec(git_clone_cmd, clone_exec_opts);
+    if (!H.isTest) {
+      console.log(clone_stdout);
+      console.warn(clone_stderr);
+    }
     H.scan_depot(harbor_name);
   }
- catch (err) {
+  catch (err) {
     return err;
   }
   return 200;
 };
 
 export {
- update_harbor,
- render_input,
- render_work_preview,
- get_constraints,
- register,
- remove,
- add_harbor_to_depot,
+  update_harbor,
+  render_input,
+  render_work_preview,
+  get_constraints,
+  register,
+  remove,
+  add_harbor_to_depot,
 };
