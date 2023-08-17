@@ -46,7 +46,6 @@ describe("Harbors startup", () => {
 
   describe("#update_avail_space", () => {
     it("updates the space recorded as available", () => {
-      console.error(update_avail_space);
       update_avail_space();
       expect(H.space_avail).to.eq(H.check_avail_space());
     });

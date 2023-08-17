@@ -9,7 +9,7 @@ const publish_shipments = function publish_shipments (lanes, options = {}) {
   if (lanes?._id) query.lane = lanes._id;
   if (lanes?.date) query.start = lanes.date;
   else if (lanes && lanes.length > 0 && lanes instanceof Array) {
-    query = { lane: { $in: lanes } };
+    query = { lane: { $in: lanes.map((item) => item._id) } };
   }
   else if (lanes?.slug) {
     let lane = Lanes.findOne({ slug: lanes.slug });
@@ -21,7 +21,7 @@ const publish_shipments = function publish_shipments (lanes, options = {}) {
 };
 
 const get_total_shipments = function () {
-  this.unblock();
+  if (!H.isTest) this.unblock();
   let now = Date.now();
   let interval = 86400000; // 24 hours
   let yesterday = new Date(now - interval);
@@ -35,32 +35,32 @@ const get_total_shipments = function () {
 };
 
 const last_shipped = function (lane = { _id: null }) {
-  this.unblock();
+  if (!H.isTest) this.unblock();
   const latest = LatestShipment.findOne(lane._id);
-  return latest ? latest.shipment : Shipments.findOne({ lane: lane._id }, {
+  const query = lane._id ? { lane: lane._id } : {};
+  return latest ? latest.shipment : Shipments.findOne(query, {
     sort: { actual: -1 },
     limit: 1,
   });
 };
 
 const total_completed_shipments = function (lane = { _id: null }) {
-  this.unblock();
-  return Shipments.find({
-    lane: lane._id,
-    exit_code: 0,
-  }).count();
+  if (!H.isTest) this.unblock();
+  const query = lane._id ? { lane: lane._id, exit_code: 0 } : { exit_code: 0 };
+  return Shipments.find(query).count();
 };
 
 const total_salvage_runs = function (lane = { _id: null }) {
-  this.unblock();
-  return Shipments.find({
-    lane: lane._id,
-    exit_code: { $ne: 0 },
-  }).count();
+  if (!H.isTest) this.unblock();
+  const query = lane._id ?
+    { lane: lane._id, exit_code: { $ne: 0 } } :
+    { exit_code: { $ne: 0 } }
+    ;
+  return Shipments.find(query).count();
 };
 
 const get_latest_date = function () {
-  this.unblock();
+  if (!H.isTest) this.unblock();
   let lane;
 
   let latest_shipment = Shipments.findOne({}, { sort: { finished: -1 } });
@@ -87,9 +87,9 @@ const get_latest_date = function () {
 };
 
 const log_shipment_totals = function () {
-  if (!H.isTest) console.log('Collecting shipment totals for each lane...');
+  console.log('Collecting shipment totals for each lane...');
   Lanes.find().forEach((lane) => {
-    if (!H.isTest) console.log(`Counting shipments for ${lane.name}...`);
+    console.log(`Counting shipments for ${lane.name}...`);
     const shipments = Shipments.find({ lane: lane._id });
     const salvage = Shipments.find({
       lane: lane._id,
@@ -98,13 +98,13 @@ const log_shipment_totals = function () {
     let shipment_count = shipments.count() || 0;
     let salvage_count = salvage.count() || 0;
 
-    if (!H.isTest) console.log(
+    console.log(
       `${lane.name} counted:
     \tShipments: ${shipment_count}
     \tSalvage Runs: ${salvage_count}`
     );
   });
-  if (!H.isTest) console.log('Done collecting shipment totals.');
+  console.log('Done collecting shipment totals.');
 };
 
 export {

@@ -117,6 +117,7 @@ if (H.isServer && H.isTest) {
     _id: '',
     lane: '',
     actual: new Date(),
+    finished: new Date(),
   });
 
   Factory.define('latest_shipment', LatestShipment, {
