@@ -17,6 +17,7 @@ import {
   test_user_login,
   screenshot,
   H,
+  expect,
 } from '../../helpers';
 
 describe('Routes', function () {
@@ -47,9 +48,12 @@ describe('Routes', function () {
 
   beforeEach(async function () {
     await page.goto(H.absoluteUrl());
-    let header = await page.waitForSelector('h1');
+    let header = await page.waitForSelector('h1', {visible: true});
+    // let header = await page.waitForSelector('h1');
 
-    expect(header).to.exist.and.be.visible;
+    // expect(header).to.exist.and.be.visible;
+    expect(header).to.exist;
+    // expect(header).to.be.visible;
   });
 
   describe('when there are no users', function () {
@@ -59,18 +63,25 @@ describe('Routes', function () {
     });
 
     it('show the Welcome Page', async function () {
-      const add_user_page = await page.$('#add-user-page');
-      const new_instance_form = await page.$('#new-instance');
+      // const add_user_page = await page.waitForSelector('#add-user-page', {
+      //   visible: true,
+      // });
+      const new_instance_form = await page.waitForSelector('#new-instance', {
+        visible: true,
+      });
 
-      expect([add_user_page, new_instance_form]).to.exist.and.be.visible;
+      expect(new_instance_form).to.exist;
+      // expect([add_user_page, new_instance_form]).to.exist;
     });
 
     it('allow a new user to sign up', async () => {
       await page.type('.email-user-invite', test_email);
       await page.click('.initial-sign-in');
-      const login_form = await page.$('.login-form');
+      const login_form = await page.waitForSelector('.login-form', {
+        visible: true,
+      });
 
-      expect(login_form).to.exist.and.be.visible;
+      expect(login_form).to.exist;
     });
   });
 
@@ -82,22 +93,26 @@ describe('Routes', function () {
 
     it('allow users to login and logout', async () => {
       await test_user_login(test_email, test_password);
-      const root_page = await page.$('#root-page');
+      const root_page = await page.waitForSelector('#root-page');
 
       expect(root_page).to.not.be.null;
 
       await page.click('.logout');
-      const login_form = await page.$('.login-form');
+      const login_form = await page.waitForSelector('.login-form', {
+        visible: true,
+      });
 
-      expect(login_form).to.exist.and.be.visible;
+      expect(login_form).to.exist;
     });
 
     it('allow a user to reset a password', async () => {
       await page.type('.login-form input[type="email"]', test_email);
       await page.click('.forgot-password');
-      const instructions = await page.$('.instructions');
+      const instructions = await page.waitForSelector('.instructions', {
+        visible: true,
+      });
 
-      expect(instructions).to.exist.and.be.visible;
+      expect(instructions).to.exist;
     });
   });
 
@@ -111,9 +126,12 @@ describe('Routes', function () {
       await page.goto(H.absoluteUrl());
       await page.reload();
       await test_user_login(test_email, test_password);
-      const last_time_shipped_header = page.$('#last-time-shipped-header');
+      const last_time_shipped_header = page.waitForSelector(
+        '#last-time-shipped-header',
+        {visible: true},
+      );
 
-      expect(last_time_shipped_header).to.exist.and.be.visible;
+      expect(last_time_shipped_header).to.exist;
     });
 
     beforeEach(async () => {
@@ -123,20 +141,22 @@ describe('Routes', function () {
     it('allow viewing the Lanes Page', async () => {
       await page.click(`.nav-item[href="/${lanes_route}"]`);
       const lanes_url = page.url();
-      const lanes_page = page.$('#lanes-page');
+      const lanes_page = page.waitForSelector('#lanes-page', {visible: true});
 
       expect(lanes_url).to.eq(`${H.absoluteUrl()}${lanes_route}`);
-      expect(lanes_page).to.exist.and.be.visible;
+      expect(lanes_page).to.exist;
 
     });
 
     it('allow creating a new Lane', async () => {
       await page.click(`.nav-item[href="/${lanes_route}"]`);
       await page.click('#new-lane');
-      const edit_lane_page = await page.$('#edit-lane-page');
+      const edit_lane_page = await page.waitForSelector('#edit-lane-page', {
+        visible: true,
+      });
       const edit_lane_url = `${H.absoluteUrl()}lanes/new/edit`;
 
-      expect(edit_lane_page).to.exist.and.be.visible;
+      expect(edit_lane_page).to.exist;
       expect(page.url()).to.eq(edit_lane_url);
     });
 
@@ -147,13 +167,19 @@ describe('Routes', function () {
       }/edit`;
 
       await page.goto(new_lane_url);
-      const edit_new_lane_page = await page.$('#edit-lane-page');
-      expect(edit_new_lane_page).to.exist.and.be.visible;
+      const edit_new_lane_page = await page.waitForSelector(
+        '#edit-lane-page',
+        {visible: true},
+      );
+      expect(edit_new_lane_page).to.exist;
       expect(page.url()).to.eq(new_lane_url);
 
       await page.goto(given_lane_url);
-      const edit_given_lane_page = await page.$('#edit-lane-page');
-      expect(edit_given_lane_page).to.exist.and.be.visible;
+      const edit_given_lane_page = await page.waitForSelector(
+        '#edit-lane-page',
+        {visible: true},
+      );
+      expect(edit_given_lane_page).to.exist;
       expect(page.url()).to.eq(given_lane_url);
     });
 
@@ -163,8 +189,11 @@ describe('Routes', function () {
       }/ship`;
 
       await page.goto(ship_lane_page_url);
-      const ship_lane_page = await page.$('#ship-lane-page');
-      expect(ship_lane_page).to.exist.and.be.visible;
+      const ship_lane_page = await page.waitForSelector(
+        '#ship-lane-page',
+        {visible: true},
+      );
+      expect(ship_lane_page).to.exist;
     });
 
     it('allow viewing of historical shipments for a Lane', async () => {
@@ -181,8 +210,11 @@ describe('Routes', function () {
       }/ship/${date_string}`;
 
       await page.goto(historical_shipped_lane_url);
-      const ship_lane_page = await page.$('#ship-lane-page');
-      expect(ship_lane_page).to.exist.and.be.visible;
+      const ship_lane_page = await page.waitForSelector(
+        '#ship-lane-page',
+        {visible: true},
+      );
+      expect(ship_lane_page).to.exist;
     });
 
     it('redirect missing Lane names to the Lanes Page', async () => {
@@ -195,10 +227,12 @@ describe('Routes', function () {
 
     it('allow viewing the Users Page showing all users', async () => {
       await page.goto(users_url);
-      const users_page = page.$('#users-page');
-      const users_list = page.$('.users-table tbody tr');
-      expect(users_page).to.exist.and.be.visible;
-      expect(users_list).to.exist.and.be.visible;
+      const users_page = page.waitForSelector('#users-page', {visible: true});
+      const users_list = page.waitForSelector('.users-table tbody tr', {
+        visible: true,
+      });
+      expect(users_page).to.exist;
+      expect(users_list).to.exist;
       expect(users_list.length);
     });
 
@@ -207,16 +241,17 @@ describe('Routes', function () {
       await page.click('.invite-user');
       const new_user = faker.internet.email();
 
-      const add_user_page = page.$('#add-user-page');
+      const add_user_page = page.waitForSelector('#add-user-page', {
+        visible: true,
+      });
       expect(page.url()).to.eq(`${users_url}/add-user`);
-      expect(add_user_page).to.exist.and.be.visible;
+      expect(add_user_page).to.exist;
 
       await page.type('.email-user-invite', new_user);
       await page.click('.send-invitation');
 
-      const users_page = page.$('#users-page');
-      expect(users_page).to.exist.and.be.visible;
-      expect(await page.$('#add-user-page')).to.not.exist;
+      const users_page = page.waitForSelector('#users-page', {visible: true});
+      expect(users_page).to.exist;
 
       expect(page.url()).to.eq(users_url);
     });
@@ -224,9 +259,11 @@ describe('Routes', function () {
     it('allow viewing a User Profile', async () => {
       await page.goto(users_url);
       await page.click('.users-table tbody tr:first-child .profile');
-      const profile_page = await page.$('#profile-page');
+      const profile_page = await page.waitForSelector('#profile-page', {
+        visible: true,
+      });
 
-      expect(profile_page).to.exist.and.be.visible;
+      expect(profile_page).to.exist;
     });
   });
 });

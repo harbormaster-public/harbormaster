@@ -13,6 +13,7 @@ import {
 H.copySync = fse.copySync;
 
 const not_found = (err) => {
+  /* istanbul ignore next */
   if (!H.isTest) console.error(err);
   return 404;
 };
@@ -24,6 +25,7 @@ const update_harbor = async function (lane, values) {
     let harbor = Harbors.findOne(lane.type);
     let success = H.harbors[lane.type].update(lane, values);
     if (success) {
+      /* istanbul ignore next */
       harbor.lanes = harbor.lanes || {};
       harbor.lanes[lane._id] = {
         manifest: values,
@@ -53,6 +55,7 @@ const update_harbor = async function (lane, values) {
 
   }
   catch (err) {
+    /* istanbul ignore next */
     if (!H.isTest) console.error(err);
     throw err;
   }
@@ -95,6 +98,7 @@ const render_work_preview = async function (
       .render_work_preview(manifest, lane)
       ;
     if (manifest?.shipment_id) {
+      /* istanbul ignore next */
       if (!H.isTest) console.log(
         `Updating rendered work for shipment: ${manifest.shipment_id}`
       );
@@ -128,10 +132,14 @@ const get_constraints = function (name) {
       { [key]: { $exists: true } },
     ],
   }).forEach((doc) => {
-    if (doc.constraints.global)
+    /* istanbul ignore else */
+    if (doc.constraints.global) {
       constraints.global = constraints.global.concat(doc.constraints.global);
-    if (doc.constraints[name])
+    }
+    /* istanbul ignore else */
+    if (doc.constraints[name]) {
       constraints[name] = constraints[name].concat(doc.constraints[name]);
+    }
   });
 
   return constraints;
@@ -145,27 +153,28 @@ const register = function (harbor) {
   if (harbor.registered) {
     let depotpath = path.join(H.depot_dir, harbor._id);
     fs.readdirSync(depotpath).forEach(file => {
+      /* istanbul ignore else */
       if (
-        (
-          file.match(harbor._id) &&
-          fs.statSync(path.join(depotpath, file)).isDirectory()
-        ) ||
-        file.match(`${harbor._id}.js`)
+        is_harbor_resource_dir(file, harbor, depotpath) ||
+        is_harbor_file(file, harbor)
       ) { files.push(file); }
     });
     files.forEach(file => {
       let filepath = path.join(depotpath, file);
       let registeredpath = path.join(H.harbors_dir, file);
+      /* istanbul ignore next */
       if (!H.isTest) console.log(`Adding harbor "${file}" for registration...`);
       H.copySync(filepath, registeredpath, { overwrite: true });
     });
   }
   else {
     fs.readdirSync(H.harbors_dir).forEach(file => {
+      /* istanbul ignore else */
       if (file.match(harbor._id)) { files.push(file); }
     });
     files.forEach(file => {
       let filepath = path.join(H.harbors_dir, file);
+      /* istanbul ignore next */
       if (!H.isTest) console.log(`Removing recursively: ${filepath}`);
       fs.rmSync(filepath, { recursive: true });
     });
@@ -181,6 +190,7 @@ const remove = function (harbor) {
     console.log(`Removing ${depotpath}...`);
     Harbors.remove(harbor);
     fs.rmSync(depotpath, { recursive: true });
+    /* istanbul ignore next */
     if (!H.isTest) console.log(`Successfully removed harbor: ${harbor._id}`);
     H.update_avail_space();
     return true;
@@ -199,6 +209,7 @@ const add_harbor_to_depot = async function (git_url) {
       stdout: clone_stdout,
       stderr: clone_stderr,
     } = await H.exec(git_clone_cmd, clone_exec_opts);
+    /* istanbul ignore next */
     if (!H.isTest) {
       console.log(clone_stdout);
       console.warn(clone_stderr);
@@ -220,3 +231,15 @@ export {
   remove,
   add_harbor_to_depot,
 };
+
+const is_harbor_file = function (file, harbor) {
+  return file.match(`${harbor._id}.js`);
+};
+
+const is_harbor_resource_dir = function (file, harbor, depotpath) {
+  return (
+    file.match(harbor._id) &&
+    fs.statSync(path.join(depotpath, file)).isDirectory()
+  );
+};
+

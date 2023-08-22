@@ -5,17 +5,19 @@
   "babel": {
     "env": {
       "COVERAGE": {
-        "plugins": [ "istanbul" ]
+        "plugins": [
+          "istanbul"
+        ]
       }
     }
   },
   "scripts": {
-    "coverage": "BABEL_ENV=COVERAGE COVERAGE=1 COVERAGE_VERBOSE=1 COVERAGE_OUT_JSON=1 COVERAGE_OUT_TEXT_SUMMARY=1 COVERAGE_APP_FOLDER=/mnt/Storage/src/harbormaster/ npm run test",
-    "test": "WARN_WHEN_USING_OLD_API=1 BROWSERSLIST_IGNORE_OLD_DATA=1 NODE_OPTIONS='--trace-warnings' ROOT_URL='' MONGO_URL='' NO_HMR=1 meteor test --port=4040 --once --driver-package meteortesting:mocha",
-    "test:watch": "WHEN_USING_OLD_API=1 BROWSERSLIST_IGNORE_OLD_DATA=1 NODE_OPTIONS='--trace-warnings' ROOT_URL=\"\" MONGO_URL=\"\" NO_HMR=1 meteor test --port=4040 --driver-package meteortesting:mocha",
+    "coverage": "BABEL_ENV=COVERAGE COVERAGE=1 COVERAGE_VERBOSE=1 COVERAGE_OUT_JSON=1 COVERAGE_OUT_TEXT_SUMMARY=1 COVERAGE_APP_FOLDER=/$PWD/ npm run test && nyc report --reporter html --reporter text -t .coverage --report-dir .coverage/summary --check-coverage --statements 90 --functions 90 --lines 90 --branches 90",
+    "test": "npm run test:watch -- --once",
+    "test:watch": "WHEN_USING_OLD_API=1 BROWSERSLIST_IGNORE_OLD_DATA=1 NODE_OPTIONS='--trace-warnings' ROOT_URL='' MONGO_URL='' NO_HMR=1 meteor test --port=4040 --driver-package meteortesting:mocha",
     "start": "NO_HMR=1 meteor run",
-    "test:e2e": "ROOT_URL=\"\" MONGO_URL=\"\" HEADLESS=1 NO_HMR=1 TEST_BROWSER_DRIVER=puppeteer meteor test --port=4040 --once --full-app --driver-package universe:e2e --raw-logs",
-    "test:e2e:watch": "ROOT_URL=\"\" MONGO_URL=\"\" HEADLESS=0 NO_HMR=1 TEST_BROWSER_DRIVER=puppeteer meteor test --port=4040 --full-app --driver-package universe:e2e --raw-logs"
+    "test:e2e": "ROOT_URL='' MONGO_URL='' HEADLESS=1 NO_HMR=1 TEST_BROWSER_DRIVER=puppeteer meteor test --port=4040 --once --full-app --driver-package universe:e2e --raw-logs",
+    "test:e2e:watch": "ROOT_URL='' MONGO_URL='' HEADLESS=0 NO_HMR=1 TEST_BROWSER_DRIVER=puppeteer meteor test --port=4040 --full-app --driver-package universe:e2e --raw-logs"
   },
   "dependencies": {
     "@babel/runtime": "^7.22.10",
@@ -58,6 +60,7 @@
     "babel-plugin-istanbul": "^6.1.1",
     "eslint": "^8.47.0",
     "mocha": "^10.2.0",
+    "nyc": "^15.1.0",
     "postcss": "^8.4.28",
     "postcss-import": "^14.1.0",
     "postcss-load-config": "^2.1.2",

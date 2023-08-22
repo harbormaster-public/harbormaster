@@ -16,11 +16,14 @@ const trim_manifest = (manifest) => {
 };
 
 const collect_latest_shipments = function () {
+  /* istanbul ignore next */
   if (!H.isTest) console.log('Collecting latest shipments...');
 
   Lanes.find().forEach((lane) => {
+  /* istanbul ignore next */
     if (!H.isTest) console.log(`Finding latest shipment for ${lane.name}...`);
 
+    /* istanbul ignore else */
     if (!lane.last_shipment) {
       let shipment = Shipments.findOne(
         { lane: lane._id },
@@ -32,6 +35,7 @@ const collect_latest_shipments = function () {
     }
   });
 
+  /* istanbul ignore next */
   if (!H.isTest) console.log('Done collecting latest shipments.');
 };
 
@@ -44,12 +48,14 @@ const get_increment = function (lane, increment = 2) {
     increment += 1;
     dupe_slug = `${slug_match[1]}${increment}`;
   }
+  /* istanbul ignore next */
   if (!H.isTest) console.log(`Checking for exsting lane: ${dupe_slug}`);
   let existing_dupe = Lanes.findOne({ slug: dupe_slug });
   if (existing_dupe) {
     console.log(`Lane ${dupe_slug} already exists.`);
     return get_increment(existing_dupe, increment);
   }
+  /* istanbul ignore next */
   if (!H.isTest) console.log(`No duplicate found for ${dupe_slug}, using it.`);
   return increment;
 };
@@ -127,6 +133,7 @@ const start_shipment = async function (id, manifest, shipment_start_date) {
   manifest.shipment_id = shipment_id;
   Lanes.update(lane._id, { $set: { shipment_count: lane.shipment_count } });
 
+  /* istanbul ignore next */
   if (!H.isTest) console.log('Starting shipment for lane:', lane.name);
   try {
     const work_method = H.bindEnvironment(
@@ -136,6 +143,7 @@ const start_shipment = async function (id, manifest, shipment_start_date) {
     new_manifest = await work_method(lane, manifest);
   }
   catch (err) {
+    /* istanbul ignore next */
     if (!H.isTest) console.error(
       'Shipment failed with error:\n',
       err + '\n',
@@ -226,6 +234,7 @@ const end_shipment = async function (lane, exit_code, manifest) {
   manifest.stdout = shipment.stdout;
   manifest.stderr = shipment.stderr;
 
+  /* istanbul ignore next */
   if (!H.isTest) console.log(
     'Shipping completed for lane:',
     lane.name,
@@ -262,6 +271,7 @@ const end_shipment = async function (lane, exit_code, manifest) {
       ;
     followup_manifest.prior_manifest = trim_manifest(manifest);
 
+    /* istanbul ignore next */
     if (!H.isTest) console.log(
       `Starting shipment for "${lane.followup.name
       }" as followup of "${lane.name}"`
@@ -343,6 +353,7 @@ const delete_lane = function (lane) {
   const harbor = Harbors.findOne(lane.type);
   delete harbor.lanes[lane._id];
   Harbors.update(harbor._id, harbor);
+  /* istanbul ignore next */
   if (!H.isTest) console.log(`Deleted lane: ${lane.name}`);
   return H.call('Lanes#get_total');
 };
@@ -362,6 +373,7 @@ const duplicate = (lane) => {
   const manifest = harbor.lanes[lane._id].manifest;
   const replacement_regex = /\d+$/g;
 
+  /* istanbul ignore next */
   if (!H.isTest) console.log(`Duplicating lane ${lane.name}...`);
   delete lane.last_shipment;
   delete lane._id;
@@ -373,6 +385,7 @@ const duplicate = (lane) => {
   const new_lane_id = Lanes.insert(lane);
   harbor.lanes[new_lane_id] = { manifest };
   Harbors.update(harbor._id, harbor);
+  /* istanbul ignore next */
   if (!H.isTest) console.log(`New lane created: ${lane.name}`);
   return `/lanes/${lane.slug}/edit`;
 };

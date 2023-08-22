@@ -151,8 +151,14 @@ describe('Harbors', () => {
   });
   describe('#get_constraints', () => {
     it("returns an object containing a Harbor's possible constraints", () => {
-      Factory.create('harbor', { constraints: { test: 'test_constraint' } });
+      Factory.create('harbor', {
+        constraints: {
+          test: ['test_constraint'],
+          global: ['global_constraint'],
+        },
+      });
       expect(get_constraints('test').test[0]).to.eq('test_constraint');
+      expect(get_constraints.global).to.eq(undefined);
     });
   });
   describe('#register', () => {
@@ -179,6 +185,15 @@ describe('Harbors', () => {
 
     it("adds a registered harbor's files to the Harbors dir", () => {
       H.copySync = () => called = true;
+      register(harbor);
+      expect(called).to.eq(true);
+      fs.statSync = () => ({ isDirectory: () => false });
+      fs.readdirSync = () => {
+        called = true;
+        return ['test.js'];
+      };
+      called = false;
+      harbor.registered = false;
       register(harbor);
       expect(called).to.eq(true);
     });
@@ -222,6 +237,9 @@ describe('Harbors', () => {
       remove(harbor);
       expect(called).to.eq(true);
       H.update_avail_space = update_avail_space;
+    });
+    it("throws with an invalid harbor object", () => {
+      expect(remove).to.throw();
     });
   });
   describe('#add_harbor_to_depot', () => {

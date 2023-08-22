@@ -6,6 +6,9 @@ import {
 } from 'meteor/universe:e2e';
 
 export * from 'meteor/universe:e2e';
+
+export {expect} from 'chai';
+
 import $H from '../startup/config/namespace';
 
 export const H = $H;
