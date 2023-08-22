@@ -1,12 +1,12 @@
 {
   "name": "harbormaster",
-  "version": "1.24.1",
+  "version": "1.25.0",
   "private": true,
   "babel": {
     "env": {
       "COVERAGE": {
         "plugins": [
-          "istanbul"
+          "nyc"
         ]
       }
     }
