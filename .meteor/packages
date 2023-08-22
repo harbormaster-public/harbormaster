@@ -39,3 +39,4 @@ universe:e2e
 meteortesting:browser-tests
 meteortesting:mocha
 meteortesting:mocha-core
+lmieulet:meteor-coverage

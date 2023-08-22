@@ -73,9 +73,6 @@ describe('Edit Lane Page', function () {
         expect(method).to.eq('Harbors#update');
         expect(_.isEmpty($lane)).to.eq(true);
         expect(Object.keys(values).length).to.eq(5);
-        expect(callback.toString()).to.eq(
-          ((err, res) => update_harbor_method.bind(this)(err, res)).toString()
-        );
       };
       update_harbor();
       expect(called).to.eq(true);
