@@ -69,10 +69,9 @@ const render_input = async function (lane, manifest) {
 
     lane.rendered_input = H.harbors[lane.type].render_input(manifest, lane);
     lane.rendered_work_preview = await H
-      .harbors
-    [lane.type]
+      .harbors[lane.type]
       .render_work_preview(manifest, lane)
-      ;
+    ;
     Lanes.update(lane._id, {
       $set: {
         rendered_input: lane.rendered_input,
@@ -88,15 +87,13 @@ const render_input = async function (lane, manifest) {
   catch (err) { return not_found(err); }
 };
 
-const render_work_preview = async function (
-  lane, manifest
-) {
+const render_work_preview = async function (lane, manifest) {
   if (!H.harbors[lane?.type]) return 404;
   try {
     lane.rendered_work_preview = await H
       .harbors[lane.type]
       .render_work_preview(manifest, lane)
-      ;
+    ;
     if (manifest?.shipment_id) {
       /* istanbul ignore next */
       if (!H.isTest) console.log(

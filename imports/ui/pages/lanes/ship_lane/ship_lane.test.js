@@ -13,7 +13,6 @@ import {
   duration,
   pretty_date,
   start_shipment,
-  handle_shipment_started,
   not_found,
   not_found_text,
 } from './lib';
@@ -131,7 +130,7 @@ describe('Ship Lane View', () => {
     it('upserts the lane and sets the Session on successful render', () => {
       Harbors.findOne = () => ({ lanes: { test: { _id: 'test' } } });
       this.$route = { params: { slug: 'test', manifest: {} } };
-      H.call = (method, lane, callback) => {
+      H.call = (method, $lane, callback) => {
         if (method == 'Lanes#upsert') {
           callback();
           expect(H.Session.get('lane')._id).to.eq('test');
@@ -226,7 +225,7 @@ describe('Ship Lane View', () => {
       expect(pretty_date(test_date))
         .to
         .eq(new Date(test_date).toLocaleString())
-        ;
+      ;
     });
     it('returns the never string for no date passed', () => {
       expect(pretty_date()).to.eq('never');
@@ -246,6 +245,8 @@ describe('Ship Lane View', () => {
       this.$route = { params: { slug: 'test' } };
       Shipments.find = () => ({ count: () => true });
       expect(any_active()).to.eq(true);
+      Shipments.find = () => ({ count: () => false });
+      expect(any_active()).to.eq(false);
       Shipments.find = shipments_find;
     });
   });
@@ -275,21 +276,22 @@ describe('Ship Lane View', () => {
   });
 
   describe('#start_shipment', () => {
-    before(() => {
+    beforeEach(() => {
       this.$router = [];
       this.$data = { rerenders: 0 };
       this.$route = { params: { slug: 'test' } };
       Shipments.findOne = () => { };
       H.Session.set('lane', { _id: 'test' });
+      Harbors.findOne = () => ({ lanes: { test: { manifest: {} } } });
     });
-    after(() => {
+    afterEach(() => {
       Shipments.findOne = shipments_find_one;
       Harbors.findOne = harbors_find_one;
     });
 
     it('saves the working lane reference in the Session', () => {
       H.call = () => { };
-      Harbors.findOne = () => ({ lanes: { test: { manifest: {} } } });
+      Shipments.findOne = () => ({ active: false });
       expect(H.Session.get('working_lanes')).to.eq(undefined);
       start_shipment();
       expect(H.Session.get('working_lanes').test).to.eq(true);

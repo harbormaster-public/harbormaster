@@ -129,7 +129,7 @@ const start_shipment = async function (id, manifest, shipment_start_date) {
   lane.shipment_count = lane.shipment_count >= 0 ?
     lane.shipment_count + 1
     : 1
-    ;
+  ;
   manifest.shipment_start_date = shipment_start_date;
   manifest.shipment_id = shipment_id;
   Lanes.update(lane._id, { $set: { shipment_count: lane.shipment_count } });

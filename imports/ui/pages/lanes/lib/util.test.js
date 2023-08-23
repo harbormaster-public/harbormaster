@@ -64,6 +64,7 @@ describe('pages/lanes/lib/util', function () {
       expect(count(test_lane_one_shipment)).to.eq(1);
       expect(count(test_lane_no_shipments)).to.eq(0);
       expect(count(test_lane_multiple_shipments)).to.eq(3);
+      expect(count()).to.eq(0);
     });
   });
 

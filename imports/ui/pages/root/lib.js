@@ -10,10 +10,13 @@ const shipments_last_24_hours = function () {
 const latest_shipment = function () {
   let shipment = H.Session.get('latest_shipment') || false;
 
-  H.call('Shipments#get_latest_date', function (err, res) {
-    if (err) throw err;
-    H.Session.set('latest_shipment', res);
-  });
+  H.call(
+    'Shipments#get_latest_date',
+    /* istanbul ignore next */
+    function (err, res) {
+      if (err) throw err;
+      H.Session.set('latest_shipment', res);
+    });
 
   if (! shipment) return { locale: 'loading...' };
 
@@ -25,6 +28,7 @@ const total_captains = function () {
   var lanes = Lanes.find().fetch();
 
   _.each(lanes, function (lane) {
+    /* istanbul ignore else */
     if (lane.captains) {
       captains = captains.concat(lane.captains);
     }

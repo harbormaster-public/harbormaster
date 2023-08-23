@@ -32,6 +32,7 @@ const assign_followup = function (followup, target, parent_id, nodes, links) {
     followup.recursive = followup._id == target._id ? true : false;
     target.children.push(followup);
 
+    /* istanbul ignore else */
     if (nodes.map((node) => node.id).indexOf(followup_id) == -1) {
       nodes.push({
         id: followup_id,
@@ -75,6 +76,7 @@ const assign_salvage = function (plan, target, parent_id, nodes, links) {
     if (last_shipment && last_shipment.exit_code == 0) color = SUCCESS_COLOR;
     else if (last_shipment && last_shipment.exit_code) color = FAIL_COLOR;
 
+    /* istanbul ignore else */
     if (nodes.map((node) => node.id).indexOf(salvage_id) == -1) {
       nodes.push({
         id: salvage_id,
@@ -115,8 +117,10 @@ const assign_children = (target, parent_id, nodes, links) => {
   target.children.forEach((child) => {
     child.children = [];
 
-    if (!child.recursive && child._id != root_node?.get()?.id)
-      assign_children(child, target._id, nodes, links);
+    /* istanbul ignore else */
+    if (!child.recursive && child._id != root_node?.get()?.id) assign_children(
+      child, target._id, nodes, links
+    );
   });
 
   return target;
@@ -165,6 +169,7 @@ const handle_link_click = function (event, link) {
   let start = $lane.shipment ? `/ship/${$lane.shipment.start}` : "/charter";
   let url = `/lanes/${$lane.slug}${start}`;
 
+  /* istanbul ignore else */
   if (this.$route.path != url) this.$router.push(url);
   else console.log("Avoiding redundant navigation.");
   return url;

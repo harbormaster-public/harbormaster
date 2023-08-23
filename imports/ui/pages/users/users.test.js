@@ -18,6 +18,7 @@ describe('Users Page', () => {
       })).to.eq('Yes');
     });
     it('returns "No" otherwise', () => {
+      expect(is_harbormaster()).to.eq('No');
       expect(is_harbormaster('test@foo.bar')).to.eq('No');
     });
   });
@@ -27,7 +28,7 @@ describe('Users Page', () => {
       expect(captain_lanes({ _id: 'test@foo.bar', harbormaster: true }))
         .to
         .eq('All')
-        ;
+      ;
     });
     it('returns a list of captained lane names in string format', () => {
       Factory.create('lane', { name: 'test_1', captains: ['test@foo.bar'] });

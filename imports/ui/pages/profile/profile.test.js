@@ -12,8 +12,10 @@ import {
   can_change_plying,
   can_change_webhook,
   webhook_allowed,
+  webhook_token,
 } from './lib';
 import { resetDatabase } from 'cleaner';
+import { Lanes } from '../../../api/lanes';
 const call_method = H.call;
 const user_method = H.user;
 
@@ -28,6 +30,7 @@ describe('Profile Page', () => {
           },
         },
       })).to.eq('test@harbormaster.io');
+      expect(get_user_id()).to.eq('test@harbormaster.io');
     });
   });
 
@@ -51,6 +54,8 @@ describe('Profile Page', () => {
       this.$route = { params: { user_id: 'test@harbormaster.io' } };
       handle_change_from_webhook.bind(this)({ target: { checked: false } });
       expect(this.lane_list_renders).to.eq(1);
+      handle_change_from_webhook.bind(this)({ target: { checked: true } });
+      expect(this.lane_list_renders).to.eq(2);
       H.call = call_method;
     });
   });
@@ -63,11 +68,22 @@ describe('Profile Page', () => {
         _id: 'test',
         captains: [],
       });
-      H.call = (method, lane) => {
-        expect(method).to.eq('Lanes#upsert');
-        expect(lane.captains.length).to.eq(1);
+      let lane;
+      let method;
+      H.call = ($method, $lane) => {
+        lane = $lane;
+        method = $method;
       };
       handle_change_can_ply.bind(this)({ target: { checked: true } });
+      expect(method).to.eq('Lanes#upsert');
+      expect(lane.captains.length).to.eq(1);
+      resetDatabase(null);
+      Factory.create('lane', {
+        _id: 'test',
+        captains: undefined,
+      });
+      handle_change_can_ply.bind(this)({ target: { checked: false } });
+      expect(Lanes.findOne('test').captains).to.eq(undefined);
       H.call = call_method;
     });
   });
@@ -168,7 +184,7 @@ describe('Profile Page', () => {
       expect(can_ply.bind(this)({ captains: ['test@harbormaster.io'] }))
         .to
         .eq(true)
-        ;
+      ;
     });
     it('returns false otherwise', () => {
       this.$route = { params: { user_id: 'test@harbormaster.io' } };
@@ -187,7 +203,7 @@ describe('Profile Page', () => {
       });
       expect(can_change_plying.bind(this)()).to.eq(true);
     });
-    it('returns false if the user viewed is different', () => {
+    it('returns false if the harbormaster viewed is different', () => {
       this.$route = { params: { user_id: 'test@harbormaster.io' } };
       H.user = () => ({ emails: [{ address: 'foo@bar.com' }] });
       Factory.create('user', { _id: 'foo@bar.com', harbormaster: true });
@@ -196,7 +212,12 @@ describe('Profile Page', () => {
       H.user = user_method;
     });
     it('returns true if no user is found', () => {
-      this.$route = { params: { user_id: 'test@harbormaster.io' } };
+      this.$route = { params: { user_id: 'foo@harbormaster.io' } };
+      expect(can_change_plying.bind(this)()).to.eq(true);
+    });
+    it('returns true if the user found is not a harbormaster', () => {
+      Factory.create('user', { _id: 'foo@harbormaster.io' });
+      this.$route = { params: { user_id: 'foo@harbormaster.io' } };
       expect(can_change_plying.bind(this)()).to.eq(true);
     });
     it('returns true if the user found is not a harbormaster', () => {
@@ -235,6 +256,18 @@ describe('Profile Page', () => {
           },
         })).to.eq('test_token');
       });
+  });
+
+  describe('#webhook_token', () => {
+    it('returns an empty string if the lane has no tokens', () => {
+      this.$route = { params: { user_id: 'test@harbormaster.io' } };
+      expect(webhook_token({})).to.eq('');
+    });
+    it('returns the token for a given user_id', () => {
+      this.$route = { params: { user_id: 'test@harbormaster.io' } };
+      expect(webhook_token({ tokens: { foo: 'test@harbormaster.io' } }))
+        .to.eq('foo');
+    });
   });
 
 });

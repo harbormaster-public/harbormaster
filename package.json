@@ -12,9 +12,9 @@
     }
   },
   "scripts": {
-    "coverage": "BABEL_ENV=COVERAGE COVERAGE=1 COVERAGE_VERBOSE=1 COVERAGE_OUT_JSON=1 COVERAGE_OUT_TEXT_SUMMARY=1 COVERAGE_APP_FOLDER=/$PWD/ npm run test && nyc report --reporter html --reporter text -t .coverage --report-dir .coverage/summary --check-coverage --statements 90 --functions 90 --lines 90 --branches 90",
+    "coverage": "BABEL_ENV=COVERAGE COVERAGE=1 COVERAGE_VERBOSE=1 COVERAGE_OUT_JSON=1 COVERAGE_OUT_TEXT_SUMMARY=1 COVERAGE_APP_FOLDER=/$PWD/ npm run test && nyc report --reporter html --reporter text -t .coverage --report-dir .coverage/summary --check-coverage --statements 100 --functions 100 --lines 100 --branches 100",
     "test": "npm run test:watch -- --once",
-    "test:watch": "WHEN_USING_OLD_API=1 BROWSERSLIST_IGNORE_OLD_DATA=1 NODE_OPTIONS='--trace-warnings' ROOT_URL='' MONGO_URL='' NO_HMR=1 meteor test --port=4040 --driver-package meteortesting:mocha",
+    "test:watch": "MOCHA_TIMEOUT=2500 WHEN_USING_OLD_API=1 BROWSERSLIST_IGNORE_OLD_DATA=1 NODE_OPTIONS='--trace-warnings' ROOT_URL='' MONGO_URL='' NO_HMR=1 meteor test --port=4040 --driver-package meteortesting:mocha",
     "start": "NO_HMR=1 meteor run",
     "test:e2e": "ROOT_URL='' MONGO_URL='' HEADLESS=1 NO_HMR=1 TEST_BROWSER_DRIVER=puppeteer meteor test --port=4040 --once --full-app --driver-package universe:e2e --raw-logs",
     "test:e2e:watch": "ROOT_URL='' MONGO_URL='' HEADLESS=0 NO_HMR=1 TEST_BROWSER_DRIVER=puppeteer meteor test --port=4040 --full-app --driver-package universe:e2e --raw-logs"

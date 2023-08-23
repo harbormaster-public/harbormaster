@@ -57,6 +57,10 @@ describe('Charter Page', () => {
       recursive: false,
       children: [],
     };
+    const recursive = {
+      _id: 'target_id',
+      children: [],
+    };
     const success_followup = {
       _id: 'success_followup_id',
       name: 'Followup',
@@ -112,6 +116,8 @@ describe('Charter Page', () => {
       expect(success_followup.role).to.equal(FOLLOWUP);
       expect(success_followup.parent).to.equal('target_id');
       expect(success_followup.recursive).to.equal(false);
+      assign_followup(recursive, recursive, parent_id, [], []);
+      expect(recursive.recursive).to.eq(true);
     });
     it('adds the followup lane to the targets of the graph', () => {
       expect(target.children).to.deep.equal([success_followup, fail_followup]);
@@ -142,6 +148,7 @@ describe('Charter Page', () => {
     let target;
     let parent_id;
     let plan;
+    const recursive = { _id: 'target_id', children: [] };
 
     beforeEach(() => {
       nodes = [];
@@ -155,12 +162,17 @@ describe('Charter Page', () => {
       assign_salvage(plan, target, parent_id, nodes, links);
       expect(nodes.length).to.eq(1);
       expect(nodes[0]._color).to.eq(SUCCESS_COLOR);
+      plan._id = 'fail_plan_id';
+      assign_salvage(plan, target, parent_id, nodes, links);
+      expect(nodes[1]._color).to.eq(FAIL_COLOR);
     });
     it('assigns graph role, parent, and recursion', () => {
       assign_salvage(plan, target, parent_id, nodes, links);
       expect(plan.role).to.eq(SALVAGE);
       expect(plan.parent).to.eq(target._id);
       expect(plan.recursive).to.eq(false);
+      assign_salvage(recursive, recursive, parent_id, [], []);
+      expect(recursive.recursive).to.eq(true);
     });
     it('adds the salvage plan lane to the targets of the graph', () => {
       assign_salvage(plan, target, parent_id, nodes, links);
@@ -301,6 +313,8 @@ describe('Charter Page', () => {
   describe('#graph_options', () => {
     it('returns the configured graph options', () => {
       expect(typeof graph_options()).to.eq('object');
+      this.window = { innerHeight: 2000 };
+      expect(typeof graph_options.bind(this)()).to.eq('object');
     });
   });
 

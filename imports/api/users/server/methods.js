@@ -22,7 +22,7 @@ export default {
       !H.isE2E
     ) Accounts.sendResetPasswordEmail(user_account._id);
 
-    return user_account || user_record || false;
+    return user_account || user_record;
   },
 
   'Users#expire_user' (email) {

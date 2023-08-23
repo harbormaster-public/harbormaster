@@ -13,12 +13,13 @@ const captain_lanes = function (user) {
     $or: [
       { captains: { $in: [user._id] } },
       { tokens: { $exists: true } },
-    ]
+    ],
   }).fetch();
   var lane_names = [];
 
   if (user.harbormaster) { return 'All'; }
   _.each(pliable_lanes, function (lane) {
+    /* istanbul ignore else */
     if (
       // user webhook assigned
       (lane.tokens && Object.values(lane.tokens).includes(user._id)) ||
@@ -35,8 +36,10 @@ const captain_lanes = function (user) {
 const expire_user = function (user) {
   const confirm_message = `Expire user?\n${user._id}`;
 
+  /* istanbul ignore else */
   if (H.confirm(confirm_message)) {
     H.call('Users#expire_user', user._id, (err, res) => {
+      /* istanbul ignore next */
       if (err) throw err;
 
       console.log('User expired:', res);

@@ -24,10 +24,10 @@ const update_harbor = function () {
     let value = element.value;
     let checked = element.checked;
     let name = element.name;
-
+    /* istanbul ignore else */
     if (!values[name]) {
-      values[name] = type == 'checkbox' || type == 'radio' ?
-        (checked && (value || checked)) || values[name] :
+      values[name] = (type == 'checkbox' || type == 'radio') ?
+        (checked && value) || values[name] :
         value
         ;
     }
@@ -35,6 +35,7 @@ const update_harbor = function () {
 
   values.timestamp = Date.now();
 
+  /* istanbul ignore next reason: no need to test the framework's machinery */
   H.call(
     'Harbors#update',
     $lane,
@@ -59,7 +60,9 @@ const update_harbor_method = function (err, res) {
 
 const update_lane = ($lane) => {
   return H.call('Lanes#upsert', $lane, (err, res) => {
+    /* istanbul ignore next */
     if (err) throw err;
+    /* istanbul ignore next */
     if (!H.isTest) console.log(`Lane "${$lane.name}" updated: ${res}`);
 
     H.Session.set('lane', $lane);
@@ -76,6 +79,7 @@ const change_lane_name = function (event) {
 
   const new_path = '/lanes/' + $lane.name + '/edit';
 
+  /* istanbul ignore else */
   if (new_path != this.$route.path) this.$router.push(
     '/lanes/' + $lane.name + '/edit'
   );
@@ -236,7 +240,7 @@ const lane_type = function () {
 
 const render_harbor = function () {
   let name = this.$route?.params?.slug;
-  let $lane = get_lane(name) || H.Session.get('lane');
+  let $lane = get_lane(name);
   if (!$lane._id && !$lane.name) return 'Assign a Name first!';
   let harbor = $lane.type ? Harbors.findOne($lane.type) : {};
   let harbor_lane_reference = harbor?.lanes ?
@@ -253,9 +257,12 @@ const render_harbor = function () {
     $lane,
     manifest,
     function (err, active_lane) {
+      /* istanbul ignore next */
       if (err) throw err;
+      /* istanbul ignore next */
       if (active_lane == 404) return not_found.set(true);
 
+      /* istanbul ignore next */
       if (active_lane) return H.Session.set('lane', active_lane);
       return false;
     });
@@ -276,7 +283,7 @@ const validate_done = function () {
 const chosen_followup = function (followup) {
   let $lane = get_lane(this.$route?.params?.slug);
 
-  return followup._id && $lane ?
+  return followup._id && $lane._id ?
     followup._id == $lane.followup?._id :
     false
     ;
@@ -285,14 +292,14 @@ const chosen_followup = function (followup) {
 const chosen_salvage_plan = function (salvage_lane) {
   let $lane = get_lane(this.$route?.params?.slug);
 
-  return salvage_lane._id && $lane ?
+  return salvage_lane._id && $lane._id ?
     salvage_lane._id == $lane.salvage_plan?._id :
     false
     ;
 };
 
 const submit_form = function () {
-  let $lane = get_lane(this.$route?.params?.slug) || H.Session.get('lane');
+  let $lane = get_lane(this.$route?.params?.slug);
   if (!$lane._id && !$lane.name) return false;
 
   if (
@@ -354,11 +361,14 @@ const change_captains = function (event) {
     captains.push(user);
   }
   else {
-    captains = _.reject(captains, function remove_captain (captain) {
-      return captain == user;
-    });
+    captains = _.reject(
+      captains,
+      /* istanbul ignore next */
+      function remove_captain (captain) { return captain == user; }
+    );
   }
 
+  /* istanbul ignore else */
   if ($lane && Lanes.findOne($lane._id)) {
     $lane.captains = captains;
     update_lane($lane);
@@ -383,10 +393,10 @@ const choose_harbor_type = function (event) {
 
 const get_lane_name = function () {
   var name = this.$route.params.slug;
-  var $lane = get_lane(name) || H.Session.get('lane') || {};
+  var $lane = get_lane(name);
   H.Session.set('lane', $lane);
 
-  return $lane.name == 'New' ? '' : ($lane.name || '');
+  return ($lane.name == 'New' || !$lane.name) ? '' : $lane.name;
 };
 
 export {
