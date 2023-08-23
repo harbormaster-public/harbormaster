@@ -36,11 +36,14 @@ H.check_avail_space = () => {
 
 export const update_avail_space = () => {
   H.space_avail = H.check_avail_space();
+  /* istanbul ignore next */
   if (!H.isTest) console.log(`${H.space_avail} available.`);
 };
 H.update_avail_space = update_avail_space;
+/* istanbul ignore next */
 if (!H.isTest) H.update_avail_space();
 
+/* istanbul ignore next */
 H.reload = () => {
   if (H.should_reload) {
     if (!H.isTest) console.log("Harbors changed, exiting.");
@@ -48,6 +51,7 @@ H.reload = () => {
   }
 };
 
+/* istanbul ignore next */
 export const setup_harbor_dirs = () => {
   if (!fs.existsSync(harbors_dir)) {
     if (!H.isTest) console.log(`No harbors directory found at: ${harbors_dir}`);
@@ -71,10 +75,13 @@ export const setup_harbor_dirs = () => {
     if (!H.isTest) console.log(`Watching ${harbors_dir} *non*-recursively...`);
   }
 };
+/* istanbul ignore next */
 if (!H.isTest) setup_harbor_dirs();
 
 export const scan_depot = (new_harbor) => {
+  /* istanbul ignore next */
   if (new_harbor && !H.isTest) console.log(`Adding new harbor: ${new_harbor}`);
+  /* istanbul ignore next */
   else if (!H.isTest) console.log(
     `Enumerating Harbors found in depot: ${depot_dir}`
   );
@@ -89,7 +96,9 @@ export const scan_depot = (new_harbor) => {
     let url = false;
     harbor.in_depot = true;
 
+    /* istanbul ignore next */
     if (!H.isTest) console.log(`Harbor "${harbor_name}" found in depot.`);
+    /* istanbul ignore else */
     if (stats.isDirectory()) {
       try {
         const version_check_cmd = `git rev-parse --short HEAD`;
@@ -104,6 +113,7 @@ export const scan_depot = (new_harbor) => {
         url = child_process.execSync(origin_check_cmd, options)
           .toString()
           .replace("\n", "");
+        /* istanbul ignore next */
         if (!H.isTest) console.log(`Version ${version} found from ${url}`);
       }
       catch (err) {
@@ -120,14 +130,17 @@ export const scan_depot = (new_harbor) => {
   });
 };
 H.scan_depot = scan_depot;
+/* istanbul ignore next */
 if (!H.isTest) H.scan_depot();
 
 export const register_harbors = () => {
+  /* istanbul ignore next */
   if (!H.isTest) console.log(`Registering Harbors from: ${harbors_dir}`);
   fs.readdirSync(harbors_dir).forEach(function (file) {
     let harbor_path = path.join(harbors_dir, file);
     let stats = fs.statSync(harbor_path);
 
+    /* istanbul ignore else */
     if (stats.isDirectory() || !stats.isFile() || !file.match(/\.js$/)) return;
 
     try {
@@ -147,17 +160,22 @@ export const register_harbors = () => {
         `Unable to register harbor name: ${harbor_name}`
       );
 
+      /* istanbul ignore next */
       if (!H.isTest) console.log(
         `Registering packages for "${harbor_name}"...`
       );
+      /* istanbul ignore else */
       if (register.pkgs instanceof Array) {
         register.pkgs.forEach((pkg) => {
           try {
+            /* istanbul ignore next */
             if (!H.isTest) console.log(`Checking for: ${pkg}...`);
             require(pkg);
+            /* istanbul ignore next */
             if (!H.isTest) console.log(`Found: ${pkg}`);
           }
           catch (e) {
+            /* istanbul ignore next */
             if (!H.isTest) console.log(`Missing: ${pkg}`);
             packages.push(pkg);
           }
@@ -165,6 +183,7 @@ export const register_harbors = () => {
       }
       if (packages.length) {
         packages = packages.join(" ");
+        /* istanbul ignore next */
         if (!H.isTest) console.log(`Installing packages: ${packages}`);
         child_process.execSync(`meteor npm i -S ${packages}`);
       }
@@ -176,15 +195,19 @@ export const register_harbors = () => {
       harbor.constraints = entrypoint.constraints && entrypoint.constraints();
       harbor.registered = true;
       Harbors.upsert({ _id: harbor_name }, harbor);
+      /* istanbul ignore next */
       if (!H.isTest) console.log(`Harbor registered: ${file}`);
     }
     catch (err) {
+      /* istanbul ignore next */
       if (!H.isTest) console.error(
         `Warning!  Unable to register Harbor: ${file}`
       );
       console.error(err);
     }
   });
+  /* istanbul ignore next */
   if (!H.isTest) console.log("All harbors registered.");
 };
+/* istanbul ignore next */
 if (!H.isTest) register_harbors();

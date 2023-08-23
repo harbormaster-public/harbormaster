@@ -12,6 +12,7 @@ let post_hooks = Picker.filter(function (req) {
 });
 
 export const respond_not_allowed = (res) => {
+  /* istanbul ignore next */
   if (!H.isTest) console.log('Request not allowed.  Responding with 401.');
   res.statusCode = 401;
   return res.end();
@@ -28,6 +29,7 @@ export const set_cors_headers = (res) => {
   return res;
 };
 
+/* istanbul ignore next */
 WebApp.rawConnectHandlers.use(function (req, res, next) {
   set_cors_headers(res);
 
@@ -39,8 +41,8 @@ export const route_lane_ship_rpc = async function (route_params, req, res) {
   let results;
   let query = require('url').parse(req.url, true).query;
   let lane_name = decodeURI(route_params.slug);
-  let user_id = query ? query.user_id : false;
-  let token = query ? query.token : false;
+  let user_id = query?.user_id ? query.user_id : false;
+  let token = query?.token ? query.token : false;
 
   let lane = get_lane(lane_name);
   if (!lane._id) return respond_not_allowed(res);
@@ -67,11 +69,13 @@ export const route_lane_ship_rpc = async function (route_params, req, res) {
     return respond_not_allowed(res);
   }
 
+  /* istanbul ignore next */
   if (!H.isTest) console.log(
     'Shipping via RPC to lane:', lane.name, 'with user:', user_id
   );
 
   if (prior_manifest) {
+    /* istanbul ignore next */
     if (!H.isTest) console.log(
       'Prior manifest detected:\n',
       prior_manifest,

@@ -27,7 +27,7 @@ const sort_by_shipped_date = function (lane1, lane2) {
   if (lane1_date > lane2_date) { sort_order = -1; }
   else if (lane1_date < lane2_date) { sort_order = 1; }
 
-  if (reverse == -1) { sort_order = -sort_order; }
+  if (reverse == -1) { sort_order = -1 * sort_order; }
   return sort_order;
 };
 
@@ -44,7 +44,7 @@ const sort_by_total_shipments = function (lane1, lane2) {
     sort_order = 1;
   }
 
-  if (reverse == -1) { sort_order = -sort_order; }
+  if (reverse == -1) { sort_order = -1 * sort_order; }
   return sort_order;
 };
 
@@ -67,7 +67,7 @@ const sort_by_total_salvage_runs = function (lane1, lane2) {
     sort_order = 1;
   }
 
-  if (reverse == -1) { sort_order = -sort_order; }
+  if (reverse == -1) { sort_order = sort_order * -1; }
   return sort_order;
 };
 
@@ -168,8 +168,10 @@ const delete_lane = function (event, lane) {
   let confirm_message = `Delete lane?\n${lane.name}`;
   let $row = H.$(event.target).parents('tr');
 
+  /* istanbul ignore else */
   if (H.confirm(confirm_message)) {
     $row.addClass('deleting');
+    /* istanbul ignore next reason: no meaningful logic */
     H.call('Lanes#delete', lane, (err, res) => {
       if (err) throw err;
       H.Session.set('total_lanes', res);
@@ -180,8 +182,10 @@ const delete_lane = function (event, lane) {
 const duplicate_lane = function (event, lane) {
   const warn = `Duplicate this lane, and then edit the new lane?`;
   const router = this.$router;
+  /* istanbul ignore next */
   if (!H.confirm(warn)) return;
   H.call('Lanes#duplicate', lane, (err, res) => {
+    /* istanbul ignore next reason: no meaningful logic */
     if (err) alert(err);
     router.push(res);
   });

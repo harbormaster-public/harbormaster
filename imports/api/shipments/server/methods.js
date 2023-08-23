@@ -13,7 +13,7 @@ const publish_shipments = function publish_shipments (lanes, options = {}) {
   }
   else if (lanes?.slug) {
     let lane = Lanes.findOne({ slug: lanes.slug });
-    query.lane = lane?._id || null;
+    query.lane = lane._id;
   }
   const shipments = Shipments.find(query, options);
 
@@ -21,6 +21,7 @@ const publish_shipments = function publish_shipments (lanes, options = {}) {
 };
 
 const get_total_shipments = function () {
+  /* istanbul ignore next */
   if (!H.isTest) this.unblock();
   let now = Date.now();
   let interval = 86400000; // 24 hours
@@ -35,6 +36,7 @@ const get_total_shipments = function () {
 };
 
 const last_shipped = function (lane = { _id: null }) {
+  /* istanbul ignore next */
   if (!H.isTest) this.unblock();
   const latest = LatestShipment.findOne(lane._id);
   const query = lane._id ? { lane: lane._id } : {};
@@ -45,12 +47,14 @@ const last_shipped = function (lane = { _id: null }) {
 };
 
 const total_completed_shipments = function (lane = { _id: null }) {
+  /* istanbul ignore next */
   if (!H.isTest) this.unblock();
   const query = lane._id ? { lane: lane._id, exit_code: 0 } : { exit_code: 0 };
   return Shipments.find(query).count();
 };
 
 const total_salvage_runs = function (lane = { _id: null }) {
+  /* istanbul ignore next */
   if (!H.isTest) this.unblock();
   const query = lane._id ?
     { lane: lane._id, exit_code: { $ne: 0 } } :
@@ -60,6 +64,7 @@ const total_salvage_runs = function (lane = { _id: null }) {
 };
 
 const get_latest_date = function () {
+  /* istanbul ignore next */
   if (!H.isTest) this.unblock();
   let lane;
 

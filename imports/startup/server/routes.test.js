@@ -43,6 +43,8 @@ describe('RPC routes', () => {
     const bogus_result = await route_lane_ship_rpc(route_params, req, res);
     expect(bogus_result).to.eq(401);
     route_params.slug = 'test';
+    const bogus_result2 = await route_lane_ship_rpc(route_params, req, res);
+    expect(bogus_result2).to.eq(401);
     req.url += '?user_id=test@harbormaster.io&token=test_token';
     const expected_result = await route_lane_ship_rpc(route_params, req, res);
     expect(expected_result).to.eq(200);

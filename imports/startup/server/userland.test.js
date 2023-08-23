@@ -22,6 +22,13 @@ describe('Userland', () => {
     fs.existsSync = exists_sync;
     fs.readdirSync = readdir_sync;
   });
+  it('returns undefined for non-executable files', () => {
+    fs.statSync = () => ({
+      isDirectory: () => true,
+      isFile: () => false,
+    });
+    expect(load_userland('foo')).to.eq(undefined);
+  });
   it('executes files in the startup folder', () => {
     let called = false;
     fs.readFileSync = () => called = true;

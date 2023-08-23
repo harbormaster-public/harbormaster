@@ -17,6 +17,7 @@ Accounts.onLogin(set_harbormaster);
 Accounts.emailTemplates.siteName = SITE_NAME;
 Accounts.emailTemplates.from = FROM;
 
+/* istanbul ignore next reason: no meaningful logic below */
 Accounts.emailTemplates.resetPassword = {
   subject () { return 'Set Your Harbormaster Account Password'; },
   text (user, url) {

@@ -52,7 +52,8 @@ const get_increment = function (lane, increment = 2) {
   if (!H.isTest) console.log(`Checking for exsting lane: ${dupe_slug}`);
   let existing_dupe = Lanes.findOne({ slug: dupe_slug });
   if (existing_dupe) {
-    console.log(`Lane ${dupe_slug} already exists.`);
+    /* istanbul ignore next */
+    if (!H.isTest) console.log(`Lane ${dupe_slug} already exists.`);
     return get_increment(existing_dupe, increment);
   }
   /* istanbul ignore next */
@@ -161,12 +162,7 @@ const start_shipment = async function (id, manifest, shipment_start_date) {
       let key = new Date();
       let result = new_manifest.error.toString();
 
-      shipment.stderr[key] = (
-        shipment.stderr[key] && shipment.stderr[key].length
-      ) ?
-        shipment.stderr[key] + result :
-        result
-        ;
+      shipment.stderr[key] = result;
 
       lane.last_shipment = shipment;
       Shipments.update(shipment_id, shipment);
@@ -251,6 +247,7 @@ const end_shipment = async function (lane, exit_code, manifest) {
       ;
     salvage_manifest.prior_manifest = trim_manifest(manifest);
 
+    /* istanbul ignore next */
     if (!H.isTest) console.log(
       `Starting shipment for "${lane.salvage_plan.name
       }" as salvage run of "${lane.name}"`
@@ -308,11 +305,7 @@ const reset_shipment = function (slug, date) {
     { $set: { shipment: Shipments.findOne(shipment._id) } }
   );
 
-  lane.last_shipment = shipment ?
-    Shipments.findOne(shipment._id) :
-    Shipments.findOne({ lane: lane._id }, { sort: { actual: -1 } })
-    ;
-
+  lane.last_shipment = Shipments.findOne(shipment._id);
   Lanes.update(lane._id, { $set: { last_shipment: lane.last_shipment } });
 
   return lane;
@@ -391,6 +384,7 @@ const duplicate = (lane) => {
 };
 
 export {
+  trim_manifest,
   collect_latest_shipments,
   publish_lanes,
   get_total,

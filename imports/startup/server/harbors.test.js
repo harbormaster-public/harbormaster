@@ -137,6 +137,13 @@ describe("Harbors startup", () => {
       expect(cwd).to.eq(path.join(depot_dir, 'test'));
       expect(cmd1).to.eq('git rev-parse --short HEAD');
       expect(cmd2).to.eq('git config --get remote.origin.url');
+      called = false;
+      fs.readdirSync = () => {
+        called = true;
+        return [];
+      };
+      scan_depot();
+      expect(called).to.eq(true);
     });
     it("logs a warning for non-git repos", () => {
       let called = '';
@@ -179,6 +186,14 @@ describe("Harbors startup", () => {
       resetDatabase(null);
     });
 
+    it("returns undefined for a non-match", () => {
+      fs.statSync = () => ({
+        isDirectory: () => true,
+        isFile: () => false,
+      });
+      fs.readdirSync = () => ['test.foo'];
+      expect(register_harbors()).to.eq(undefined);
+    });
     it("loads the harbors found in the .harbors dir", () => {
       let expected_folder;
       fs.readdirSync = (folder) => {

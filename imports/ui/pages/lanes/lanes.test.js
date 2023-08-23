@@ -20,11 +20,11 @@ import {
   latest_shipment,
   salvage_plan_name,
   total_captains,
-  lane_ids,
   empty,
   lanes,
 } from './lib';
 import { expect } from 'chai';
+import { Lanes } from '../../../api/lanes';
 
 const shipments_find = Shipments.find;
 const call_method = H.call;
@@ -47,6 +47,7 @@ describe('Lanes Page', function () {
       Shipments.find = ({ lane } = shipment) => {
         switch (lane) {
           default:
+            return { fetch: () => ([]) };
           case 'test_1':
             return { fetch: () => ([{ actual: new Date(0) }]) };
           case 'test_2':
@@ -65,6 +66,16 @@ describe('Lanes Page', function () {
         .eq(-1)
         ;
     });
+    it(
+      'returns 1 if the first lane was shipped more recently reverse sort',
+      () => {
+        H.Session.set('lanes_table_sort_reverse', true);
+        expect(sort_by_shipped_date({ _id: 'test_2' }, { _id: 'test_1' }))
+          .to
+          .eq(1)
+          ;
+        H.Session.set('lanes_table_sort_reverse', false);
+    });
     it('returns 1 if the second lane was shipped more recently', () => {
       expect(sort_by_shipped_date({ _id: 'test_1' }, { _id: 'test_2' }))
         .to
@@ -72,7 +83,7 @@ describe('Lanes Page', function () {
         ;
     });
     it('returns 0 if both lanes shipped at the same time', () => {
-      expect(sort_by_shipped_date({ _id: 'test_1' }, { _id: 'test_1' }))
+      expect(sort_by_shipped_date({ _id: 'test_3' }, { _id: 'test_3' }))
         .to
         .eq(0)
         ;
@@ -100,6 +111,14 @@ describe('Lanes Page', function () {
         .to
         .eq(-1)
         ;
+    });
+    it('returns 1 if the first lane has more shipments reverse sort', () => {
+      H.Session.set('lanes_table_sort_reverse', true);
+      expect(sort_by_total_shipments({ _id: 'test_2' }, { _id: 'test_1' }))
+        .to
+        .eq(1)
+        ;
+      H.Session.set('lanes_table_sort_reverse', false);
     });
     it('returns 1 if the second lane has more shipments', () => {
       expect(sort_by_total_shipments({ _id: 'test_1' }, { _id: 'test_2' }))
@@ -137,6 +156,16 @@ describe('Lanes Page', function () {
         .eq(-1)
         ;
     });
+    it(
+      'returns 1 if the first lane has more failed shipments reverse sort',
+      () => {
+        H.Session.set('lanes_table_sort_reverse', true);
+        expect(sort_by_total_salvage_runs({ _id: 'test_2' }, { _id: 'test_1' }))
+          .to
+          .eq(1)
+          ;
+        H.Session.set('lanes_table_sort_reverse', false);
+    });
     it('returns 1 if the second lane has more failed shipments', () => {
       expect(sort_by_total_salvage_runs({ _id: 'test_1' }, { _id: 'test_2' }))
         .to
@@ -154,7 +183,7 @@ describe('Lanes Page', function () {
   });
 
   describe('#lanes', function () {
-    before(() => {
+    beforeEach(() => {
       resetDatabase(null);
       Factory.create('lane', {
         _id: 'b',
@@ -208,11 +237,25 @@ describe('Lanes Page', function () {
       expect(list[0].name).to.eq('a');
       expect(list[2].name).to.eq('c');
     });
+    it('returns a cursor of lanes reverse sorted by name', () => {
+      H.Session.set('lanes_table_sort_by', 'name');
+      H.Session.set('lanes_table_sort_reverse', true);
+      const list = lanes().fetch();
+      expect(list[0].name).to.eq('c');
+      expect(list[2].name).to.eq('a');
+      H.Session.set('lanes_table_sort_reverse', false);
+    });
     it('returns a list of lanes sorted by number of captains', () => {
       H.Session.set('lanes_table_sort_by', 'captains');
       const list = lanes();
       expect(list[0].captains.length).to.eq(3);
       expect(list[2].captains.length).to.eq(1);
+      Lanes.update('a', { $unset: { captains: '' } });
+      Lanes.update('b', { $unset: { captains: '' } });
+      Lanes.update('c', { $unset: { captains: '' } });
+      expect(lanes()[0].captains).to.eq(undefined);
+      expect(lanes()[1].captains).to.eq(undefined);
+      expect(lanes()[2].captains).to.eq(undefined);
     });
     it('returns a list of lanes sorted by type of lane', () => {
       H.Session.set('lanes_table_sort_by', 'type');
@@ -444,9 +487,14 @@ describe('Lanes Page', function () {
       expect(can_ply({})).to.eq(true);
     });
     it('returns true if the user is a captain of the lane', () => {
+      expect(can_ply({ captains: ['foo@harbormaster.io'] })).to.eq(false);
       expect(can_ply({ captains: ['test@harbormaster.io'] })).to.eq(true);
     });
     it('returns true if the user has a token for the lane', () => {
+      expect(can_ply({ tokens: { test_token: 'foo@harbormaster.io' } }))
+        .to
+        .eq(false)
+        ;
       expect(can_ply({ tokens: { test_token: 'test@harbormaster.io' } }))
         .to
         .eq(true)
@@ -492,8 +540,11 @@ describe('Lanes Page', function () {
 
   describe('#followup_name', function () {
     it('returns the name of the followup lane or an empty string', () => {
+      resetDatabase(null);
       expect(followup_name({})).to.eq('');
       expect(followup_name({ followup: { name: 'test' } })).to.eq('test');
+      Factory.create('lane', { _id: 'test', name: 'test' });
+      expect(followup_name({ followup: { _id: 'test' } })).to.eq('test');
     });
   });
 
@@ -528,8 +579,14 @@ describe('Lanes Page', function () {
 
   describe('#salvage_plan_name', function () {
     it('returns the name of the salvage plan or an empty string', () => {
+      resetDatabase(null);
       expect(salvage_plan_name({})).to.eq('');
       expect(salvage_plan_name({ salvage_plan: { name: 'test' } }))
+        .to
+        .eq('test')
+        ;
+      Factory.create('lane', { _id: 'test', name: 'test' });
+      expect(salvage_plan_name({ salvage_plan: { _id: 'test' } }))
         .to
         .eq('test')
         ;

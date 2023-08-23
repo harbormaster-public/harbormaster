@@ -9,6 +9,7 @@ export const load_userland = function (file) {
   let file_path = path.join(startup_dir, file);
   let stats = fs.statSync(file_path);
 
+  /* istanbul ignore else */
   if (
     stats.isDirectory() ||
     !stats.isFile() ||
@@ -18,6 +19,7 @@ export const load_userland = function (file) {
   try {
     let string = fs.readFileSync(file_path).toString();
     eval(string);
+    /* istanbul ignore next */
     if (!H.isTest) console.log('Startup file loaded:', file);
   }
   catch (err) {
@@ -26,6 +28,7 @@ export const load_userland = function (file) {
   }
 };
 
+/* istanbul ignore next */
 if (fs.existsSync(startup_dir)) {
   if (!H.isTest) console.log('Loading userland startup files...');
   fs.readdirSync(startup_dir).forEach(load_userland);

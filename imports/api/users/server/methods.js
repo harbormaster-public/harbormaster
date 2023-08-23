@@ -16,6 +16,7 @@ export default {
       user_account = Accounts.findUserByEmail(email);
     }
 
+    /* istanbul ignore next */
     if (
       user_account &&
       !H.isE2E
@@ -40,6 +41,7 @@ export default {
   },
 
   'Users#reset_password' (email) {
+    /* istanbul ignore next */
     if (!H.isE2E) Accounts.sendResetPasswordEmail(
       Accounts.findUserByEmail(email)._id
     );

@@ -19,8 +19,12 @@ describe('Shipments', () => {
         .to.eq('Shipments');
     });
     it('accepts a Lane as the query', () => {
-      const lane = Factory.create('lane', { _id: 'test', type: 'test' });
-      Factory.create('shipment', { _id: 'test', lane: 'test' });
+      const lane = Factory.create('lane', {
+        _id: 'test',
+        type: 'test',
+        date: 'test',
+      });
+      Factory.create('shipment', { _id: 'test', lane: 'test', start: 'test' });
       expect(publish_shipments(lane).count()).to.eq(1);
     });
     it('accepts an array of Lanes for the query', () => {
@@ -62,6 +66,13 @@ describe('Shipments', () => {
         _id: 'test3', lane: 'test1', actual: new Date(Date.now() + 2),
       });
       expect(last_shipped({ _id: 'test1' })._id).to.eq('test3');
+      Factory.create('latest_shipment', {
+         _id: 'test1',
+          shipment: {
+          _id: 'test1',
+        },
+      });
+      expect(last_shipped({ _id: 'test1' })._id).to.eq('test1');
     });
   });
 
@@ -89,7 +100,13 @@ describe('Shipments', () => {
 
   describe('#get_latest_date', () => {
     it('returns an object with locale string for the latest date', () => {
-      Factory.create('shipment');
+      Factory.create('shipment', { _id: 'test', lane: 'test', finished: 1 });
+      Factory.create('lane', { _id: 'test', slug: 'test' });
+      Factory.create('lane', { _id: 'test2', name: 'test2' });
+      expect(get_latest_date().lane).to.eq('test');
+      Factory.create('shipment', { _id: 'test2', lane: 'test2', finished: 2 });
+      expect(get_latest_date().lane).to.eq('test2');
+      Factory.create('shipment', { _id: 'test3', lane: 'test3', finished: 3 });
       expect(typeof get_latest_date().locale).to.eq('string');
     });
     it('returns a information correctly for a lane never shipped', () => {

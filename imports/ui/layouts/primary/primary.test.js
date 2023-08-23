@@ -34,6 +34,11 @@ describe('Primary Layout', () => {
       resetDatabase(null);
       expect(no_users()).to.eq(true);
     });
+    it('returns false if there are Users', () => {
+      Factory.create('user');
+      expect(no_users()).to.eq(false);
+      resetDatabase(null);
+    });
   });
 
   describe('#logged_in', () => {
@@ -50,13 +55,27 @@ describe('Primary Layout', () => {
     it('returns true if there are no harbormasters', () => {
       expect(no_harbormasters()).to.eq(true);
     });
+    it('returns false otherwise', () => {
+      Factory.create('user', { harbormaster: true });
+      expect(no_harbormasters()).to.eq(false);
+      resetDatabase(null);
+    });
   });
 
   describe('#set_constraints', () => {
     const harbors_find_method = Harbors.find;
     const test_harbors_find_method = () => ([
       {
-        constraints: { global: ['foo'] },
+        constraints: {
+           global: ['foo'],
+           test: [{ id: 'bar', rel: 'bar' }],
+          },
+      },
+      {
+        constraints: {
+           global: ['baz'],
+           test: [{ id: 'qux', src: 'qux' }],
+          },
       },
     ]);
 
@@ -69,21 +88,21 @@ describe('Primary Layout', () => {
       }
       this.$route = { name: 'test' };
       set_constraints();
-      expect(Constraints.get().global.length).to.eq(1);
+      expect(Constraints.get().global.length).to.eq(2);
     });
   });
 
   describe('#is_valid_constraint', () => {
-    it('throws for an invalid constraint', () => {
+    it('returns false for an invalid constraint', () => {
       const id = 'test_id';
       const rel = 'test_rel';
       const src = 'test_src';
       const text = 'test_text';
-      expect(() => is_valid_constraint({})).to.throw();
-      expect(() => is_valid_constraint({ id })).to.throw();
-      expect(() => is_valid_constraint({ id, rel })).to.not.throw();
-      expect(() => is_valid_constraint({ id, src })).to.not.throw();
-      expect(() => is_valid_constraint({ id, text })).to.not.throw();
+      expect(is_valid_constraint({})).to.eq(false);
+      expect(is_valid_constraint({ id })).to.eq(false);
+      expect(is_valid_constraint({ id, rel })).to.eq(true);
+      expect(is_valid_constraint({ id, src })).to.eq(true);
+      expect(is_valid_constraint({ id, text })).to.eq(true);
     });
   });
 

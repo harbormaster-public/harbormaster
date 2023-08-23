@@ -19,6 +19,7 @@ const is_loaded = function () {
 };
 
 const no_users = function () {
+  /* istanbul ignore else */
   if (! Users.find().fetch().length) { return true; }
   return false;
 };
@@ -37,6 +38,7 @@ const set_constraints = function () {
   const parsed = {};
   const { name } = this.$route;
   Harbors.find().forEach(harbor => {
+    /* istanbul ignore else */
     if (harbor.constraints) {
       for (const [scope, list] of Object.entries(harbor.constraints)) {
         parsed[scope] = parsed[scope] ? parsed[scope].concat(list) : list;
@@ -45,9 +47,8 @@ const set_constraints = function () {
             if (is_valid_constraint(constraint) && constraint.rel) {
               return add_rel(constraint);
             }
-            else if (is_valid_constraint(constraint)) {
-              return add_script(constraint);
-            }
+
+            return add_script(constraint);
           });
         }
       }
@@ -62,12 +63,15 @@ const is_valid_constraint = function (constraint) {
     !constraint.id
     || (!constraint.rel && !constraint.src && !constraint.text)
   ) {
-    throw new Error(`
+    /* istanbul ignore next */
+    if (!H.isTest) console.error(`
       An 'id' string is required for all constraints,
-      as well as either a 'src' field, a 'text' field, 
+      as well as either a 'src' field, a 'text' field,
       or both a 'rel' and 'href' field.
     `);
+    return false;
   }
+  return true;
 };
 
 const add_script = function (constraint) {

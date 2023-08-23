@@ -2,6 +2,7 @@ import { resetDatabase } from 'cleaner';
 import '.';
 import { Lanes } from '..';
 import {
+  trim_manifest,
   collect_latest_shipments,
   delete_lane,
   duplicate,
@@ -24,6 +25,11 @@ const call_method = H.call;
 
 describe('Lanes', function () {
   beforeEach(function () { resetDatabase(null); });
+
+  describe('#trim_manifest', () => {
+    expect(trim_manifest({prior_manifest: true}).prior_manifest)
+    .to.eq(undefined);
+  });
 
   describe('#collect_latest_shipments', () => {
     beforeEach(() => Factory.create('lane', {
@@ -49,6 +55,17 @@ describe('Lanes', function () {
       });
       expect(get_increment(lane)).to.eq(24);
     });
+    it('increments recursively if a dupe exists', () => {
+      const lane = Factory.create('lane', {
+        _id: 'test',
+        slug: 'test',
+      });
+      Factory.create('lane', {
+        _id: 'test-2',
+        slug: 'test-2',
+      });
+      expect(get_increment(lane)).to.eq(3);
+    });
   });
 
   describe('#publish_lanes', () => {
@@ -66,9 +83,9 @@ describe('Lanes', function () {
       Factory.create('lane', { _id: '3' });
       expect(publish_lanes(['1', '2', '3']).fetch().length).to.eq(3);
     });
-    it('allows subscription by object', () => {
+    it('allows subscription by default assignment object', () => {
       Factory.create('lane');
-      expect(publish_lanes({}).fetch().length).to.eq(1);
+      expect(publish_lanes().fetch().length).to.eq(1);
     });
   });
 
@@ -135,6 +152,9 @@ describe('Lanes', function () {
       await start_shipment('test', {}, 'test_start_date');
       expect(Shipments.find().count()).to.eq(1);
       expect(Lanes.findOne('test').shipment_count).to.eq(1);
+      await start_shipment('test', {}, 'test_start_date');
+      expect(Shipments.find().count()).to.eq(2);
+      expect(Lanes.findOne('test').shipment_count).to.eq(2);
     });
     it(
       "catches errors and records them as part of the Shipment manifest",
@@ -146,6 +166,7 @@ describe('Lanes', function () {
         const shipment = Shipments.findOne({ lane: 'test' });
         const key = Object.keys(shipment.stderr)[0];
         expect(shipment.stderr[key]).to.eq('Error: test');
+        expect(shipment.stderr[key].length).to.eq(11);
         H.call = call_method;
       });
     it("ends a shipment with exit code 1 on an error", async () => {
@@ -214,6 +235,8 @@ describe('Lanes', function () {
     it('increments salvage runs for a non-zero exit code', async () => {
       await end_shipment($lane, 1, { shipment_id: 'test' });
       expect(Lanes.findOne('test').salvage_runs).to.eq(1);
+      await end_shipment($lane, 1, { shipment_id: 'test' });
+      expect(Lanes.findOne('test').salvage_runs).to.eq(2);
     });
     it(
       'updates a shipment record with results and sets it inactive',
@@ -255,16 +278,24 @@ describe('Lanes', function () {
   describe('#reset_shipment', () => {
     beforeEach(() => {
       Factory.create('lane', { _id: 'test', slug: 'test_slug' });
+      Factory.create('lane', { _id: 'test-2', slug: 'test-2_slug' });
       Factory.create('shipment', {
         start: 'test_date',
         lane: 'test',
         active: true,
       });
+      Factory.create('shipment', {
+        lane: 'test-2',
+        active: true,
+      });
     });
     it('sets a given shipment to inactive with exit code 1', () => {
       reset_shipment('test_slug', 'test_date');
+      reset_shipment('test-2_slug', 'test-2_date');
       expect(Shipments.findOne({ lane: 'test' }).active).to.eq(false);
       expect(Shipments.findOne({ lane: 'test' }).exit_code).to.eq(1);
+      expect(Shipments.findOne({ lane: 'test-2' }).active).to.eq(false);
+      expect(Shipments.findOne({ lane: 'test-2' }).exit_code).to.eq(1);
     });
     it("updates the LatestShipment collection and Lane's last shipment", () => {
       reset_shipment('test_slug', 'test_date');
