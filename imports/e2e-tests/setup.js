@@ -1,4 +1,4 @@
-import {setup} from 'meteor/universe:e2e';
+import { setup } from 'meteor/universe:e2e';
 
 const maybe_run_headless = function () {
   let should_be = process.env.HEADLESS || true;

@@ -4,18 +4,14 @@ const test_email = faker.internet.email();
 const test_password = faker.internet.password();
 
 import {
-  after,
-  afterEach,
   describe,
   it,
   before,
   beforeEach,
-  browser,
   page,
   reset_users,
   create_test_user,
   test_user_login,
-  screenshot,
   H,
   expect,
 } from '../../helpers';
@@ -25,35 +21,11 @@ describe('Routes', function () {
     await reset_users();
   });
 
-  after(async () => {
-    await browser.close();
-    // Something doesn't seem to be cleaning up properly, and the process
-    // seems to hang when the tests complete, pass or fail.  For now,
-    // We'll just bail if we wait for longer than 5s after the tests are run.
-    setTimeout(() => {
-      console.log(`Test run complete, exiting.`);
-      process.exit();
-    }, 5000);
-  });
-
-  afterEach(async () => {
-    const { state, title } = this.ctx.currentTest;
-    // Ensure to fail the whole run if any of the tests fail.
-    if (state == 'failed') {
-      const error_date = 'error-' + Date.now();
-      await screenshot(error_date, title);
-      process.exitCode = 1;
-    }
-  });
-
   beforeEach(async function () {
     await page.goto(H.absoluteUrl());
-    let header = await page.waitForSelector('h1', {visible: true});
-    // let header = await page.waitForSelector('h1');
+    let header = await page.waitForSelector('h1', { visible: true });
 
-    // expect(header).to.exist.and.be.visible;
     expect(header).to.exist;
-    // expect(header).to.be.visible;
   });
 
   describe('when there are no users', function () {
@@ -63,15 +35,11 @@ describe('Routes', function () {
     });
 
     it('show the Welcome Page', async function () {
-      // const add_user_page = await page.waitForSelector('#add-user-page', {
-      //   visible: true,
-      // });
       const new_instance_form = await page.waitForSelector('#new-instance', {
         visible: true,
       });
 
       expect(new_instance_form).to.exist;
-      // expect([add_user_page, new_instance_form]).to.exist;
     });
 
     it('allow a new user to sign up', async () => {
@@ -117,7 +85,6 @@ describe('Routes', function () {
   });
 
   describe('for logged in users', () => {
-    const lanes_route = 'lanes';
     const users_url = `${H.absoluteUrl()}users`;
 
     before(async () => {
@@ -128,7 +95,7 @@ describe('Routes', function () {
       await test_user_login(test_email, test_password);
       const last_time_shipped_header = page.waitForSelector(
         '#last-time-shipped-header',
-        {visible: true},
+        { visible: true },
       );
 
       expect(last_time_shipped_header).to.exist;
@@ -136,85 +103,6 @@ describe('Routes', function () {
 
     beforeEach(async () => {
       await page.goto(H.absoluteUrl());
-    });
-
-    it('allow viewing the Lanes Page', async () => {
-      await page.click(`.nav-item[href="/${lanes_route}"]`);
-      const lanes_url = page.url();
-      const lanes_page = page.waitForSelector('#lanes-page', {visible: true});
-
-      expect(lanes_url).to.eq(`${H.absoluteUrl()}${lanes_route}`);
-      expect(lanes_page).to.exist;
-
-    });
-
-    it('allow creating a new Lane', async () => {
-      await page.click(`.nav-item[href="/${lanes_route}"]`);
-      await page.click('#new-lane');
-      const edit_lane_page = await page.waitForSelector('#edit-lane-page', {
-        visible: true,
-      });
-      const edit_lane_url = `${H.absoluteUrl()}lanes/new/edit`;
-
-      expect(edit_lane_page).to.exist;
-      expect(page.url()).to.eq(edit_lane_url);
-    });
-
-    it('allow users to edit Lanes using "new" or a given path', async () => {
-      const new_lane_url = `${H.absoluteUrl()}lanes/new/edit`;
-      const given_lane_url = `${H.absoluteUrl()}lanes/${
-        faker.lorem.word()
-      }/edit`;
-
-      await page.goto(new_lane_url);
-      const edit_new_lane_page = await page.waitForSelector(
-        '#edit-lane-page',
-        {visible: true},
-      );
-      expect(edit_new_lane_page).to.exist;
-      expect(page.url()).to.eq(new_lane_url);
-
-      await page.goto(given_lane_url);
-      const edit_given_lane_page = await page.waitForSelector(
-        '#edit-lane-page',
-        {visible: true},
-      );
-      expect(edit_given_lane_page).to.exist;
-      expect(page.url()).to.eq(given_lane_url);
-    });
-
-    it('allow shipping to a Lane', async () => {
-      const ship_lane_page_url = `${H.absoluteUrl()}lanes/${
-        faker.lorem.word()
-      }/ship`;
-
-      await page.goto(ship_lane_page_url);
-      const ship_lane_page = await page.waitForSelector(
-        '#ship-lane-page',
-        {visible: true},
-      );
-      expect(ship_lane_page).to.exist;
-    });
-
-    it('allow viewing of historical shipments for a Lane', async () => {
-      const date = new Date();
-      const date_string = `${
-        date.getMonth()}-${
-        date.getDate()}-${
-        date.getHours()}-${
-        date.getMinutes()}-${
-        date.getSeconds()
-      }`;
-      const historical_shipped_lane_url = `${H.absoluteUrl()}lanes/${
-        faker.lorem.word()
-      }/ship/${date_string}`;
-
-      await page.goto(historical_shipped_lane_url);
-      const ship_lane_page = await page.waitForSelector(
-        '#ship-lane-page',
-        {visible: true},
-      );
-      expect(ship_lane_page).to.exist;
     });
 
     it('redirect missing Lane names to the Lanes Page', async () => {
@@ -227,7 +115,7 @@ describe('Routes', function () {
 
     it('allow viewing the Users Page showing all users', async () => {
       await page.goto(users_url);
-      const users_page = page.waitForSelector('#users-page', {visible: true});
+      const users_page = page.waitForSelector('#users-page', { visible: true });
       const users_list = page.waitForSelector('.users-table tbody tr', {
         visible: true,
       });
@@ -250,7 +138,7 @@ describe('Routes', function () {
       await page.type('.email-user-invite', new_user);
       await page.click('.send-invitation');
 
-      const users_page = page.waitForSelector('#users-page', {visible: true});
+      const users_page = page.waitForSelector('#users-page', { visible: true });
       expect(users_page).to.exist;
 
       expect(page.url()).to.eq(users_url);

@@ -1,5 +1,5 @@
-import {Users} from '../../imports/api/users';
-import {cwd} from 'process';
+import { Users } from '../../imports/api/users';
+import { cwd } from 'process';
 import { Accounts } from 'meteor/accounts-base';
 import {
   page,
@@ -7,7 +7,7 @@ import {
 
 export * from 'meteor/universe:e2e';
 
-export {expect} from 'chai';
+export { expect } from 'chai';
 
 import $H from '../startup/config/namespace';
 
@@ -21,10 +21,10 @@ export const reset_users = Meteor.bindEnvironment(async () => {
 });
 
 export const create_test_user = Meteor.bindEnvironment(async (
-    email,
-    password,
-    should_log,
-  ) => {
+  email,
+  password,
+  should_log,
+) => {
   if (should_log) console.log(
     `Creating test user "${test_email}" with password "${test_password}"`
   );
@@ -52,9 +52,10 @@ export const test_user_login = async function (email, password, log = false) {
 };
 
 export const screenshot = async function (filename, title) {
+  const dir = process.env.SCREENSHOT_DIR || cwd();
   const type = 'png';
   const encoding = 'binary';
-  const path = `${cwd()}/${filename}.${type}`;
+  const path = `${dir}/${filename}.${type}`;
   const fail_string = title ? `Test "${title}" failed.  ` : '';
   await page.screenshot({
     path,

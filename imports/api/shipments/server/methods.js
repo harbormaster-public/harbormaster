@@ -12,8 +12,7 @@ const publish_shipments = function publish_shipments (lanes, options = {}) {
     query = { lane: { $in: lanes.map((item) => item._id) } };
   }
   else if (lanes?.slug) {
-    let lane = Lanes.findOne({ slug: lanes.slug });
-    query.lane = lane._id;
+    query.lane = Lanes.findOne({ slug: lanes.slug })?._id;
   }
   const shipments = Shipments.find(query, options);
 
@@ -81,7 +80,7 @@ const get_latest_date = function () {
     lane: '',
     date: '',
     locale: `recorded at ${latest_shipment.finished.toLocaleString()
-      }, <b><i>and is orphaned (no lane found to match it).</b></i>`,
+    }, <b><i>and is orphaned (no lane found to match it).</b></i>`,
   };
 
   return {
