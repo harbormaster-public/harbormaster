@@ -1,6 +1,6 @@
 {
   "name": "harbormaster",
-  "version": "1.26.0",
+  "version": "1.26.1",
   "private": true,
   "babel": {
     "env": {
