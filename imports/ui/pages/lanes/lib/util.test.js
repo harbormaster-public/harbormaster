@@ -10,44 +10,45 @@ import faker from 'faker';
 import _ from 'lodash';
 const { expect } = chai;
 
+const test_lane_one_shipment_id = faker.random.uuid();
+const test_lane_no_shipments_id = faker.random.uuid();
+const test_lane_multiple_shipments_id = faker.random.uuid();
+const first_complete_actual = 1;
+const second_complete_actual = 2;
+const third_complete_actual = 3;
+Factory.define('test_one_shipment_lane', Lanes, {
+  _id: test_lane_one_shipment_id,
+  name: 'One Shipment',
+  slug: 'one-shipment',
+});
+Factory.define('test_no_shipments_lane', Lanes, {
+  _id: test_lane_no_shipments_id,
+});
+Factory.define('test_lane_multiple_shipments', Lanes, {
+  _id: test_lane_multiple_shipments_id,
+});
+Factory.define('test_one_shipment', Shipments, {
+  lane: test_lane_one_shipment_id,
+});
+Factory.define('test_multi_shipment_1', Shipments, {
+  lane: test_lane_multiple_shipments_id,
+  actual: first_complete_actual,
+});
+Factory.define('test_multi_shipment_2', Shipments, {
+  lane: test_lane_multiple_shipments_id,
+  actual: third_complete_actual,
+});
+Factory.define('test_multi_shipment_3', Shipments, {
+  lane: test_lane_multiple_shipments_id,
+  actual: second_complete_actual,
+});
+
 describe('pages/lanes/lib/util', function () {
   let test_lane_no_shipments;
   let test_lane_one_shipment;
   let test_lane_multiple_shipments;
-  const test_lane_one_shipment_id = faker.random.uuid();
-  const test_lane_no_shipments_id = faker.random.uuid();
-  const test_lane_multiple_shipments_id = faker.random.uuid();
-  const first_complete_actual = 1;
-  const second_complete_actual = 2;
-  const third_complete_actual = 3;
 
   before(() => {
-    Factory.define('test_one_shipment_lane', Lanes, {
-      _id: test_lane_one_shipment_id,
-      name: 'One Shipment',
-      slug: 'one-shipment',
-    });
-    Factory.define('test_no_shipments_lane', Lanes, {
-      _id: test_lane_no_shipments_id,
-    });
-    Factory.define('test_lane_multiple_shipments', Lanes, {
-      _id: test_lane_multiple_shipments_id,
-    });
-    Factory.define('test_one_shipment', Shipments, {
-      lane: test_lane_one_shipment_id,
-    });
-    Factory.define('test_multi_shipment_1', Shipments, {
-      lane: test_lane_multiple_shipments_id,
-      actual: first_complete_actual,
-    });
-    Factory.define('test_multi_shipment_2', Shipments, {
-      lane: test_lane_multiple_shipments_id,
-      actual: third_complete_actual,
-    });
-    Factory.define('test_multi_shipment_3', Shipments, {
-      lane: test_lane_multiple_shipments_id,
-      actual: second_complete_actual,
-    });
     Factory.create('test_one_shipment');
     Factory.create('test_multi_shipment_1');
     Factory.create('test_multi_shipment_2');
@@ -55,8 +56,8 @@ describe('pages/lanes/lib/util', function () {
     test_lane_one_shipment = Factory.create('test_one_shipment_lane');
     test_lane_no_shipments = Factory.create('test_no_shipments_lane');
     test_lane_multiple_shipments = Factory.create(
-        'test_lane_multiple_shipments'
-      );
+      'test_lane_multiple_shipments'
+    );
   });
 
   describe('#count', function () {
@@ -72,13 +73,13 @@ describe('pages/lanes/lib/util', function () {
     it(
       'returns the shipments for a lane sorted descending by date and limited',
       () => {
-      const test_limit = 2;
-      const test_shipments = history(test_lane_multiple_shipments, test_limit)
-        .fetch();
-      expect(test_shipments.length).to.eq(2);
-      expect(test_shipments[0].actual).to.eq(3);
-      expect(test_shipments[1].actual).to.eq(2);
-    });
+        const test_limit = 2;
+        const test_shipments = history(test_lane_multiple_shipments, test_limit)
+          .fetch();
+        expect(test_shipments.length).to.eq(2);
+        expect(test_shipments[0].actual).to.eq(3);
+        expect(test_shipments[1].actual).to.eq(2);
+      });
     it('returns false if not given a lane', () => {
       const test_arbitrary_limit = Math.round(Math.random() * 100);
       expect(history()).to.eq(false);

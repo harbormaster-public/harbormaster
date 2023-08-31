@@ -29,3 +29,7 @@ for harbor in "${default[@]}"; do
     cp -R $depot/$harbor/$harbor $harbors/$harbor
   fi
 done
+
+echo "Installing git hooks."
+cp pre-commit.sh .git/hooks/pre-commit
+cp pre-push.sh .git/hooks/pre-push
