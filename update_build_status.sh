@@ -19,3 +19,6 @@ else
   echo "Updating README with coverage status."
   echo "$NEW_README" > README.md
 fi
+
+git add README.md
+git commit --amend --no-verify -C HEAD
