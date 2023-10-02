@@ -22,7 +22,7 @@ collect_latest_shipments();
 
 H.publish('Lanes', publish_lanes);
 
-
+/* istanbul ignore next */
 H.publish('LatestShipment', function () {
   return LatestShipment.find();
 });

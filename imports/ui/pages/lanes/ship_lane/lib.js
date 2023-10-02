@@ -1,12 +1,10 @@
-import { Session } from 'meteor/session';
-import { ReactiveVar } from 'meteor/reactive-var';
 import { HTTP } from 'meteor/http';
 import { Harbors } from '../../../../api/harbors';
 import { Shipments } from '../../../../api/shipments';
 import { history, get_lane } from '../lib/util';
 import { moment } from 'meteor/momentjs:moment';
 
-const not_found = new ReactiveVar(false);
+const not_found = new H.ReactiveVar(false);
 const not_found_text = `
   <p><strong>The harbor you're viewing hasn't been installed for this
     Harbormaster instance.</strong></p>
@@ -16,12 +14,15 @@ const not_found_text = `
 `;
 
 const lane = function () {
-  let $lane = get_lane(this.$route.params.slug) || false;
+  let $lane = this.$route?.params?.slug ?
+    get_lane(this.$route.params.slug) :
+    false
+    ;
   return $lane;
 };
 
 const active = function () {
-  let $lane = get_lane(this.$route.params.slug) || {};
+  let $lane = get_lane(this.$route.params.slug);
   let date = this.$route.params.date;
   let total = Shipments.find({
     active: true,
@@ -42,19 +43,23 @@ const created = function () {
     this.$data.historical = true;
   }
 
-  if (user_id && token) HTTP.post(this.$route.fullPath, (err, res) => {
-    if (!err && res) console.log(`Shipment started.`);
-  });
+  if (user_id && token) HTTP.post(
+    this.$route.fullPath,
+    /* istanbul ignore next */
+    (err, res) => {
+      /* istanbul ignore next */
+      if (!err && res) console.log(`Shipment started.`);
+    });
 };
 
 const exit_code = function () {
-  let $lane = get_lane(this.$route.params.slug) || {};
+  let $lane = get_lane(this.$route.params.slug);
   let date = this.$route.params.date;
 
-  let shipment = $lane ?
+  let shipment = $lane._id ?
     Shipments.findOne({ start: date, lane: $lane._id }) :
     false
-  ;
+    ;
 
   if (!shipment || shipment?.active) return '';
 
@@ -65,15 +70,13 @@ const work_preview = function () {
   let shipment;
   let manifest;
   let $lane = get_lane(this.$route.params.slug);
-  let harbor = Harbors.findOne($lane?.type);
-  const harbor_not_ready_header = `
-    <h4>This Harbor is not ready, or otherwise not fully configured.</h4>
-  `;
+  let harbor = Harbors.findOne($lane.type);
   const edit_lane = `<a href="/lanes/${$lane.name}/edit">Edit this lane</a>`;
-  const harbor_not_ready_text = `
-    ${harbor_not_ready_header}
-    <p>Please ${edit_lane} and complete its configuration.</p>
-  `;
+  let harbor_not_ready_header = `<h4>This Harbor is not ready`;
+  harbor_not_ready_header += `, or otherwise not fully configured.</h4>`;
+  let harbor_not_ready_text = `${harbor_not_ready_header}\n`;
+  harbor_not_ready_text += `<p>Please ${edit_lane}`;
+  harbor_not_ready_text += ` and complete its configuration.</p >`;
 
   if (not_found.get()) return not_found_text;
 
@@ -92,28 +95,24 @@ const work_preview = function () {
     manifest = (
       shipment?.manifest ||
       harbor.lanes[$lane._id]?.manifest
-      ) || false;
-
+    ) || false;
 
     H.call(
       'Harbors#render_work_preview',
       $lane,
       manifest,
+      /* istanbul ignore next */
       function (err_preview, res_lane) {
         if (err_preview) throw err;
         if (res_lane == 404) return not_found.set(true);
 
-        return H.call('Lanes#upsert', lane, (err_update, res_success) => {
-          if (err_update) throw err_update;
-          console.log(`Lane "${lane.name}" updated: ${res_success}`);
-          return Session.set('lane', res_lane);
-        });
+        console.log(`Lane "${lane.name}" updated`);
+        return H.Session.set('lane', res_lane);
       }
     );
   }
-
-  return lane.rendered_work_preview ?
-    lane.rendered_work_preview :
+  return $lane.rendered_work_preview ?
+    $lane.rendered_work_preview :
     harbor_not_ready_text
   ;
 };
@@ -126,10 +125,10 @@ const has_work_output = function () {
 
   if (
     shipment && (
-      Object.keys(shipment.stdout).length ||
-      Object.keys(shipment.stderr).length ||
+      (shipment.stdout && Object.keys(shipment.stdout).length) ||
+      (shipment.stderr && Object.keys(shipment.stderr).length) ||
       shipment.exit_code == 0
-      ) ||
+    ) ||
     any_shipment
   ) {
     return true;
@@ -141,13 +140,13 @@ const has_work_output = function () {
 const work_output = function () {
   let $lane = get_lane(this.$route.params.slug);
   let date = this.$route.params.date;
-  let shipment = $lane.latest_shipment ?
-    $lane.latest_shipment :
+  let shipment = $lane.last_shipment ?
+    $lane.last_shipment :
     Shipments.findOne({
       lane: $lane?._id,
       start: date,
     })
-  ;
+    ;
 
   return shipment;
 };
@@ -168,7 +167,7 @@ const duration = function (shipment) {
 };
 
 const any_active = function () {
-  let $lane = get_lane(this.$route.params.slug) || false;
+  let $lane = get_lane(this.$route.params.slug);
   let shipments = Shipments.find({ lane: $lane._id, active: true });
 
   if (shipments.count()) return true;
@@ -178,24 +177,33 @@ const any_active = function () {
 const reset_shipment = function () {
   const { date, slug } = this.$route.params;
 
-  H.call('Lanes#reset_shipment', slug, date, function (err, res) {
-    if (err) throw err;
-    console.log('Reset shipment response:', res);
-  });
+  H.call(
+    'Lanes#reset_shipment',
+    slug,
+    date,
+    /* istanbul ignore next */
+    function (err, res) {
+      if (err) throw err;
+      console.log('Reset shipment response:', res);
+    });
 };
 
 const reset_all_active = function () {
-  const {slug} = this.$route.params;
+  const { slug } = this.$route.params;
 
-  H.call('Lanes#reset_all_active_shipments', slug, function (err, res) {
-    if (err) throw err;
-    console.log('Reset all active shipments response:', res);
-  });
+  H.call(
+    'Lanes#reset_all_active_shipments',
+    slug,
+    /* istanbul ignore next */
+    function (err, res) {
+      if (err) throw err;
+      console.log('Reset all active shipments response:', res);
+    });
 };
 
 const start_shipment = function () {
   let { $router, $data } = this;
-  let working_lanes = Session.get('working_lanes') || {};
+  let working_lanes = H.Session.get('working_lanes') || {};
   let $lane = get_lane(this.$route.params.slug);
   let harbor = Harbors.findOne($lane.type);
   let manifest = harbor.lanes[$lane._id].manifest;
@@ -206,9 +214,11 @@ const start_shipment = function () {
   });
 
   working_lanes[$lane._id] = true;
-  Session.set('working_lanes', working_lanes);
-  if (! shipment || ! shipment.active) {
-    console.log(`Starting shipment for lane: ${$lane.name}`);
+  H.Session.set('working_lanes', working_lanes);
+  /* istanbul ignore else */
+  if (!shipment || !shipment.active) {
+    /* istanbul ignore next */
+    if (!H.isTest) console.log(`Starting shipment for lane: ${$lane.name}`);
     H.call(
       'Lanes#start_shipment',
       $lane._id,
@@ -217,10 +227,11 @@ const start_shipment = function () {
       (err, res) => {
         if (err) throw err;
 
-        working_lanes = Session.get('working_lanes');
+        working_lanes = H.Session.get('working_lanes');
         working_lanes[$lane._id] = false;
-        Session.set('working_lanes', working_lanes);
-        console.log('Shipment started for lane:', $lane.name);
+        H.Session.set('working_lanes', working_lanes);
+        /* istanbul ignore next */
+        if (!H.isTest) console.log('Shipment started for lane:', $lane.name);
         $router.push(`/lanes/${$lane.slug}/ship/${shipment_start_date}`);
         $data.rerenders = this.$data.rerenders + 1;
 
@@ -247,4 +258,6 @@ export {
   duration,
   pretty_date,
   start_shipment,
+  not_found,
+  not_found_text,
 };

@@ -1,16 +1,10 @@
 import { resetDatabase } from "cleaner";
-import faker from "faker";
 import ".";
 import { Users } from "..";
 import chai from "chai";
-// import { "Users#invite_user" as invite_user } from './methods';
 
 const { expect } = chai;
-const test_email = faker.internet.email();
-
-Factory.define("user", Users, {
-  _id: test_email,
-});
+const test_email = require("faker").internet.email();
 
 describe("Users#invite_user", function () {
   beforeEach(function () {
@@ -28,7 +22,7 @@ describe("Users#invite_user", function () {
   });
 
   it("returns the user account if it already exists", function () {
-    var user = Factory.create("user");
+    var user = Factory.create("user", { _id: test_email });
     var invited_user = H.call("Users#invite_user", test_email);
     var existing_user = Users.findOne(user._id);
 
@@ -39,20 +33,56 @@ describe("Users#invite_user", function () {
   it("returns false if no email is passed", function () {
     let results = H.call("Users#invite_user");
 
-    expect(results).to.be.false;
+    expect(results).to.eq(false);
   });
 });
 
 describe("Users#expire_user", () => {
-  it("expires the password associated with the email given");
-  it("returns the email of the account associated with the expiry");
-  it("sets the user to expired status");
+  const accounts_find_user_by_email = Accounts.findUserByEmail;
+  const accounts_set_password = Accounts.setPassword;
+  beforeEach(() => {
+    resetDatabase(null);
+    Accounts.findUserByEmail = () => ({ _id: '' });
+    Accounts.setPassword = () => { };
+  });
+  afterEach(() => {
+    Accounts.findUserByEmail = accounts_find_user_by_email;
+    Accounts.setPassword = accounts_set_password;
+  });
+
+  it("expires the password associated with the email given", () => {
+    Accounts.setPassword = (id, password) => {
+      expect(typeof password).to.eq('string');
+    };
+    H.call('Users#expire_user', 'test@harbormaster.io');
+  });
+  it("returns the email of the account associated with the expiry", () => {
+    expect(H.call('Users#expire_user', 'test@harbormaster.io'))
+      .to
+      .eq('test@harbormaster.io');
+  });
+  it("sets the user to expired status", () => {
+    Factory.create('user', { _id: 'test@harbormaster.io' });
+    H.call('Users#expire_user', 'test@harbormaster.io');
+    expect(Users.findOne('test@harbormaster.io').expired).to.eq(true);
+  });
 });
 
 describe("Users#update", () => {
-  it("updates a user by looking up their email");
+  it("updates a user by looking up their email", () => {
+    const users_update = Users.update;
+    Users.update = (email) => expect(email).to.eq('test@harbormaster.io');
+    resetDatabase(null);
+    Factory.create('user');
+    expect(H.call('Users#update', 'test@harbormaster.io', {})).to.eq(true);
+    Users.update = users_update;
+  });
 });
 
 describe("Users#reset_password", () => {
-  it("returns the email of the account reset");
+  it("returns the email of the account reset", () => {
+    expect(H.call('Users#reset_password', 'test@harbormaster.io'))
+      .to
+      .eq('test@harbormaster.io');
+  });
 });

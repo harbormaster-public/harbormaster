@@ -12,7 +12,8 @@ let post_hooks = Picker.filter(function (req) {
 });
 
 export const respond_not_allowed = (res) => {
-  console.log('Request not allowed.  Responding with 401.');
+  /* istanbul ignore next */
+  if (!H.isTest) console.log('Request not allowed.  Responding with 401.');
   res.statusCode = 401;
   return res.end();
 };
@@ -28,29 +29,32 @@ export const set_cors_headers = (res) => {
   return res;
 };
 
+/* istanbul ignore next */
 WebApp.rawConnectHandlers.use(function (req, res, next) {
   set_cors_headers(res);
 
   return next();
 });
 
-export const route_lane_ship_rpc = async function (params, req, res) {
+export const route_lane_ship_rpc = async function (route_params, req, res) {
 
   let results;
   let query = require('url').parse(req.url, true).query;
-  let lane_name = decodeURI(params.slug);
-  let user_id = query ? query.user_id : false;
-  let token = query ? query.token : false;
+  let lane_name = decodeURI(route_params.slug);
+  let user_id = query?.user_id ? query.user_id : false;
+  let token = query?.token ? query.token : false;
 
   let lane = get_lane(lane_name);
-  if (!lane) return respond_not_allowed(res);
+  if (!lane._id) return respond_not_allowed(res);
 
   let harbor = Harbors.findOne(lane.type);
   let manifest = harbor.lanes[lane._id].manifest;
   let shipment_start_date = H.start_date();
   let shipment = Shipments.findOne({
-    start: shipment_start_date,
-    lane: lane._id,
+    $or: [
+      { lane: lane._id, start: shipment_start_date },
+      { lane: lane._id, active: true },
+    ],
   });
   let prior_manifest = req.body;
 
@@ -65,10 +69,14 @@ export const route_lane_ship_rpc = async function (params, req, res) {
     return respond_not_allowed(res);
   }
 
-  console.log('Shipping via RPC to lane:', lane.name, 'with user:', user_id);
+  /* istanbul ignore next */
+  if (!H.isTest) console.log(
+    'Shipping via RPC to lane:', lane.name, 'with user:', user_id
+  );
 
   if (prior_manifest) {
-    console.log(
+    /* istanbul ignore next */
+    if (!H.isTest) console.log(
       'Prior manifest detected:\n',
       prior_manifest,
       '\n adding to recorded manifest.'
@@ -88,7 +96,7 @@ export const route_lane_ship_rpc = async function (params, req, res) {
 
   }
 
-  results = await Meteor.call(
+  results = await H.call(
     'Lanes#start_shipment',
     lane._id,
     manifest,

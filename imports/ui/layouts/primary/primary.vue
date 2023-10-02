@@ -1,5 +1,5 @@
 <template>
-  <div id=main class="min-h-screen">
+  <div id=primary class="min-h-screen">
     <div v-if="is_loaded()">
       <div v-if="no_users" class="p-5">
         <add-user v-bind:fresh="true"></add-user>
@@ -78,7 +78,7 @@ export default {
 </script>
 
 <style>
-#main {
+#primary {
   background-color: #333;
 }
 

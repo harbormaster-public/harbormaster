@@ -176,17 +176,19 @@ export default {
     is_harbormaster,
 
     add_new_harbor(evt) {
-      const url = evt.target.elements.harbor_url.value;
+      const url = evt?.target?.elements?.harbor_url?.value;
       let git_url_not_recognized = `The url:\n${url}\n`;
       git_url_not_recognized += "Doesn't appear to be a proper git url."
       let warn = `This will add the following Harbor to the Depot:\n\n${url}`;
       warn += `\n\nThen the page will reload.  Ok?`;
-      if (!is_git_url(url)) return alert(git_url_not_recognized);
-      if (!confirm(warn)) return;
+
+      if (!is_git_url(url)) return H.alert(git_url_not_recognized);
+      if (!H.confirm(warn)) return;
+
       H.call('Harbors#add_harbor_to_depot', url, (err, res) => {
-        if (err) alert(err);
-        else if (res.stderr) alert(res.stderr);
-        else window.location.reload();
+        if (err) H.alert(err);
+        else if (res.stderr) H.alert(res.stderr);
+        else H.window.location.reload();
       });
     },
 
@@ -212,7 +214,7 @@ export default {
         }register the "${harbor._id}" harbor?`
       warn += `\n\nThis will force the page to reload in a few moments.`;
 
-      if (!confirm(warn)) return;
+      if (!H.confirm(warn)) return;
 
       H.call('Harbors#register', harbor, (err, res) => {
         let harbor_registration_error_msg = 'Error!\n\n';
@@ -222,15 +224,15 @@ export default {
         harbor_file_not_found_msg += 'Make sure the harbor file is present, ';
         harbor_file_not_found_msg += 'and named correctly.'
         if (err) {
-          alert(harbor_registration_error_msg);
+          H.alert(harbor_registration_error_msg);
           throw err;
         }
-        if (res == 404) alert(harbor_file_not_found_msg);
+        if (res == 404) H.alert(harbor_file_not_found_msg);
       });
-      setTimeout(() => {
-        // TODO Add server check for status code, reload on 200
+      // TODO Add heartbeat check for status code, reload on 200
+      if (!H.isTest) setTimeout(() => {
         console.log('Reloading...');
-        window.location.reload()
+        H.window.location.reload();
       }, reload_timeout_ms);
     },
 
@@ -238,13 +240,13 @@ export default {
       let warn = `Confirm you want to delete ${harbor._id} from the Depot?`;
       warn += '\n\nThis will reload the page.'
 
-      if (!confirm(warn)) return;
+      if (!H.confirm(warn)) return;
 
       H.call('Harbors#remove', harbor, (err, res) => {
-        if (err) alert(err);
+        if (err) H.alert(err);
         else if (res) {
           console.log(`Harbor ${harbor._id} removed, reloading.`);
-          window.location.reload();
+          H.window.location.reload();
         }
       });
     }

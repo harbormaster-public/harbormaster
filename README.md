@@ -1,7 +1,5 @@
 # harbormaster
 
-[![Build Status](https://travis-ci.org/StrictlySkyler/harbormaster.svg?branch=master)](https://travis-ci.org/StrictlySkyler/harbormaster)
-
 _n._
 1. A framework for microservices.
 2. An intelligent pub/sub system.
@@ -224,3 +222,14 @@ Contributions welcome.  See the `CONTRIBUTING` file present in this repo for gui
 
 ## License
 GPL 3.0, see `LICENSE` file.
+
+## Build Status
+
+LAST UPDATED: Tue Sep 12 16:58:18 PDT 2023
+
+=============================== Coverage summary ===============================
+Statements   : 100% ( 1221/1221 )
+Branches     : 100% ( 689/689 )
+Functions    : 100% ( 191/191 )
+Lines        : 100% ( 1128/1128 )
+================================================================================

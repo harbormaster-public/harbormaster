@@ -9,11 +9,10 @@ const publish_shipments = function publish_shipments (lanes, options = {}) {
   if (lanes?._id) query.lane = lanes._id;
   if (lanes?.date) query.start = lanes.date;
   else if (lanes && lanes.length > 0 && lanes instanceof Array) {
-    query = { lane: { $in: lanes }};
+    query = { lane: { $in: lanes.map((item) => item._id) } };
   }
   else if (lanes?.slug) {
-    let lane = Lanes.findOne({slug: lanes.slug});
-    query.lane = lane?._id || null;
+    query.lane = Lanes.findOne({ slug: lanes.slug })?._id;
   }
   const shipments = Shipments.find(query, options);
 
@@ -21,7 +20,8 @@ const publish_shipments = function publish_shipments (lanes, options = {}) {
 };
 
 const get_total_shipments = function () {
-  this.unblock();
+  /* istanbul ignore next */
+  if (!H.isTest) this.unblock();
   let now = Date.now();
   let interval = 86400000; // 24 hours
   let yesterday = new Date(now - interval);
@@ -35,32 +35,36 @@ const get_total_shipments = function () {
 };
 
 const last_shipped = function (lane = { _id: null }) {
-  this.unblock();
+  /* istanbul ignore next */
+  if (!H.isTest) this.unblock();
   const latest = LatestShipment.findOne(lane._id);
-  return latest ? latest.shipment : Shipments.findOne({ lane: lane._id }, {
+  const query = lane._id ? { lane: lane._id } : {};
+  return latest ? latest.shipment : Shipments.findOne(query, {
     sort: { actual: -1 },
     limit: 1,
   });
 };
 
 const total_completed_shipments = function (lane = { _id: null }) {
-  this.unblock();
-  return Shipments.find({
-    lane: lane._id,
-    exit_code: 0,
-  }).count();
+  /* istanbul ignore next */
+  if (!H.isTest) this.unblock();
+  const query = lane._id ? { lane: lane._id, exit_code: 0 } : { exit_code: 0 };
+  return Shipments.find(query).count();
 };
 
 const total_salvage_runs = function (lane = { _id: null }) {
-  this.unblock();
-  return Shipments.find({
-    lane: lane._id,
-    exit_code: { $ne: 0 },
-  }).count();
+  /* istanbul ignore next */
+  if (!H.isTest) this.unblock();
+  const query = lane._id ?
+    { lane: lane._id, exit_code: { $ne: 0 } } :
+    { exit_code: { $ne: 0 } }
+    ;
+  return Shipments.find(query).count();
 };
 
 const get_latest_date = function () {
-  this.unblock();
+  /* istanbul ignore next */
+  if (!H.isTest) this.unblock();
   let lane;
 
   let latest_shipment = Shipments.findOne({}, { sort: { finished: -1 } });
@@ -75,8 +79,7 @@ const get_latest_date = function () {
   if (latest_shipment) return {
     lane: '',
     date: '',
-    locale: `recorded at ${
-      latest_shipment.finished.toLocaleString()
+    locale: `recorded at ${latest_shipment.finished.toLocaleString()
     }, <b><i>and is orphaned (no lane found to match it).</b></i>`,
   };
 

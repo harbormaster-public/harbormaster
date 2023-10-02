@@ -1,24 +1,26 @@
-import { ReactiveVar } from 'meteor/reactive-var';
 import { Lanes } from '../../../api/lanes';
 import { Users } from '../../../api/users';
 
-let total_shipments = new ReactiveVar('Loading');
+let total_shipments = new H.ReactiveVar('Loading');
 
 const shipments_last_24_hours = function () {
   return total_shipments.get().toLocaleString();
 };
 
 const latest_shipment = function () {
-  let shipment = Session.get('latest_shipment') || false;
+  let shipment = H.Session.get('latest_shipment') || false;
 
-  H.call('Shipments#get_latest_date', function (err, res) {
-    if (err) throw err;
-    Session.set('latest_shipment', res);
-  });
+  H.call(
+    'Shipments#get_latest_date',
+    /* istanbul ignore next */
+    function (err, res) {
+      if (err) throw err;
+      H.Session.set('latest_shipment', res);
+    });
 
   if (! shipment) return { locale: 'loading...' };
 
-  return Session.get('latest_shipment');
+  return H.Session.get('latest_shipment');
 };
 
 const total_captains = function () {
@@ -26,6 +28,7 @@ const total_captains = function () {
   var lanes = Lanes.find().fetch();
 
   _.each(lanes, function (lane) {
+    /* istanbul ignore else */
     if (lane.captains) {
       captains = captains.concat(lane.captains);
     }

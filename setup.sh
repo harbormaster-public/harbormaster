@@ -3,7 +3,7 @@ set -e
 
 depot=~/.harbormaster/depot
 harbors=~/.harbormaster/harbors
-default=(sleep ssh timestamp other-lanes post-to-slack email javascript)
+default=(sleep ssh other-lanes email javascript)
 github="git@github.com:strictlyskyler"
 
 if [ ! -d $depot ]; then
@@ -29,3 +29,7 @@ for harbor in "${default[@]}"; do
     cp -R $depot/$harbor/$harbor $harbors/$harbor
   fi
 done
+
+echo "Installing git hooks."
+cp pre-commit.sh .git/hooks/pre-commit
+cp pre-push.sh .git/hooks/pre-push

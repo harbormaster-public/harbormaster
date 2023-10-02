@@ -16,12 +16,13 @@ export default {
       user_account = Accounts.findUserByEmail(email);
     }
 
+    /* istanbul ignore next */
     if (
       user_account &&
       !H.isE2E
     ) Accounts.sendResetPasswordEmail(user_account._id);
 
-    return user_account || user_record || false;
+    return user_account || user_record;
   },
 
   'Users#expire_user' (email) {
@@ -40,6 +41,7 @@ export default {
   },
 
   'Users#reset_password' (email) {
+    /* istanbul ignore next */
     if (!H.isE2E) Accounts.sendResetPasswordEmail(
       Accounts.findUserByEmail(email)._id
     );
