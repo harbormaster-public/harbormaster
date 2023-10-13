@@ -61,26 +61,26 @@ import { Harbors } from '../../api/harbors';
       return {
         find (selector) {
           switch (selector) {
-            case 'input, textarea':
-              return [
-                { type: 'text', value: 'foo', name: 'foo' },
-                { type: 'checkbox', value: 'bar', name: 'bar', checked: true },
-                { type: 'radio', value: 'baz', name: 'baz', checked: false },
-                { type: 'textarea', value: 'qux', name: 'qux' },
-              ];
-            default:
-              return [];
+          case 'input, textarea':
+            return [
+              { type: 'text', value: 'foo', name: 'foo' },
+              { type: 'checkbox', value: 'bar', name: 'bar', checked: true },
+              { type: 'radio', value: 'baz', name: 'baz', checked: false },
+              { type: 'textarea', value: 'qux', name: 'qux' },
+            ];
+          default:
+            return [];
           }
         },
         attr (selector) {
           switch (selector) {
-            default:
-            case 'data-type':
-              return 'test_type';
-            case 'data-value':
-              return 'test_value';
-            case 'data-lane-id':
-              return 'test';
+          default:
+          case 'data-type':
+            return 'test_type';
+          case 'data-value':
+            return 'test_value';
+          case 'data-lane-id':
+            return 'test';
           }
         },
         addClass (className) {
@@ -141,7 +141,7 @@ import { Harbors } from '../../api/harbors';
   H.ReactiveVar = ReactiveVar;
   H.$ = $;
   H.alert = H.isClient ? alert : console.warn;
-  H.confirm = H.isClient ? confirm : console.warn;
+  H.confirm = H.isClient ? args => window.confirm(args) : console.warn;
   H.window = H.isClient ? window : {
     location: {
       host: 'localhost:4040',

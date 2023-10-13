@@ -77,44 +77,44 @@ const lanes = function () {
   let reverse = H.Session.get('lanes_table_sort_reverse') ? -1 : 1;
 
   switch (sort_by) {
-    case 'name':
-      lane_list = Lanes.find({}, { sort: { name: reverse } });
-      break;
-    case 'captains':
-      lane_list = Lanes.find({}).fetch().sort(function (lane1, lane2) {
-        const lane1_captains = lane1.captains ? lane1.captains.length : 0;
-        const lane2_captains = lane2.captains ? lane2.captains.length : 0;
-        if (lane1_captains > lane2_captains) return -reverse;
-        if (lane1_captains < lane2_captains) return reverse;
-        return 0;
-      });
-      break;
-    case 'type':
-      lane_list = Lanes.find({}, { sort: { type: reverse } });
-      break;
-    case 'shipped':
-      lane_list = Lanes.find({}).fetch().sort(sort_by_shipped_date);
-      break;
-    case 'shipments':
-      lane_list = Lanes.find({}).fetch().sort(sort_by_total_shipments);
-      break;
-    case 'salvage-runs':
-      lane_list = Lanes.find({}).fetch().sort(sort_by_total_salvage_runs);
-      break;
-    case 'state':
-      lane_list = Lanes.find(
-        {}, { sort: { 'last_shipment.exit_code': reverse } }
-      );
-      break;
-    case 'followup':
-      lane_list = Lanes.find({}, { sort: { 'followup.name': reverse } });
-      break;
-    case 'salvage':
-      lane_list = Lanes.find({}, { sort: { 'salvage_plan.name': reverse } });
-      break;
-    default:
-      lane_list = Lanes.find();
-      break;
+  case 'name':
+    lane_list = Lanes.find({}, { sort: { name: reverse } });
+    break;
+  case 'captains':
+    lane_list = Lanes.find({}).fetch().sort(function (lane1, lane2) {
+      const lane1_captains = lane1.captains ? lane1.captains.length : 0;
+      const lane2_captains = lane2.captains ? lane2.captains.length : 0;
+      if (lane1_captains > lane2_captains) return -reverse;
+      if (lane1_captains < lane2_captains) return reverse;
+      return 0;
+    });
+    break;
+  case 'type':
+    lane_list = Lanes.find({}, { sort: { type: reverse } });
+    break;
+  case 'shipped':
+    lane_list = Lanes.find({}).fetch().sort(sort_by_shipped_date);
+    break;
+  case 'shipments':
+    lane_list = Lanes.find({}).fetch().sort(sort_by_total_shipments);
+    break;
+  case 'salvage-runs':
+    lane_list = Lanes.find({}).fetch().sort(sort_by_total_salvage_runs);
+    break;
+  case 'state':
+    lane_list = Lanes.find(
+      {}, { sort: { 'last_shipment.exit_code': reverse } }
+    );
+    break;
+  case 'followup':
+    lane_list = Lanes.find({}, { sort: { 'followup.name': reverse } });
+    break;
+  case 'salvage':
+    lane_list = Lanes.find({}, { sort: { 'salvage_plan.name': reverse } });
+    break;
+  default:
+    lane_list = Lanes.find();
+    break;
   }
 
   return lane_list;
@@ -155,7 +155,7 @@ const sort_by_header = function (event) {
   H.$(event.target).siblings('.active')
     .removeClass('active')
     .removeClass('reverse')
-    ;
+  ;
   H.$(event.target).addClass('active');
 
   if (sort_lane_table_reverse(sort_value)) { reverse_sort(event); }
