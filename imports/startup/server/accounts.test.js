@@ -12,7 +12,7 @@ describe('Accounts.onLogin', () => {
     });
     it('assigns a new Harbormaster if there are no users', () => {
       H.user = () => ({
-        emails: [{address: 'test@harbormaster.io'}],
+        emails: [{ address: 'test@harbormaster.io' }],
       });
       set_harbormaster();
       expect(Users.findOne('test@harbormaster.io').harbormaster).to.eq(true);

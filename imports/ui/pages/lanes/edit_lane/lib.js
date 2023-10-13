@@ -29,7 +29,7 @@ const update_harbor = function () {
       values[name] = (type == 'checkbox' || type == 'radio') ?
         (checked && value) || values[name] :
         value
-        ;
+      ;
     }
   });
 
@@ -93,7 +93,7 @@ const slug = function ($lane, render_only) {
   $lane = $lane && $lane.name && $lane.name != 'new' ?
     $lane :
     get_lane($lane)
-    ;
+  ;
 
   if ($lane.name) {
     const $slug = $lane.name.toLowerCase()
@@ -110,6 +110,7 @@ const slug = function ($lane, render_only) {
     $lane.slug = $slug;
     if (!render_only) {
       update_lane($lane);
+      return $slug;
     }
 
     return `${H.window.location.host}/lanes/${$slug}/ship`;
@@ -286,7 +287,7 @@ const chosen_followup = function (followup) {
   return followup._id && $lane._id ?
     followup._id == $lane.followup?._id :
     false
-    ;
+  ;
 };
 
 const chosen_salvage_plan = function (salvage_lane) {
@@ -295,7 +296,7 @@ const chosen_salvage_plan = function (salvage_lane) {
   return salvage_lane._id && $lane._id ?
     salvage_lane._id == $lane.salvage_plan?._id :
     false
-    ;
+  ;
 };
 
 const submit_form = function () {
@@ -309,7 +310,7 @@ const submit_form = function () {
     $lane.type
   ) {
 
-    $lane.slug = slug($lane, true);
+    $lane.slug = slug($lane, false);
     H.Session.set('lane', $lane);
     H.Session.set('validating_fields', true);
 

@@ -193,7 +193,7 @@ describe('Edit Lane Page', function () {
     });
     it('returns the slug url', () => {
       const expected_url_regex = /localhost:4040\/lanes\/test-lane\/ship/;
-      expect(expected_url_regex.test(slug($lane))).to.eq(true);
+      expect(expected_url_regex.test(slug($lane, true))).to.eq(true);
     });
     it('returns empty string if the lane has no name yet', () => {
       expect(slug(bogus_lane)).to.eq('');
