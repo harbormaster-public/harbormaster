@@ -9,8 +9,18 @@
       </h3>
       <h4>You currently have:</h4>
       <ul class="list-inside">
-        <li class="my-5"><a href="/lanes">{{total_lanes}} Lanes</a></li>
-        <li><a href="/users">{{total_users}} Users, {{total_captains}} of which are Captains, and {{total_harbormasters}} of which are Harbormasters</a></li>
+        <li class="my-5">
+          <a href="/lanes">
+          <span
+            v-if="!$subReady.Lanes">(loading...)</span>
+          <span v-else>{{total_lanes}}</span> Lanes</a>
+        </li>
+        <li>
+          <a href="/users">
+            <span v-if="!$subReady.Users">(loading...) Users</span>
+            <span v-else>{{total_users}} Users, {{total_captains}} of which are Captains,
+          and {{total_harbormasters}} of which are Harbormasters</span>
+          </a></li>
       </ul>
       <p class="text-2xl my-10">This is version {{get_version()}}.</p>
     </div>
@@ -37,7 +47,7 @@ export default {
       'Users': [],
     },
   
-    total_lanes () { return Lanes.find().count() },
+    total_lanes () { return Lanes.find().count(); },
     total_users () { return Users.find({ expired: { $not: true }}).count() },
     shipments_last_24_hours,
     latest_shipment,
@@ -75,6 +85,14 @@ export default {
   color: #0af;
 }
 
+a span {
+  color: #0af;
+}
+
+a:hover span,
+a span:hover {
+  color: #ffae00;
+}
 
 @media all 
   and (min-device-width: 280px)

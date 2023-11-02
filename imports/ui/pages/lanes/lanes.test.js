@@ -46,12 +46,12 @@ describe('Lanes Page', function () {
     beforeEach(() => {
       Shipments.find = ({ lane } = shipment) => {
         switch (lane) {
-          default:
-            return { fetch: () => ([]) };
-          case 'test_1':
-            return { fetch: () => ([{ actual: new Date(0) }]) };
-          case 'test_2':
-            return { fetch: () => ([{ actual: new Date(1) }]) };
+        default:
+          return { fetch: () => ([]) };
+        case 'test_1':
+          return { fetch: () => ([{ actual: new Date(0) }]) };
+        case 'test_2':
+          return { fetch: () => ([{ actual: new Date(1) }]) };
         }
       };
     });
@@ -64,7 +64,7 @@ describe('Lanes Page', function () {
       expect(sort_by_shipped_date({ _id: 'test_2' }, { _id: 'test_1' }))
         .to
         .eq(-1)
-        ;
+      ;
     });
     it(
       'returns 1 if the first lane was shipped more recently reverse sort',
@@ -73,20 +73,20 @@ describe('Lanes Page', function () {
         expect(sort_by_shipped_date({ _id: 'test_2' }, { _id: 'test_1' }))
           .to
           .eq(1)
-          ;
+        ;
         H.Session.set('lanes_table_sort_reverse', false);
-    });
+      });
     it('returns 1 if the second lane was shipped more recently', () => {
       expect(sort_by_shipped_date({ _id: 'test_1' }, { _id: 'test_2' }))
         .to
         .eq(1)
-        ;
+      ;
     });
     it('returns 0 if both lanes shipped at the same time', () => {
       expect(sort_by_shipped_date({ _id: 'test_3' }, { _id: 'test_3' }))
         .to
         .eq(0)
-        ;
+      ;
     });
   });
 
@@ -94,11 +94,11 @@ describe('Lanes Page', function () {
     beforeEach(() => {
       Shipments.find = ({ lane } = shipment) => {
         switch (lane) {
-          default:
-          case 'test_1':
-            return { fetch: () => ([{}]) };
-          case 'test_2':
-            return { fetch: () => ([{}, {}]) };
+        default:
+        case 'test_1':
+          return { fetch: () => ([{}]) };
+        case 'test_2':
+          return { fetch: () => ([{}, {}]) };
         }
       };
     });
@@ -110,27 +110,27 @@ describe('Lanes Page', function () {
       expect(sort_by_total_shipments({ _id: 'test_2' }, { _id: 'test_1' }))
         .to
         .eq(-1)
-        ;
+      ;
     });
     it('returns 1 if the first lane has more shipments reverse sort', () => {
       H.Session.set('lanes_table_sort_reverse', true);
       expect(sort_by_total_shipments({ _id: 'test_2' }, { _id: 'test_1' }))
         .to
         .eq(1)
-        ;
+      ;
       H.Session.set('lanes_table_sort_reverse', false);
     });
     it('returns 1 if the second lane has more shipments', () => {
       expect(sort_by_total_shipments({ _id: 'test_1' }, { _id: 'test_2' }))
         .to
         .eq(1)
-        ;
+      ;
     });
     it('returns 0 if each lane has the same number of shipments', () => {
       expect(sort_by_total_shipments({ _id: 'test_1' }, { _id: 'test_1' }))
         .to
         .eq(0)
-        ;
+      ;
     });
   });
 
@@ -138,11 +138,11 @@ describe('Lanes Page', function () {
     beforeEach(() => {
       Shipments.find = ({ lane } = shipment) => {
         switch (lane) {
-          default:
-          case 'test_1':
-            return { fetch: () => ([{}]) };
-          case 'test_2':
-            return { fetch: () => ([{}, {}]) };
+        default:
+        case 'test_1':
+          return { fetch: () => ([{}]) };
+        case 'test_2':
+          return { fetch: () => ([{}, {}]) };
         }
       };
     });
@@ -154,7 +154,7 @@ describe('Lanes Page', function () {
       expect(sort_by_total_salvage_runs({ _id: 'test_2' }, { _id: 'test_1' }))
         .to
         .eq(-1)
-        ;
+      ;
     });
     it(
       'returns 1 if the first lane has more failed shipments reverse sort',
@@ -163,14 +163,14 @@ describe('Lanes Page', function () {
         expect(sort_by_total_salvage_runs({ _id: 'test_2' }, { _id: 'test_1' }))
           .to
           .eq(1)
-          ;
+        ;
         H.Session.set('lanes_table_sort_reverse', false);
-    });
+      });
     it('returns 1 if the second lane has more failed shipments', () => {
       expect(sort_by_total_salvage_runs({ _id: 'test_1' }, { _id: 'test_2' }))
         .to
         .eq(1)
-        ;
+      ;
     });
     it(
       'returns 0 if both lanes have the same number of failed shipments',
@@ -178,7 +178,7 @@ describe('Lanes Page', function () {
         expect(sort_by_total_salvage_runs({ _id: 'test_1' }, { _id: 'test_1' }))
           .to
           .eq(0)
-          ;
+        ;
       });
   });
 
@@ -494,11 +494,11 @@ describe('Lanes Page', function () {
       expect(can_ply({ tokens: { test_token: 'foo@harbormaster.io' } }))
         .to
         .eq(false)
-        ;
+      ;
       expect(can_ply({ tokens: { test_token: 'test@harbormaster.io' } }))
         .to
         .eq(true)
-        ;
+      ;
     });
     it('returns false otherwise', () => { expect(can_ply({})).to.eq(false); });
   });
@@ -554,12 +554,14 @@ describe('Lanes Page', function () {
       () => {
         const expected_datestring = new Date(0).toLocaleString();
         resetDatabase(null);
-        expect(last_shipped({})).to.eq('Loading...');
+        expect(last_shipped({ last_shipment: { actual: '' } }))
+          .to.eq('');
         Factory.create('latest_shipment', {
           _id: 'test',
           shipment: { actual: new Date(0) },
         });
-        expect(last_shipped({ _id: 'test' })).to.eq(expected_datestring);
+        expect(last_shipped({ last_shipment: { actual: new Date(0) } }))
+          .to.eq(expected_datestring);
       });
   });
 
@@ -568,12 +570,13 @@ describe('Lanes Page', function () {
       'returns the latest shipment start date for a lane or an empty string',
       () => {
         resetDatabase(null);
-        expect(latest_shipment({})).to.eq('');
+        expect(latest_shipment({ last_shipment: { start: '' } })).to.eq('');
         Factory.create('latest_shipment', {
           _id: 'test',
           shipment: { start: 'test_date' },
         });
-        expect(latest_shipment({ _id: 'test' })).to.eq('test_date');
+        expect(latest_shipment({ last_shipment: { start: 'test_date' } }))
+          .to.eq('test_date');
       });
   });
 
@@ -584,12 +587,12 @@ describe('Lanes Page', function () {
       expect(salvage_plan_name({ salvage_plan: { name: 'test' } }))
         .to
         .eq('test')
-        ;
+      ;
       Factory.create('lane', { _id: 'test', name: 'test' });
       expect(salvage_plan_name({ salvage_plan: { _id: 'test' } }))
         .to
         .eq('test')
-        ;
+      ;
     });
   });
 

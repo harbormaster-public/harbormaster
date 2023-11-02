@@ -85,7 +85,7 @@ export default {
       );
     },
     handle_paginator (evt) {
-      shipment_sub.stop();
+      shipment_sub.stopNow();
       switch (evt.target.id) {
         case 'paginator-next':
           this.$data.skip += H.AMOUNT_SHOWN;

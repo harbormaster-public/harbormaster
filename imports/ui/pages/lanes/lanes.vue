@@ -92,7 +92,6 @@ export default {
   meteor: {
     $subscribe: {
       'Lanes': [],
-      'LatestShipment': [],
     },
     lanes () {
       return Lanes.find({});

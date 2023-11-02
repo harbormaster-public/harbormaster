@@ -1,7 +1,12 @@
 <template>
   <div id=profile-page>
-    <h1 class="text-5xl my-2"><span>User ID:</span> <span>{{user_email()}}</span></h1>
-    <form class="fieldset px-5" v-if="this.$subReady.Users && this.$subReady.Lanes">
+    <h1 class="text-5xl my-2">
+      <span>User ID:</span> <span>{{user_email()}}</span>
+    </h1>
+    <form
+      class="fieldset px-5" 
+      v-if="this.$subReady.Users && this.$subReady.Lanes"
+    >
       <fieldset>
         <label>
           <input 
@@ -57,6 +62,7 @@
         </ul>
       </div>
     </form>
+    <h2 class="text-4xl my-2" v-else>(loading...)</h2>
   </div>
 </template>
 

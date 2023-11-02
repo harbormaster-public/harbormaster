@@ -25,10 +25,10 @@ export const manifest_index = (index) => {
   if (pretty_index == 1) {
     return '1st';
   }
- else if (pretty_index == 2) {
+  else if (pretty_index == 2) {
     return '2nd';
   }
- else if (pretty_index == 3) {
+  else if (pretty_index == 3) {
     return '3rd';
   }
 

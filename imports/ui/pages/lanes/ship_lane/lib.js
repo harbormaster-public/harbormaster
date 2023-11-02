@@ -152,7 +152,11 @@ const work_output = function () {
 };
 
 const shipment_history = function () {
-  let shipments = history(get_lane(this.$route?.params?.slug));
+  let shipments = history(
+    get_lane(this.$route?.params?.slug),
+    H.AMOUNT_SHOWN,
+    1,
+  );
   return shipments;
 };
 

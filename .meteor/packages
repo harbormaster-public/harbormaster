@@ -40,3 +40,4 @@ meteortesting:mocha
 meteortesting:mocha-core
 lmieulet:meteor-coverage
 bslocombe:vue-component
+ccorcos:subs-cache

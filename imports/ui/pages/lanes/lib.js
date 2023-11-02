@@ -194,7 +194,6 @@ const duplicate_lane = function (event, lane) {
 const ready = function () {
   if (
     this.$subReady.Lanes
-    && this.$subReady.LatestShipment
   ) return true;
   return false;
 };
@@ -265,19 +264,11 @@ const followup_name = function (lane) {
 };
 
 const last_shipped = function (lane) {
-
-  let latest = LatestShipment.findOne(lane?._id)?.shipment;
-  const actual = latest ? latest.actual : 'Loading...';
-
-  return actual.toLocaleString();
+  return lane.last_shipment.actual.toLocaleString();
 };
 
 const latest_shipment = function (lane) {
-
-  let latest = LatestShipment.findOne(lane?._id)?.shipment;
-  const start = latest ? latest.start : '';
-
-  return start;
+  return lane.last_shipment.start;
 };
 
 const salvage_plan_name = function (lane) {
