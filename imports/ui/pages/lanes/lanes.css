@@ -1,4 +1,5 @@
-.lanes-table th, td {
+.lanes-table th,
+td {
   border: 1px solid lightgrey;
 }
 
@@ -89,11 +90,11 @@ table tbody tr:nth-child(odd) {
 
 .lanes-table .admin.active {
   display: block;
-  box-shadow: 1px -2px 0px 2px #ffae00, 
-              0 0px 3px 1px #333;
+  box-shadow: 1px -2px 0px 2px #ffae00,
+    0 0px 3px 1px #333;
 }
 
-.lanes-table .admin a, 
+.lanes-table .admin a,
 .lanes-table .admin button {
   color: #fff;
   border: 1px solid white;
@@ -132,7 +133,6 @@ tr:first-child th:first-child {
 }
 
 .lane-options {
-  content: '⋯';
   font-size: 15px;
   color: #fff;
   position: absolute;
@@ -144,6 +144,7 @@ tr:first-child th:first-child {
   height: 100%;
   background: none;
   margin-left: -1px;
+  width: 30px;
 }
 
 .delete-lane:hover,
@@ -157,8 +158,8 @@ tr:first-child th:first-child {
 }
 
 .lane-options.active {
-  background: #ffae00;
-  border-color: #fff;
+  background: #999;
+  border-color: #ffae00;
   color: #fff;
   border-left-color: #ffae00;
 }
@@ -232,6 +233,7 @@ a#new-lane:after {
 }
 
 @media all and (max-width: 1023px) {
+
   .followup-column,
   .salvage-plan-column,
   .salvage-runs-column,
@@ -241,9 +243,7 @@ a#new-lane:after {
   }
 }
 
-@media all 
-  and (min-device-width: 280px)
-  and (max-device-width: 800px) {
+@media all and (min-device-width: 280px) and (max-device-width: 800px) {
 
   .lanes-table .admin.active {
     margin-top: 0;
@@ -258,7 +258,7 @@ a#new-lane:after {
     width: 800px;
   }
 
-  #lanes-page .admin a, 
+  #lanes-page .admin a,
   #lanes-page .admin button {
     border: 0;
     display: inline-flex;
@@ -380,7 +380,8 @@ a#new-lane:after {
     color: #fff;
   }
 
-  .lanes-table th, td {
+  .lanes-table th,
+  td {
     font-size: 50px;
   }
 

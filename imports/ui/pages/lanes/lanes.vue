@@ -64,7 +64,6 @@
 
 <script>
 import { Lanes } from '../../../api/lanes';
-import { Shipments } from '../../../api/shipments';
 import {
   loading_lanes,
   sort_by_header,
@@ -93,14 +92,9 @@ export default {
   meteor: {
     $subscribe: {
       'Lanes': [],
-      'LatestShipment': [],
-      'Shipments': [lane_ids.get(), options],
     },
     lanes () {
       return Lanes.find({});
-    },
-    shipments () {
-      return Shipments.find({});
     },
     empty,
     lanes,
@@ -118,6 +112,7 @@ export default {
             .getAttribute('class')
             .replace(' active', ''),
         );
+        event.target.innerHTML = '⋯';
         return event.target.setAttribute(
           'class',
           event.target.getAttribute('class').replace(' active', ''),
@@ -131,6 +126,7 @@ export default {
           .nextElementSibling
           .getAttribute('class') + ' active',
       );
+      event.target.innerHTML = '📌';
       return event.target.setAttribute(
         'class',
         event.target.getAttribute('class') + ' active',

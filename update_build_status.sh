@@ -21,4 +21,3 @@ else
 fi
 
 git add README.md
-git commit --amend --no-verify -C HEAD

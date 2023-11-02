@@ -1,6 +1,6 @@
 import Vue from 'vue';
 import VueRouter from 'vue-router';
-import VueMeteorTracker from 'vue-meteor-tracker';
+import VueMeteor from 'vue-meteor-tracker';
 
 import layout from '../../ui/layouts/primary';
 import '../../ui/components/welcome';
@@ -78,9 +78,16 @@ const router = new VueRouter({
   mode: 'history',
   routes,
 });
+const subsCache = new SubsCache({
+  expireAfter: H.CACHE_EXPIRE_MIN,
+  cacheLimit: H.CACHED_SUB_MAX,
+});
 
 Meteor.startup(() => {
-  Vue.use(VueMeteorTracker);
+  Vue.use(VueMeteor);
+  Vue.config.meteor.subscribe = function (...args) {
+    return subsCache.subscribe(...args);
+  };
   new Vue({ router, render: (h) => h(layout) }).$mount('#app');
 });
 

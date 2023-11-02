@@ -14,8 +14,7 @@ let Constraints = new H.ReactiveVar({
 });
 
 const is_loaded = function () {
-  if (this.$subReady.Harbors && ! H.loggingIn()) return true;
-  return false;
+  return !H.loggingIn();
 };
 
 const no_users = function () {

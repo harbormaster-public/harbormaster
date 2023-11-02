@@ -2,7 +2,10 @@
   <div id="harbors-page">
     <h1 class="text-5xl my-2">Harbors</h1>
     <div v-if="is_harbormaster()" class="is-harbormaster">
-      <h2 class="text-3xl my-2">Currently Registered:</h2>
+      <h2 class="text-3xl my-2">
+        Currently Registered:
+        <span v-if="!$subReady.Harbors"> (loading...)</span>
+      </h2>
       <ul class="registered-list">
         <li v-for="harbor in currently_registered()" :key="harbor._id">
           <span>{{harbor._id}}</span>
@@ -158,7 +161,6 @@ export default {
   meteor: {
     $subscribe: {
       'Harbors': [],
-      'Users': [],
     }
   },
 

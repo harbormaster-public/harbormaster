@@ -21,9 +21,6 @@ describe('Primary Layout', () => {
       'returns true if Harbors subscription is ready and not logging in',
       () => {
         H.loggingIn = test_logging_in_method;
-        this.$subReady = { Harbors: false };
-        expect(is_loaded()).to.eq(false);
-        this.$subReady = { Harbors: true };
         expect(is_loaded()).to.eq(true);
         H.loggingIn = logging_in_method;
       });
@@ -67,15 +64,15 @@ describe('Primary Layout', () => {
     const test_harbors_find_method = () => ([
       {
         constraints: {
-           global: ['foo'],
-           test: [{ id: 'bar', rel: 'bar' }],
-          },
+          global: ['foo'],
+          test: [{ id: 'bar', rel: 'bar' }],
+        },
       },
       {
         constraints: {
-           global: ['baz'],
-           test: [{ id: 'qux', src: 'qux' }],
-          },
+          global: ['baz'],
+          test: [{ id: 'qux', src: 'qux' }],
+        },
       },
     ]);
 

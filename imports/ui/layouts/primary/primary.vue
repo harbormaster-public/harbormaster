@@ -1,6 +1,6 @@
 <template>
   <div id=primary class="min-h-screen">
-    <div v-if="is_loaded()">
+    <div v-if="$subReady.Users && is_loaded">
       <div v-if="no_users" class="p-5">
         <add-user v-bind:fresh="true"></add-user>
       </div>
@@ -52,19 +52,15 @@ import {
 } from './lib';
 
 export default {
+  
   meteor: {
     $subscribe: {
-      'Users': [],
-      'Lanes': [],
-      'Harbors': [],
+      Users: [],
     },
     no_users,
     logged_in,
     no_harbormasters,
     set_constraints,
-  },
-
-  methods: {
     is_loaded,
   },
 

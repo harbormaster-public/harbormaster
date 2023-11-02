@@ -6,10 +6,18 @@ const count = (lane = { _id: '' }) => {
   return Shipments.find({ lane: lane._id }).count();
 };
 
-const history = (lane, limit = H.AMOUNT_SHOWN) => {
+const history = function (lane, limit = H.AMOUNT_SHOWN, skip) {
   return lane?._id ?
-    Shipments.find({ lane: lane._id }, { sort: { actual: -1 }, limit }) :
-    false;
+    Shipments.find(
+      { lane: lane._id },
+      {
+        sort: { actual: -1 },
+        limit,
+        skip,
+      }
+    ) :
+    false
+  ;
 };
 
 const get_lane = (string) => {

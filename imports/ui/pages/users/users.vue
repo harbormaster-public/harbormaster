@@ -41,9 +41,9 @@
         </tr>
       </tbody>
     </table>
-    <div v-else>
+    <h2 class="text-4xl my-2" v-else>
       Loading...
-    </div>
+    </h2>
   </div>
 </template>
 
@@ -59,7 +59,7 @@ import './users.css';
 export default {
   meteor: {
     $subscribe: {
-      'Users': [],
+      Users: [],
     },
     users () { return Users.find({ expired: { $not: true }}) },
   },
