@@ -1,4 +1,4 @@
-import {Shipments} from '..';
+import { Shipments } from '..';
 import {
   publish_shipments,
   get_total_shipments,
