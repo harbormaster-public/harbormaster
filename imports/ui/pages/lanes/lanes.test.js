@@ -519,21 +519,24 @@ describe('Lanes Page', function () {
       expect(current_state($lane)).to.eq('active');
     });
     it('returns "error" if the last shipment has a non-0 exit code', () => {
-      Factory.create('latest_shipment', {
-        _id: 'test',
-        shipment: { exit_code: 1 },
-      });
+      // Factory.create('latest_shipment', {
+      // _id: 'test',
+      // shipment: { exit_code: 1 },
+      // });
+      $lane.last_shipment = { exit_code: 1 };
       expect(current_state($lane)).to.eq('error');
     });
     it('returns "ready" if the last exit code was 0', () => {
-      Factory.create('latest_shipment', {
-        _id: 'test',
-        shipment: { exit_code: 0 },
-      });
+      // Factory.create('latest_shipment', {
+      //   _id: 'test',
+      //   shipment: { exit_code: 0 },
+      // });
+      $lane.last_shipment = { exit_code: 0 };
       expect(current_state($lane)).to.eq('ready');
     });
     it('returns "N/A" otherwise', () => {
       resetDatabase(null);
+      delete $lane.last_shipment;
       expect(current_state($lane)).to.eq('N/A');
     });
   });

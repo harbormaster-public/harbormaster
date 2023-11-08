@@ -29,7 +29,10 @@ const active = function () {
     lane: $lane._id,
   }).fetch();
 
-  if (total.length == 1 && total[0].start == date) return true;
+  if (
+    total.length == 1 && total[0].start == date
+    || $lane.last_shipment?.active
+  ) return true;
   return false;
 };
 
@@ -174,7 +177,10 @@ const any_active = function () {
   let $lane = get_lane(this.$route.params.slug);
   let shipments = Shipments.find({ lane: $lane._id, active: true });
 
-  if (shipments.count()) return true;
+  if (
+    shipments.count()
+    || $lane.last_shipment?.active
+  ) return true;
   return false;
 };
 

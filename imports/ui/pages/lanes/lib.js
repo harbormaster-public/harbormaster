@@ -1,7 +1,6 @@
 import { Lanes } from '../../../api/lanes';
 import { Users } from '../../../api/users';
 import { Shipments } from '../../../api/shipments';
-import { LatestShipment } from '../../../api/shipments';
 
 let lane_ids = new ReactiveVar([]);
 
@@ -241,15 +240,17 @@ const current_state = function (lane) {
   const text_na = 'N/A';
   const text_error = 'error';
   const text_ready = 'ready';
+  const text_active = 'active';
 
   let active_shipments = Shipments.find({
     lane: lane._id,
     active: true,
   }).count();
-  let last_shipment = LatestShipment.findOne(lane._id)?.shipment;
 
-  if (active_shipments || last_shipment?.active) return 'active';
+  if (active_shipments) return 'active';
+  const last_shipment = lane.last_shipment;
 
+  if (last_shipment?.active) return text_active;
   if (last_shipment?.exit_code) return text_error;
   if (last_shipment?.exit_code == 0) return text_ready;
 
