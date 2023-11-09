@@ -8,14 +8,6 @@
   fill: #fff;
 }
 
-.link-label:first-child {
-  transform: translate(0, -15px);
-}
-
-.link-label:nth-child(2) {
-  transform: translate(0, 25px);
-}
-
 .node-label {
   fill: #fff;
 }
@@ -23,8 +15,11 @@
 figure.charter {
   border: none;
   text-align: center;
-  position: relative;
-  margin: 20px 0;
+  position: absolute;
+  margin: 20px 0 0 -8px;
+  height: 85%;
+  width: 100%;
+  box-shadow: 0 0 5px 0 inset black;
 }
 
 .charter figcaption {
@@ -35,8 +30,13 @@ figure.charter {
   padding: 5px;
 }
 
-.charter div {
+.charter .net {
   position: relative;
+  height: 100%;
+}
+
+.charget .net-svg {
+  height: 100%;
 }
 
 .svg-path {

@@ -181,15 +181,9 @@ export default {
 
   meteor: {
     $subscribe: {
-      'Lanes': function () {
-        let lane = get_lane(this.$route.params.slug);
-        return [lane];
-      },
+      'Lanes': [],
       'Users': [],
-      'Harbors': function () {
-        const type = get_lane(this.$route.params.slug)?.type;
-        return [Harbors.findOne(type)];
-      },
+      'Harbors': [],
     },
     followup_lane,
     salvage_plan_lane,
@@ -257,12 +251,6 @@ export default {
         router.push(res);
       });
     },
-  },
-
-  mounted() {
-    const name = this.$route.params.slug;
-    const lane = get_lane(name);
-    if (lane) Meteor.subscribe('Shipments', lane, options);
   },
 }
 </script>

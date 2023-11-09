@@ -13,11 +13,9 @@ const not_found_text = `
     (<code>~/.harbormaster/harbors</code> by default).</p>
 `;
 
-const lane = function () {
-  let $lane = this.$route?.params?.slug ?
-    get_lane(this.$route.params.slug) :
-    false
-    ;
+const lane = function (slug) {
+  slug = slug ? slug : this.$route?.params?.slug;
+  let $lane = slug ? get_lane(slug) : false;
   return $lane;
 };
 
@@ -114,7 +112,7 @@ const work_preview = function () {
       }
     );
   }
-  return $lane.rendered_work_preview ?
+  return $lane.rendered_work_preview && harbor ?
     $lane.rendered_work_preview :
     harbor_not_ready_text
   ;
@@ -158,7 +156,7 @@ const shipment_history = function () {
   let shipments = history(
     get_lane(this.$route?.params?.slug),
     H.AMOUNT_SHOWN,
-    1,
+    (this.$data.skip ? 1 : 0)
   );
   return shipments;
 };

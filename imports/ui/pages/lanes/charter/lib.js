@@ -3,10 +3,12 @@ import { Shipments } from "../../../../api/shipments";
 import { get_lane } from "../lib/util";
 
 export const ROOT = "ROOT";
-export const FOLLOWUP = "FOLLOWUP ➡";
-export const SALVAGE = "SALVAGE ➡";
-export const FOLLOWUP_COLOR = "#0af";
-export const SALVAGE_COLOR = "#fa0";
+export const FOLLOWUP = "FOLLOWUP➡️";
+export const SALVAGE = "⚠️SALVAGE";
+export const FOLLOWUP_COLOR = "rgba(0, 170, 255, 1)";
+export const FOLLOWUP_LINK_COLOR = "rgba(0, 170, 255, 0.5)";
+export const SALVAGE_COLOR = "rgba(255, 170, 0, 1)";
+export const SALVAGE_LINK_COLOR = "rgba(255, 170, 0, 0.5)";
 export const ROOT_COLOR = "#f0a";
 export const SUCCESS_COLOR = "#3adb76";
 export const FAIL_COLOR = "red";
@@ -19,7 +21,8 @@ const link_list = new H.ReactiveVar([]);
 
 const assign_followup = function (followup, target, parent_id, nodes, links) {
   if (followup && !target?.recursive && followup?._id != parent_id) {
-    let last_shipment = Shipments.findOne({ lane: followup._id });
+    // let last_shipment = Shipments.findOne({ lane: followup._id });
+    let last_shipment = followup.last_shipment;
     let color = FOLLOWUP_COLOR;
     let followup_id = followup._id;
 
@@ -52,7 +55,7 @@ const assign_followup = function (followup, target, parent_id, nodes, links) {
       id: `${target._id}:${followup_id}`,
       sid: target._id,
       tid: followup_id,
-      _color: FOLLOWUP_COLOR,
+      _color: FOLLOWUP_LINK_COLOR,
       name: FOLLOWUP,
     });
 
@@ -64,7 +67,8 @@ const assign_followup = function (followup, target, parent_id, nodes, links) {
 
 const assign_salvage = function (plan, target, parent_id, nodes, links) {
   if (plan && !target.recursive && plan._id != parent_id) {
-    let last_shipment = Shipments.findOne({ lane: plan._id });
+    // let last_shipment = Shipments.findOne({ lane: plan._id });
+    let last_shipment = plan.last_shipment;
     let color = SALVAGE_COLOR;
     let salvage_id = plan._id;
 
@@ -96,7 +100,7 @@ const assign_salvage = function (plan, target, parent_id, nodes, links) {
       id: `${target._id}:${salvage_id}`,
       sid: target._id,
       tid: salvage_id,
-      _color: SALVAGE_COLOR,
+      _color: SALVAGE_LINK_COLOR,
       name: SALVAGE,
     });
 
@@ -127,7 +131,7 @@ const assign_children = (target, parent_id, nodes, links) => {
 };
 
 const build_graph = function () {
-  let $lane = get_lane(this.$route.params.slug);
+  let $lane = get_lane(this.$route?.params?.slug);
   let nodes = [];
   let links = [];
 
@@ -135,7 +139,8 @@ const build_graph = function () {
 
   $lane.children = [];
   $lane.role = ROOT;
-  let last_shipment = Shipments.findOne({ lane: $lane._id });
+  // let last_shipment = Shipments.findOne({ lane: $lane._id });
+  let last_shipment = $lane.last_shipment;
   let color = ROOT_COLOR;
   if (last_shipment && last_shipment.exit_code) color = FAIL_COLOR;
   else if (last_shipment && last_shipment.exit_code == 0) color = SUCCESS_COLOR;
@@ -162,11 +167,17 @@ const build_graph = function () {
   return node_list.get();
 };
 
-const lane = () => get_lane(this.$route?.params.slug);
+const lane = function () {
+  const $lane = get_lane(this.$route?.params.slug);
+  return $lane;
+};
 
 const handle_link_click = function (event, link) {
   const $lane = link.target.lane;
-  let start = $lane.shipment ? `/ship/${$lane.shipment.start}` : "/charter";
+  let start = $lane.last_shipment ?
+    `/ship/${$lane.last_shipment.start}`
+    : "/charter"
+  ;
   let url = `/lanes/${$lane.slug}${start}`;
 
   /* istanbul ignore else */
@@ -178,7 +189,7 @@ const handle_link_click = function (event, link) {
 const graph_options = function () {
   return {
     canvas: false,
-    size: { h: this.window ? this.window.innerHeight - TOP_PADDING : 0 },
+    size: { h: H.window ? H.window.innerHeight - TOP_PADDING : 0 },
     offset: { x: 0, y: 0 },
     force: 50000,
     forces: {

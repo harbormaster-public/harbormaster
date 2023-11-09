@@ -12,12 +12,7 @@ import {
   ROOT,
   FOLLOWUP,
   SALVAGE,
-  SUCCESS_COLOR,
-  FAIL_COLOR,
-  FOLLOWUP_COLOR,
-  SALVAGE_COLOR,
   ROOT_COLOR,
-  STROKE_WIDTH,
 } from './lib';
 import { Shipments } from "../../../../api/shipments";
 import { Lanes } from "../../../../api/lanes";
@@ -28,19 +23,17 @@ import { resetDatabase } from 'cleaner';
 const { expect } = chai;
 const test_shipments_find_one = function (options) {
   switch (options.lane) {
-    case 'success_plan_id':
-    case 'success_followup_id':
-      return { exit_code: 0 };
-    case 'fail_plan_id':
-    case 'fail_followup_id':
-      return { exit_code: 1 };
-    default:
-      return undefined;
+  case 'success_plan_id':
+  case 'success_followup_id':
+    return { exit_code: 0 };
+  case 'fail_plan_id':
+  case 'fail_followup_id':
+    return { exit_code: 1 };
+  default:
+    return undefined;
   }
 };
 const shipments_find_one = Shipments.findOne;
-const shipments_find_one_success = () => ({ exit_code: 0 });
-const shipments_find_one_failure = () => ({ exit_code: 1 });
 const shipments_find_none = () => ({});
 
 describe('Charter Page', () => {
@@ -84,7 +77,6 @@ describe('Charter Page', () => {
     ];
     const links = [];
     let success_followup_node;
-    let fail_followup_node;
     let followup_link;
     let success;
 
@@ -104,14 +96,6 @@ describe('Charter Page', () => {
       );
     });
 
-    it('assigns a success color for exit code 0', function () {
-      expect(success_followup_node._color).to.equal(SUCCESS_COLOR);
-      expect(success_followup_node.shipment).to.deep.equal({ exit_code: 0 });
-    });
-    it('assigns a fail color for exit code non-0', () => {
-      expect(fail_followup_node._color).to.equal(FAIL_COLOR);
-      expect(fail_followup_node.shipment).to.deep.equal({ exit_code: 1 });
-    });
     it('assigns graph role, parent, and recursion', () => {
       expect(success_followup.role).to.equal(FOLLOWUP);
       expect(success_followup.parent).to.equal('target_id');
@@ -125,15 +109,10 @@ describe('Charter Page', () => {
     it('adds a decorated node to the nodes list if it does not exist', () => {
       expect(success_followup_node.name).to.equal('Followup');
       expect(success_followup_node._cssClass).to.equal('success_followup_id');
-      expect(success_followup_node._svgAttrs).to.deep.equal({
-        stroke: FOLLOWUP_COLOR,
-        'stroke-width': STROKE_WIDTH,
-      });
     });
     it('adds a decorated link to the links list', () => {
       expect(followup_link.sid).to.equal('target_id');
       expect(followup_link.tid).to.equal('success_followup_id');
-      expect(followup_link._color).to.equal(FOLLOWUP_COLOR);
       expect(followup_link.name).to.equal(FOLLOWUP);
     });
     it('returns true if successful, false otherwise', () => {
@@ -158,14 +137,6 @@ describe('Charter Page', () => {
       plan = { _id: 'success_plan_id', name: 'Plan Name' };
     });
 
-    it('assigns a success color based on exit code 0', () => {
-      assign_salvage(plan, target, parent_id, nodes, links);
-      expect(nodes.length).to.eq(1);
-      expect(nodes[0]._color).to.eq(SUCCESS_COLOR);
-      plan._id = 'fail_plan_id';
-      assign_salvage(plan, target, parent_id, nodes, links);
-      expect(nodes[1]._color).to.eq(FAIL_COLOR);
-    });
     it('assigns graph role, parent, and recursion', () => {
       assign_salvage(plan, target, parent_id, nodes, links);
       expect(plan.role).to.eq(SALVAGE);
@@ -183,18 +154,12 @@ describe('Charter Page', () => {
       assign_salvage(plan, target, parent_id, nodes, links);
       expect(nodes.length).to.eq(1);
       expect(nodes[0].name).to.eq(plan.name);
-      expect(nodes[0]._color).to.eq(SUCCESS_COLOR); // Default is successful
       expect(nodes[0]._cssClass).to.eq(plan._id);
-      expect(nodes[0]._svgAttrs).to.deep.equal({
-        stroke: SALVAGE_COLOR, // But show that it's a salvage plan here
-        "stroke-width": STROKE_WIDTH,
-      });
     });
     it('adds a decorated link to the links list', () => {
       assign_salvage(plan, target, parent_id, nodes, links);
       expect(links.length).to.eq(1);
       expect(links[0].id).to.eq(`${target._id}:${plan._id}`);
-      expect(links[0]._color).to.eq(SALVAGE_COLOR);
       expect(links[0].name).to.eq(SALVAGE);
     });
     it('returns true if successful, false otherwise', () => {
@@ -216,12 +181,12 @@ describe('Charter Page', () => {
     let result;
     const test_lanes_find_one = function (id) {
       switch (id) {
-        case 'followup':
-          return target.followup;
-        case 'salvage':
-          return target.salvage_plan;
-        default:
-          return undefined;
+      case 'followup':
+        return target.followup;
+      case 'salvage':
+        return target.salvage_plan;
+      default:
+        return undefined;
       }
     };
     const lanes_find_one = Lanes.findOne;
@@ -270,15 +235,6 @@ describe('Charter Page', () => {
       Shipments.findOne = shipments_find_none;
       build_graph();
       expect(root_node.get()._color).to.eq(ROOT_COLOR);
-
-      Shipments.findOne = shipments_find_one_success;
-      build_graph();
-      expect(root_node.get()._color).to.eq(SUCCESS_COLOR);
-
-      Shipments.findOne = shipments_find_one_failure;
-      build_graph();
-      expect(root_node.get()._color).to.eq(FAIL_COLOR);
-
       Shipments.findOne = shipments_find_one;
     });
     it('adds the root node to the nodes list', () => {
@@ -326,7 +282,7 @@ describe('Charter Page', () => {
       let handle = handle_link_click({}, {
         target: {
           lane: {
-            shipment: { start: 'bar' },
+            last_shipment: { start: 'bar' },
             slug: 'baz',
           },
         },

@@ -78,6 +78,9 @@ const router = new VueRouter({
   mode: 'history',
   routes,
 });
+router.afterEach((to) => {
+  document.title = `H${to.path}`;
+});
 const subsCache = new SubsCache({
   expireAfter: H.CACHE_EXPIRE_MIN,
   cacheLimit: H.CACHED_SUB_MAX,

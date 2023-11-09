@@ -1,14 +1,11 @@
 <template>
   <div id=charter-page>
     <h1 class="text-5xl my-2">Lane Charter</h1>
-    <figure
-      v-if="this.$subReady.Shipments && build_graph().length"
-      class="charter"
-    >
+    <figure v-if="this.$subReady.Lanes" class="charter">
       <figcaption class="text-2xl">
         Starting with lane:
-        <a class="root" :href="'/lanes/' + lane().slug + '/ship'">{{
-          lane().name
+        <a class="root" :href="'/lanes/' + lane.slug + '/ship'">{{
+          lane.name
         }}</a>
       </figcaption>
       <d3-network
@@ -37,32 +34,26 @@ import './charter.css';
 
 const options = {
   sort: { actual: -1 },
+  limit: 1,
 };
 
 export default {
   meteor: {
     $subscribe: {
-      Lanes: function () {
-        let list = [node_list.get()?.map((node) => ({ _id: node.id }))];
-        return list;
-      },
+      Lanes: [],
 
       Shipments: function () {
         let list = node_list.get()?.map((node) => node.id);
         return [list, options];
       },
     },
-  },
-
-  beforeCreate() {
-    build_graph.call(this);
+    lane,
   },
 
   methods: {
     build_graph,
     graph_options,
     handle_link_click,
-    lane,
 
     links () {
       return link_list.get();

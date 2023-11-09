@@ -144,7 +144,7 @@ describe('Ship Lane View', () => {
         name: 'test',
         rendered_work_preview: '<p>test</p>',
       });
-      Harbors.findOne = () => { };
+      Harbors.findOne = () => ({ lanes: { test: { manifest: {} } } });
       Lanes.findOne = () => { };
       this.$route = { params: { slug: 'test', manifest: {} } };
       not_found.set(false);

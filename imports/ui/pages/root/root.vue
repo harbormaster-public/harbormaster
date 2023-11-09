@@ -85,7 +85,7 @@ export default {
   color: #0af;
 }
 
-a span {
+a:not(.shipment-link) span {
   color: #0af;
 }
 

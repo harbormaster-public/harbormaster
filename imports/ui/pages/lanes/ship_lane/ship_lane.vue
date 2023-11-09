@@ -1,6 +1,6 @@
 <template>
   <div id="ship-lane-page">
-    <div v-if="this.$subReady.Lanes && lane">
+    <div v-if="$subReady.Lanes && lane && $subReady.Harbors && $subReady.Shipments">
       <h1 class="text-5xl my-2"><em>Ship to lane:</em>&nbsp;<strong>{{lane.name}}</strong></h1>
       <h2 class="text-2xl my-2 px-2">Let's review.  Ready to ship?</h2>
       <a :href="`/lanes/${lane.slug}/edit`" class="rounded-sm my-2 block edit-lane">Edit this lane</a>
@@ -19,13 +19,11 @@
     <div v-if="active">
       <button @click.prevent="reset_shipment" class="rounded-sm my-2 block reset-shipment">Reset Shipment</button>
     </div>
-    <div v-else>
-      <div v-if="working">
-        <button class="rounded-sm my-2 block working" disabled>Working...</button>
-      </div>
-      <div v-else>
-        <button @click.prevent="start_shipment" class="rounded-sm my-2 block start-shipment" :disabled="can_ship">Start Shipment</button>
-      </div>
+    <div v-else-if="working">
+      <button class="rounded-sm my-2 block working" disabled>Working...</button>
+    </div>
+    <div v-else-if="installed">
+      <button @click.prevent="start_shipment" class="rounded-sm my-2 block start-shipment" :disabled="can_ship">Start Shipment</button>
     </div>
     <div v-if="any_active()">
       <button @click.prevent="reset_all_active" class="rounded-sm my-2 block reset-all-active">Reset All Active Shipments</button>
@@ -152,20 +150,35 @@ import {
   has_work_output,
 } from './lib';
 import './ship_lane.css';
+import { Harbors } from '../../../../api/harbors';
 
 export default {
   meteor: {
     $subscribe: {
-      'Lanes': function () { return [this.$route.params.slug] },
-      'Shipments': function () { return [{
-        slug: this.$route.params.slug,
-        date: this.$route.params.date,
-      }]},
+      'Lanes': function () { return [this.$route.params.slug]; },
+      'Shipments': function () {
+        return [
+          {
+            slug: this.$route.params.slug,
+            date: this.$route.params.date,
+          }, 
+          {
+            limit: 1,
+            sort: { actual: -1, },
+          }
+        ];
+      },
+      Harbors: [],
     },
     lane,
     work_preview,
     active,
     exit_code,
+    installed () {
+      const $lane = lane(this.$route.params.slug);
+      const harbor = Harbors.findOne($lane.type);
+      if ($lane && harbor) return harbor;
+    }
   },
   created,
 

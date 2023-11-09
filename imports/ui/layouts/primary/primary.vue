@@ -82,6 +82,7 @@ export default {
   background-color: #666;
   border-left: 2px solid #ffae00;
   border-right: 2px solid #0af;
+  position: relative;
 }
 
 html body * {
