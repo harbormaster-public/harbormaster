@@ -156,16 +156,16 @@ const start_shipment = async function (id, manifest, shipment_start_date) {
   }
   finally {
 
+    let shipment = Shipments.findOne(shipment_id);
     if (new_manifest && new_manifest.error) {
       let exit_code = 1;
-      let shipment = Shipments.findOne(shipment_id);
       let key = new Date();
       let result = new_manifest.error.toString();
 
       shipment.stderr[key] = result;
 
-      lane.last_shipment = shipment;
       Shipments.update(shipment_id, shipment);
+      lane.last_shipment = shipment;
       Lanes.update(lane._id, { $set: { last_shipment: lane.last_shipment } });
       LatestShipment.upsert(shipment.lane, { shipment });
 
@@ -176,6 +176,10 @@ const start_shipment = async function (id, manifest, shipment_start_date) {
         new_manifest
       );
     }
+
+    lane.last_shipment = shipment;
+    Lanes.update(lane._id, { $set: { last_shipment: lane.last_shipment } });
+    LatestShipment.upsert(shipment.lane, { shipment });
 
     return new_manifest;
   }

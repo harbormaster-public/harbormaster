@@ -21,7 +21,6 @@ const link_list = new H.ReactiveVar([]);
 
 const assign_followup = function (followup, target, parent_id, nodes, links) {
   if (followup && !target?.recursive && followup?._id != parent_id) {
-    // let last_shipment = Shipments.findOne({ lane: followup._id });
     let last_shipment = followup.last_shipment;
     let color = FOLLOWUP_COLOR;
     let followup_id = followup._id;
@@ -67,7 +66,6 @@ const assign_followup = function (followup, target, parent_id, nodes, links) {
 
 const assign_salvage = function (plan, target, parent_id, nodes, links) {
   if (plan && !target.recursive && plan._id != parent_id) {
-    // let last_shipment = Shipments.findOne({ lane: plan._id });
     let last_shipment = plan.last_shipment;
     let color = SALVAGE_COLOR;
     let salvage_id = plan._id;
@@ -139,7 +137,6 @@ const build_graph = function () {
 
   $lane.children = [];
   $lane.role = ROOT;
-  // let last_shipment = Shipments.findOne({ lane: $lane._id });
   let last_shipment = $lane.last_shipment;
   let color = ROOT_COLOR;
   if (last_shipment && last_shipment.exit_code) color = FAIL_COLOR;
