@@ -1,6 +1,10 @@
-.node:hover,
+.link {
+  filter: brightness(0.5);
+}
+
 .link:hover {
   cursor: pointer;
+  filter: brightness(0.75);
 }
 
 .link-label {
@@ -8,8 +12,28 @@
   fill: #fff;
 }
 
+.link-label:nth-child(even) {
+  transform: translate(-10px, -10px);
+}
+
+.link-label:nth-child(odd) {
+  transform: translate(10px, 10px);
+}
+
 .node-label {
   fill: #fff;
+}
+
+#charter-page code {
+  color: #ffae00;
+  border: none;
+  padding: 5px 10px !important;
+  box-shadow: 0 0 30px 3px inset #222;
+  min-height: 1em;
+  border-radius: 3px;
+  display: inline-block;
+  line-height: 1em;
+  background: #333;
 }
 
 figure.charter {

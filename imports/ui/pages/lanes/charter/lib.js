@@ -6,9 +6,9 @@ export const ROOT = "ROOT";
 export const FOLLOWUP = "FOLLOWUP➡️";
 export const SALVAGE = "⚠️SALVAGE";
 export const FOLLOWUP_COLOR = "rgba(0, 170, 255, 1)";
-export const FOLLOWUP_LINK_COLOR = "rgba(0, 170, 255, 0.5)";
+export const FOLLOWUP_LINK_COLOR = "rgba(0, 170, 255, 1)";
 export const SALVAGE_COLOR = "rgba(255, 170, 0, 1)";
-export const SALVAGE_LINK_COLOR = "rgba(255, 170, 0, 0.5)";
+export const SALVAGE_LINK_COLOR = "rgba(255, 170, 0, 1)";
 export const ROOT_COLOR = "#f0a";
 export const SUCCESS_COLOR = "#3adb76";
 export const FAIL_COLOR = "red";
@@ -192,7 +192,7 @@ const graph_options = function () {
     forces: {
       Center: true,
       X: 2,
-      Y: 3,
+      Y: 2,
       ManyBody: true,
       Link: true,
     },
@@ -202,7 +202,7 @@ const graph_options = function () {
     linkLabels: true,
     fontSize: 14,
     strLinks: true,
-    resizeListener: false,
+    resizeListener: true,
     canvasStyles: {},
   };
 };

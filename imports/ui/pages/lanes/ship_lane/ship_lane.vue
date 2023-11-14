@@ -1,13 +1,13 @@
 <template>
   <div id="ship-lane-page">
-    <div v-if="$subReady.Lanes && lane && $subReady.Harbors && $subReady.Shipments">
+    <div v-if="$subReady.Lanes && lane.name && $subReady.Harbors && $subReady.Shipments">
       <h1 class="text-5xl my-2"><em>Ship to lane:</em>&nbsp;<strong>{{lane.name}}</strong></h1>
       <h2 class="text-2xl my-2 px-2">Let's review.  Ready to ship?</h2>
       <a :href="`/lanes/${lane.slug}/edit`" class="rounded-sm my-2 block edit-lane">Edit this lane</a>
       <a href="/lanes/new/edit" class="rounded-sm my-2 block new-lane">New Lane</a>
       <a :href="`/lanes/${lane.slug}/charter`" class="rounded-sm my-2 block lane-charter">Lane Charter</a>
     </div>
-    <div v-else-if="this.$subReady.Lanes">
+    <div v-else-if="this.$subReady.Lanes && !lane.name">
       <h1 class="text-5xl my-2">That lane doesn't exist.</h1>
     </div>
     <div v-else>

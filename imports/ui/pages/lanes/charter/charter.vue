@@ -1,7 +1,7 @@
 <template>
   <div id=charter-page>
     <h1 class="text-5xl my-2">Lane Charter</h1>
-    <figure v-if="this.$subReady.Lanes" class="charter">
+    <figure v-if="$subReady.Lanes && lane.name" class="charter">
       <figcaption class="text-2xl">
         Starting with lane:
         <a class="root" :href="'/lanes/' + lane.slug + '/ship'">{{
@@ -16,6 +16,9 @@
         @link-click="handle_link_click"
       />
     </figure>
+    <h2 v-else-if="$subReady.Lanes && !lane.name">
+      Lane with slug <code>{{$route.params.slug}}</code> isn't configured.
+    </h2>
     <h2 v-else>Loading...</h2>
   </div>
 </template>

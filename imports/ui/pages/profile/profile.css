@@ -31,9 +31,7 @@
   display: inline-block;
 }
 
-@media all 
-  and (min-device-width: 280px)
-  and (max-device-width: 800px) {
+@media all and (min-device-width: 280px) and (max-device-width: 800px) {
 
   #profile-page {
     font-size: 50px;
