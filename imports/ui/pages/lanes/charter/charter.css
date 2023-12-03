@@ -12,16 +12,24 @@
   fill: #fff;
 }
 
-.link-label:nth-child(even) {
+.link:nth-child(even) {
   transform: translate(-10px, -10px);
 }
 
-.link-label:nth-child(odd) {
+.link:nth-child(odd) {
   transform: translate(10px, 10px);
 }
 
-.node-label {
-  fill: #fff;
+.link textPath {
+  alignment-baseline: middle;
+}
+
+.node circle {
+  cursor: all-scroll;
+}
+
+.fixed circle {
+  stroke-dasharray: 10;
 }
 
 #charter-page code {

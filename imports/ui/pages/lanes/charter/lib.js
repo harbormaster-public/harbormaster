@@ -6,9 +6,9 @@ export const ROOT = "ROOT";
 export const FOLLOWUP = "FOLLOWUP➡️";
 export const SALVAGE = "⚠️SALVAGE";
 export const FOLLOWUP_COLOR = "rgba(0, 170, 255, 1)";
-export const FOLLOWUP_LINK_COLOR = "rgba(0, 170, 255, 1)";
+export const FOLLOWUP_LINK_COLOR = "rgba(0, 170, 255, 0.75)";
 export const SALVAGE_COLOR = "rgba(255, 170, 0, 1)";
-export const SALVAGE_LINK_COLOR = "rgba(255, 170, 0, 1)";
+export const SALVAGE_LINK_COLOR = "rgba(255, 170, 0, 0.75)";
 export const ROOT_COLOR = "#f0a";
 export const SUCCESS_COLOR = "#3adb76";
 export const FAIL_COLOR = "red";
@@ -19,8 +19,8 @@ export const root_node = new H.ReactiveVar();
 const node_list = new H.ReactiveVar([]);
 const link_list = new H.ReactiveVar([]);
 
-const assign_followup = function (followup, target, parent_id, nodes, links) {
-  if (followup && !target?.recursive && followup?._id != parent_id) {
+const assign_followup = function (followup, $lane, parent_id, nodes, links) {
+  if (followup && !$lane?.recursive && followup?._id != parent_id) {
     let last_shipment = followup.last_shipment;
     let color = FOLLOWUP_COLOR;
     let followup_id = followup._id;
@@ -30,32 +30,34 @@ const assign_followup = function (followup, target, parent_id, nodes, links) {
       color = SUCCESS_COLOR;
 
     followup.role = FOLLOWUP;
-    followup.parent = target._id;
-    followup.recursive = followup._id == target._id ? true : false;
-    target.children.push(followup);
+    followup.parent = $lane._id;
+    followup.recursive = followup._id == $lane._id ? true : false;
+    $lane.children.push(followup);
 
     /* istanbul ignore else */
     if (nodes.map((node) => node.id).indexOf(followup_id) == -1) {
       nodes.push({
         id: followup_id,
         name: followup.name,
-        _color: color,
-        _cssClass: followup_id,
-        _svgAttrs: {
-          stroke: FOLLOWUP_COLOR,
-          "stroke-width": STROKE_WIDTH,
-        },
+        color: color,
+        cssClass: followup_id,
+        stroke: FOLLOWUP_COLOR,
+        stroke_width: STROKE_WIDTH,
         lane: followup,
         shipment: Shipments.findOne({ lane: followup._id }),
+        x: null,
+        y: null,
       });
-    }
 
+    }
     links.push({
-      id: `${target._id}:${followup_id}`,
-      sid: target._id,
+      id: `${$lane._id}:${followup_id}`,
+      sid: $lane._id,
       tid: followup_id,
-      _color: FOLLOWUP_LINK_COLOR,
+      color: FOLLOWUP_LINK_COLOR,
       name: FOLLOWUP,
+      source: $lane._id,
+      target: followup._id,
     });
 
     return true;
@@ -64,16 +66,16 @@ const assign_followup = function (followup, target, parent_id, nodes, links) {
   return false;
 };
 
-const assign_salvage = function (plan, target, parent_id, nodes, links) {
-  if (plan && !target.recursive && plan._id != parent_id) {
+const assign_salvage = function (plan, $lane, parent_id, nodes, links) {
+  if (plan && !$lane.recursive && plan._id != parent_id) {
     let last_shipment = plan.last_shipment;
     let color = SALVAGE_COLOR;
     let salvage_id = plan._id;
 
     plan.role = SALVAGE;
-    plan.parent = target._id;
-    plan.recursive = plan._id == target._id ? true : false;
-    target.children.push(plan);
+    plan.parent = $lane._id;
+    plan.recursive = plan._id == $lane._id ? true : false;
+    $lane.children.push(plan);
 
     if (last_shipment && last_shipment.exit_code == 0) color = SUCCESS_COLOR;
     else if (last_shipment && last_shipment.exit_code) color = FAIL_COLOR;
@@ -83,23 +85,25 @@ const assign_salvage = function (plan, target, parent_id, nodes, links) {
       nodes.push({
         id: salvage_id,
         name: plan.name,
-        _color: color,
-        _cssClass: salvage_id,
-        _svgAttrs: {
-          stroke: SALVAGE_COLOR,
-          "stroke-width": STROKE_WIDTH,
-        },
+        color: color,
+        cssClass: salvage_id,
+        stroke: SALVAGE_COLOR,
+        stroke_width: STROKE_WIDTH,
         lane: plan,
         shipment: Shipments.findOne({ lane: plan._id }),
+        x: null,
+        y: null,
       });
-    }
 
+    }
     links.push({
-      id: `${target._id}:${salvage_id}`,
-      sid: target._id,
+      id: `${$lane._id}:${salvage_id}`,
+      sid: $lane._id,
       tid: salvage_id,
-      _color: SALVAGE_LINK_COLOR,
+      color: SALVAGE_LINK_COLOR,
       name: SALVAGE,
+      source: $lane._id,
+      target: plan._id,
     });
 
     return true;
@@ -108,24 +112,24 @@ const assign_salvage = function (plan, target, parent_id, nodes, links) {
   return false;
 };
 
-const assign_children = (target, parent_id, nodes, links) => {
-  let followup = Lanes.findOne(target.followup?._id);
-  let plan = Lanes.findOne(target.salvage_plan?._id);
+const assign_children = ($lane, parent_id, nodes, links) => {
+  let followup = Lanes.findOne($lane.followup?._id);
+  let plan = Lanes.findOne($lane.salvage_plan?._id);
 
-  assign_followup(followup, target, parent_id, nodes, links);
+  assign_followup(followup, $lane, parent_id, nodes, links);
 
-  assign_salvage(plan, target, parent_id, nodes, links);
+  assign_salvage(plan, $lane, parent_id, nodes, links);
 
-  target.children.forEach((child) => {
+  $lane.children.forEach((child) => {
     child.children = [];
 
     /* istanbul ignore else */
     if (!child.recursive && child._id != root_node?.get()?.id) assign_children(
-      child, target._id, nodes, links
+      child, $lane._id, nodes, links
     );
   });
 
-  return target;
+  return $lane;
 };
 
 const build_graph = function () {
@@ -145,14 +149,14 @@ const build_graph = function () {
   root_node.set({
     id: $lane._id,
     name: $lane.name,
-    _color: color,
-    _cssClass: $lane._id,
+    color: color,
+    cssClass: $lane._id,
     lane: $lane,
-    _svgAttrs: {
-      stroke: ROOT_COLOR,
-      "stroke-width": STROKE_WIDTH,
-    },
+    stroke: ROOT_COLOR,
+    stroke_width: STROKE_WIDTH,
     shipment: last_shipment,
+    x: null,
+    y: null,
   });
   nodes.push(root_node.get());
 
