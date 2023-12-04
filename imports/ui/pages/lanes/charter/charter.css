@@ -28,6 +28,14 @@
   cursor: all-scroll;
 }
 
+.node text {
+  cursor: pointer;
+}
+
+.node text:hover {
+  fill: #fa0 !important;
+}
+
 .fixed circle {
   stroke-dasharray: 10;
 }

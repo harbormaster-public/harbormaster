@@ -71,7 +71,9 @@ const svg_graph = function svg_graph () {
     )
     .attr('id', d => d.id)
     .attr('stroke-width', 25)
-    .attr('stroke', d => d.color);
+    .attr('stroke', d => d.color)
+    .on('click', handle_link_click.bind(this))
+    ;
 
   const link_text = link.append('text')
     .attr('class', 'link-label')
@@ -101,7 +103,9 @@ const svg_graph = function svg_graph () {
     .attr('x', 30)
     .attr('y', 7)
     .style('fill', '#fff')
-    .style('font-size', '16px');
+    .style('font-size', '16px')
+    .on('click', handle_link_click.bind(this))
+    ;
 
   node.call(d3.drag()
     .on("start", dragstarted)
