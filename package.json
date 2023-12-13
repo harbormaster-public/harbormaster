@@ -1,6 +1,6 @@
 {
   "name": "harbormaster",
-  "version": "1.28.5",
+  "version": "1.29.0",
   "private": true,
   "babel": {
     "env": {
@@ -20,7 +20,7 @@
     "test:e2e:watch": "SCREENSHOT_DIR=$PWD ROOT_URL='' MONGO_URL='' HEADLESS=0 NO_HMR=1 TEST_BROWSER_DRIVER=puppeteer meteor test --port=4040 --full-app --driver-package universe:e2e --raw-logs"
   },
   "dependencies": {
-    "@babel/runtime": "^7.22.10",
+    "@babel/runtime": "^7.23.6",
     "ansicolor": "^1.1.100",
     "bcrypt": "^5.1.1",
     "body-parser": "^1.20.2",
@@ -32,7 +32,7 @@
     "expand-tilde": "^1.2.2",
     "faker": "3.1.0",
     "foundation-sites": "^6.8.1",
-    "fs-extra": "^11.1.1",
+    "fs-extra": "^11.2.0",
     "get-folder-size": "^4.0.0",
     "is-git-url": "^1.0.0",
     "jquery": "^3.7.0",
@@ -54,15 +54,15 @@
     "what-input": "^5.2.12"
   },
   "devDependencies": {
-    "@babel/core": "^7.23.2",
-    "@babel/eslint-parser": "^7.22.15",
+    "@babel/core": "^7.23.6",
+    "@babel/eslint-parser": "^7.23.3",
     "@vue/babel-preset-app": "^5.0.8",
     "autoprefixer": "^10.4.16",
     "babel-plugin-istanbul": "^6.1.1",
-    "eslint": "^8.52.0",
+    "eslint": "^8.55.0",
     "mocha": "^10.2.0",
     "nyc": "^15.1.0",
-    "postcss": "^8.4.31",
+    "postcss": "^8.4.32",
     "postcss-import": "^14.1.0",
     "postcss-load-config": "^2.1.2",
     "puppeteer": "^8.0.0"

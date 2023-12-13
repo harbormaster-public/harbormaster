@@ -25,9 +25,8 @@ const assign_followup = function (followup, $lane, parent_id, nodes, links) {
     let color = FOLLOWUP_COLOR;
     let followup_id = followup._id;
 
-    if (last_shipment && last_shipment.exit_code) color = FAIL_COLOR;
-    else if (last_shipment && last_shipment.exit_code == 0)
-      color = SUCCESS_COLOR;
+    if (last_shipment?.exit_code == 0) color = SUCCESS_COLOR;
+    else if (last_shipment?.exit_code) color = FAIL_COLOR;
 
     followup.role = FOLLOWUP;
     followup.parent = $lane._id;
@@ -77,8 +76,8 @@ const assign_salvage = function (plan, $lane, parent_id, nodes, links) {
     plan.recursive = plan._id == $lane._id ? true : false;
     $lane.children.push(plan);
 
-    if (last_shipment && last_shipment.exit_code == 0) color = SUCCESS_COLOR;
-    else if (last_shipment && last_shipment.exit_code) color = FAIL_COLOR;
+    if (last_shipment?.exit_code == 0) color = SUCCESS_COLOR;
+    else if (last_shipment?.exit_code) color = FAIL_COLOR;
 
     /* istanbul ignore else */
     if (nodes.map((node) => node.id).indexOf(salvage_id) == -1) {
@@ -143,8 +142,8 @@ const build_graph = function () {
   $lane.role = ROOT;
   let last_shipment = $lane.last_shipment;
   let color = ROOT_COLOR;
-  if (last_shipment && last_shipment.exit_code) color = FAIL_COLOR;
-  else if (last_shipment && last_shipment.exit_code == 0) color = SUCCESS_COLOR;
+  if (last_shipment && last_shipment.exit_code == 0) color = SUCCESS_COLOR;
+  else if (last_shipment && last_shipment.exit_code) color = FAIL_COLOR;
 
   root_node.set({
     id: $lane._id,

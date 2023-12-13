@@ -22,6 +22,7 @@ import { Shipments } from '../../../../api/shipments';
 import { Harbors } from '../../../../api/harbors';
 import { Lanes } from '../../../../api/lanes';
 import { resetDatabase } from 'cleaner';
+import '../../../../startup/config/constants';
 
 const shipments_find = Shipments.find;
 const shipments_find_one = Shipments.findOne;
@@ -38,6 +39,7 @@ describe('Ship Lane View', () => {
       this.$route = { params: { slug: 'test' } };
       expect(typeof lane()).to.eq('object');
       this.$route = undefined;
+      expect(typeof lane('slug')).to.eq('object');
       expect(lane()).to.eq(false);
     });
   });
@@ -208,14 +210,18 @@ describe('Ship Lane View', () => {
     after(() => Shipments.find = shipments_find);
 
     it('returns the list of shipments capped by H.AMOUNT_SHOWN', () => {
-      Shipments.find = () => {
+      Shipments.find = (qry, opts) => {
         let shipments_found = [];
-        for (let i = 0; i <= H.AMOUNT_SHOWN; i++) {
+        for (let i = (opts.skip || 0); i < opts.limit; i++) {
           shipments_found.push({ _id: `test_shipment_${i}` });
         }
         return shipments_found;
       };
+      H.Session.set('lane', { _id: 'test' });
       expect(shipment_history().length).to.eq(H.AMOUNT_SHOWN);
+      this.$data = { skip: 20 };
+      expect(shipment_history.bind(this)().length).to.eq(H.AMOUNT_SHOWN - 1);
+      H.Session.set('lane', undefined);
     });
   });
 

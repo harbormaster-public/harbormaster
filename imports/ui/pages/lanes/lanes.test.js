@@ -511,6 +511,8 @@ describe('Lanes Page', function () {
     });
 
     it('returns "active" if there are any active shipments on the lane', () => {
+      $lane.last_shipment = { active: true };
+      expect(current_state($lane)).to.eq('active');
       Factory.create('shipment', {
         _id: 'test_shipment',
         lane: 'test',
@@ -521,14 +523,14 @@ describe('Lanes Page', function () {
     it('returns "error" if the last shipment has a non-0 exit code', () => {
       $lane.last_shipment = { exit_code: 1 };
       expect(current_state($lane)).to.eq('error');
+      delete $lane.last_shipment;
     });
     it('returns "ready" if the last exit code was 0', () => {
       $lane.last_shipment = { exit_code: 0 };
       expect(current_state($lane)).to.eq('ready');
+      delete $lane.last_shipment;
     });
     it('returns "N/A" otherwise', () => {
-      resetDatabase(null);
-      delete $lane.last_shipment;
       expect(current_state($lane)).to.eq('N/A');
     });
   });

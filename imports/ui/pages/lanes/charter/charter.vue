@@ -19,7 +19,6 @@
 </template>
 
 <script>
-import D3Network from "vue-d3-network";
 import * as d3 from 'd3';
 import {
   build_graph,

@@ -1,8 +1,8 @@
-.link {
+#charter-page .link {
   filter: brightness(0.5);
 }
 
-.link:hover {
+#charter-page .link:hover {
   cursor: pointer;
   filter: brightness(0.75);
 }
@@ -12,11 +12,11 @@
   fill: #fff;
 }
 
-.link:nth-child(even) {
+#charter-page .link:nth-child(even) {
   transform: translate(-10px, -10px);
 }
 
-.link:nth-child(odd) {
+#charter-page .link:nth-child(odd) {
   transform: translate(10px, 10px);
 }
 
@@ -28,7 +28,7 @@
   cursor: all-scroll;
 }
 
-.node text {
+#charter-page .node text {
   cursor: pointer;
 }
 
@@ -52,7 +52,7 @@
   background: #333;
 }
 
-figure.charter {
+#charter-page figure.charter {
   border: none;
   text-align: center;
   position: absolute;

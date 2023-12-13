@@ -93,6 +93,9 @@ import { Harbors } from '../../api/harbors';
         },
         siblings () { return H.$(target.siblings); },
         parents () { return H.$(target.parents); },
+        width () { return H.window.render_null ? false : 1024; },
+        height () { return H.window.render_null ? false : 768; },
+        html () {},
       };
     };
 
@@ -152,6 +155,8 @@ import { Harbors } from '../../api/harbors';
       body: { appendChild: () => { } },
       head: { appendChild: () => { } },
     },
+    innerHeight: 2000,
+    render_null: false,
   };
 
 })();

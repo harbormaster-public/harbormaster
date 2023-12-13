@@ -174,7 +174,7 @@ td.active {
 }
 
 td.ready {
-  color: green;
+  color: #44aa99;
 }
 
 td.error {

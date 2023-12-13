@@ -13,6 +13,8 @@ import {
   FOLLOWUP,
   SALVAGE,
   ROOT_COLOR,
+  FAIL_COLOR,
+  SUCCESS_COLOR,
 } from './lib';
 import { Shipments } from "../../../../api/shipments";
 import { Lanes } from "../../../../api/lanes";
@@ -57,10 +59,12 @@ describe('Charter Page', () => {
     const success_followup = {
       _id: 'success_followup_id',
       name: 'Followup',
+      last_shipment: { exit_code: 0 },
     };
     const fail_followup = {
       _id: 'fail_followup_id',
       name: 'Followup',
+      last_shipment: { exit_code: 1 },
     };
     const parent_id = 'parent_id';
     const nodes = [
@@ -77,6 +81,7 @@ describe('Charter Page', () => {
     ];
     const links = [];
     let success_followup_node;
+    let fail_followup_node;
     let followup_link;
     let success;
 
@@ -108,7 +113,9 @@ describe('Charter Page', () => {
     });
     it('adds a decorated node to the nodes list if it does not exist', () => {
       expect(success_followup_node.name).to.equal('Followup');
-      expect(success_followup_node._cssClass).to.equal('success_followup_id');
+      expect(success_followup_node.cssClass).to.equal('success_followup_id');
+      expect(success_followup_node.color).to.eq(SUCCESS_COLOR);
+      expect(fail_followup_node.color).to.eq(FAIL_COLOR);
     });
     it('adds a decorated link to the links list', () => {
       expect(followup_link.sid).to.equal('target_id');
@@ -127,6 +134,7 @@ describe('Charter Page', () => {
     let target;
     let parent_id;
     let plan;
+    let failed_plan;
     const recursive = { _id: 'target_id', children: [] };
 
     beforeEach(() => {
@@ -134,7 +142,16 @@ describe('Charter Page', () => {
       links = [];
       target = { _id: 'target_id', recursive: false, children: [] };
       parent_id = 'parent_id';
-      plan = { _id: 'success_plan_id', name: 'Plan Name' };
+      plan = {
+        _id: 'success_plan_id',
+        name: 'Plan Name',
+        last_shipment: { exit_code: 0 },
+      };
+      failed_plan = {
+        _id: 'failed_plan_id',
+        name: 'Failed Plan',
+        last_shipment: { exit_code: 1 },
+      };
     });
 
     it('assigns graph role, parent, and recursion', () => {
@@ -152,9 +169,12 @@ describe('Charter Page', () => {
     });
     it('adds a decorated node to the nodes list if it does not exist', () => {
       assign_salvage(plan, target, parent_id, nodes, links);
-      expect(nodes.length).to.eq(1);
+      assign_salvage(failed_plan, target, parent_id, nodes, links);
+      expect(nodes.length).to.eq(2);
       expect(nodes[0].name).to.eq(plan.name);
-      expect(nodes[0]._cssClass).to.eq(plan._id);
+      expect(nodes[0].cssClass).to.eq(plan._id);
+      expect(nodes[0].color).to.eq(SUCCESS_COLOR);
+      expect(nodes[1].color).to.eq(FAIL_COLOR);
     });
     it('adds a decorated link to the links list', () => {
       assign_salvage(plan, target, parent_id, nodes, links);
@@ -234,7 +254,21 @@ describe('Charter Page', () => {
     it('assigns a color based on exit code', () => {
       Shipments.findOne = shipments_find_none;
       build_graph();
-      expect(root_node.get()._color).to.eq(ROOT_COLOR);
+      expect(root_node.get().color).to.eq(ROOT_COLOR);
+      H.Session.set('lane', {
+        _id: 'test_lane',
+        name: 'test',
+        last_shipment: { exit_code: 0 },
+      });
+      build_graph();
+      expect(root_node.get().color).to.eq(SUCCESS_COLOR);
+      H.Session.set('lane', {
+        _id: 'test_lane',
+        name: 'test',
+        last_shipment: { exit_code: 1 },
+      });
+      build_graph();
+      expect(root_node.get().color).to.eq(FAIL_COLOR);
       Shipments.findOne = shipments_find_one;
     });
     it('adds the root node to the nodes list', () => {
@@ -268,9 +302,15 @@ describe('Charter Page', () => {
 
   describe('#graph_options', () => {
     it('returns the configured graph options', () => {
-      expect(typeof graph_options()).to.eq('object');
-      this.window = { innerHeight: 2000 };
-      expect(typeof graph_options.bind(this)()).to.eq('object');
+      const window = H.window;
+      const options = graph_options();
+      delete H.window;
+      const windowless_options = graph_options();
+      expect(typeof options).to.eq('object');
+      expect(typeof options.size).to.eq('object');
+      expect(options.size.h).to.eq(1775);
+      expect(windowless_options.size.h).to.eq(0);
+      H.window = window;
     });
   });
 
@@ -279,7 +319,7 @@ describe('Charter Page', () => {
       this.$route = { path: 'foo' };
       this.$router = [];
 
-      let handle = handle_link_click({}, {
+      let handle1 = handle_link_click({}, {
         target: {
           lane: {
             last_shipment: { start: 'bar' },
@@ -287,14 +327,25 @@ describe('Charter Page', () => {
           },
         },
       });
+      let handle2 = handle_link_click({}, {
+        lane: {
+          last_shipment: { start: 'bar' },
+          slug: 'baz',
+        },
+      });
       let expected_url = '/lanes/baz/ship/bar';
-      expect(this.$router.length).to.eq(1);
+      expect(this.$router.length).to.eq(2);
       expect(this.$router[0]).to.eq(expected_url);
-      expect(handle).to.eq(expected_url);
+      expect(handle1).to.eq(expected_url);
+      expect(handle2).to.eq(expected_url);
 
-      handle = handle_link_click({}, { target: { lane: { slug: 'qux' } } });
+      let handle3 = handle_link_click({}, {
+        target: {
+          lane: { slug: 'qux' },
+        },
+      });
       expected_url = '/lanes/qux/charter';
-      expect(handle).to.eq(expected_url);
+      expect(handle3).to.eq(expected_url);
     });
   });
 });

@@ -11,8 +11,7 @@
       <ul class="list-inside">
         <li class="my-5">
           <a href="/lanes">
-          <span
-            v-if="!$subReady.Lanes">(loading...)</span>
+          <span v-if="!$subReady.Lanes">(loading...)</span>
           <span v-else>{{total_lanes}}</span> Lanes</a>
         </li>
         <li>
@@ -22,6 +21,13 @@
           and {{total_harbormasters}} of which are Harbormasters</span>
           </a></li>
       </ul>
+      <figure id="all-charters">
+        <figcaption>All Charters <span v-if="!$subReady.Lanes">(loading...)</span></figcaption>
+        <svg></svg>
+        <div v-if="$subReady.Lanes && build_graph().length">
+          {{svg_graph()}}
+        </div>
+      </figure>
       <p class="text-2xl my-10">This is version {{get_version()}}.</p>
     </div>
   </div>
@@ -30,14 +36,18 @@
 <script>
 import { Lanes } from '../../../api/lanes';
 import { Users } from '../../../api/users';
-import {
-  shipments_last_24_hours,
-  latest_shipment,
-  total_captains,
-  total_harbormasters,
-  total_shipments,
-  is_harbormaster,
-  is_captain,
+import { 
+  shipments_last_24_hours, 
+  latest_shipment, 
+  total_captains, 
+  total_harbormasters, 
+  total_shipments, 
+  is_harbormaster, 
+  is_captain, 
+  moniker,
+  svg_graph,
+  collect_graph_lists,
+  build_graph,
 } from './lib';
 
 export default {
@@ -53,19 +63,14 @@ export default {
     latest_shipment,
     total_captains,
     total_harbormasters,
-    moniker () {
-      let user = H.user().emails[0]?.address;
-      let role = 'User';
-      if (this.is_harbormaster()) role = `Harbormaster`;
-      if (this.is_captain()) role = `Captain`;
-      return `${role}  ${user}`;
-    },
+    moniker,
   },
 
   methods: {
-    get_version () {
-      return H.VERSION;
-    },
+    svg_graph,
+    collect_graph_lists,
+    build_graph,
+    get_version () { return H.VERSION; },
     is_harbormaster,
     is_captain,
   },
@@ -75,8 +80,14 @@ export default {
       if (err) throw err;
 
       total_shipments.set(res);
+      if (H.$('svg').length && !H.$('svg').html().length) this.svg_graph();
     });
-  }
+  },
+
+  unmounted () {
+    H.simulation.stop();
+  },
+
 }
 </script>
 
@@ -92,6 +103,37 @@ a:not(.shipment-link) span {
 a:hover span,
 a span:hover {
   color: #ffae00;
+}
+
+#all-charters {
+  width: 100%;
+  height: 400px;
+  box-shadow: 0 0 5px 0 inset black;
+  border: none;
+  position: relative;
+  margin-top: 50px;
+  border-radius: 3px;
+}
+
+#all-charters figcaption {
+  text-align: left;
+  position: absolute;
+  background: #666;
+  top: -20px;
+  padding: 5px;
+}
+
+#all-charters svg {
+  width: 100%;
+  height: 100%;
+}
+
+#all-charters .fixed circle {
+  stroke-dasharray: 5;
+}
+
+#all-charters text {
+  cursor: all-scroll;
 }
 
 @media all 

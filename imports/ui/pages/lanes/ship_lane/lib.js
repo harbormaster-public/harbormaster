@@ -156,7 +156,7 @@ const shipment_history = function () {
   let shipments = history(
     get_lane(this.$route?.params?.slug),
     H.AMOUNT_SHOWN,
-    (this.$data.skip ? 1 : 0)
+    (this.$data?.skip ? 1 : 0)
   );
   return shipments;
 };

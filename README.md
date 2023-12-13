@@ -225,11 +225,11 @@ GPL 3.0, see `LICENSE` file.
 
 ## Build Status
 
-LAST UPDATED: Mon Nov 13 17:35:36 PST 2023
+LAST UPDATED: Wed Dec 13 19:52:32 PST 2023
 
 =============================== Coverage summary ===============================
-Statements   : 100% ( 1223/1223 )
-Branches     : 100% ( 690/690 )
-Functions    : 100% ( 191/191 )
-Lines        : 100% ( 1130/1130 )
+Statements   : 100% ( 1284/1284 )
+Branches     : 100% ( 710/710 )
+Functions    : 100% ( 196/196 )
+Lines        : 100% ( 1185/1185 )
 ================================================================================
