@@ -1,6 +1,6 @@
 <template>
   <div id=root-page>
-    <h1 id=welcome-header class="text-5xl my-5">Welcome, {{moniker}}!</h1>
+    <h1 id=welcome-header class="text-4xl my-5">Welcome, <a href="/profile">{{email}}</a>!</h1>
     <div class="px-5">
       <h2 class="text-3xl my-5"><span class="font-mono">{{shipments_last_24_hours}}</span> total shipments made in the last day</h2>
       <h3 id="last-time-shipped-header">
@@ -28,8 +28,8 @@
           {{svg_graph()}}
         </div>
       </figure>
-      <p class="text-2xl my-10">This is version {{get_version()}}.</p>
     </div>
+    
   </div>
 </template>
 
@@ -64,13 +64,13 @@ export default {
     total_captains,
     total_harbormasters,
     moniker,
+    email () { return H.user().emails[0].address; },
   },
 
   methods: {
     svg_graph,
     collect_graph_lists,
     build_graph,
-    get_version () { return H.VERSION; },
     is_harbormaster,
     is_captain,
   },

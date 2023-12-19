@@ -15,6 +15,13 @@
             </nav>
             <div id=router-view class="container mx-auto min-h-screen p-2">
               <router-view></router-view>
+              <footer v-if="$subReady.Lanes" class="p-2 px-16">
+                <span id="version-text" class="my-10">This is version
+                {{get_version()}}.  </span>
+                <span id="user-status">You're logged in as {{email()}}, with
+                permissions as {{role()}}.</span>
+                <span id="time-text">{{timestamp}}</span>
+              </footer>
             </div>
           </div>
         </div>
@@ -43,6 +50,10 @@ import 'tailwindcss/dist/components.css';
 import 'tailwindcss/dist/utilities.css';
 import 'tailwindcss/dist/tailwind.css';
 
+import _ from 'lodash';
+
+import { Lanes } from '../../../api/lanes';
+import { Users } from '../../../api/users';
 import {
   is_loaded,
   no_users,
@@ -56,6 +67,7 @@ export default {
   meteor: {
     $subscribe: {
       Users: [],
+      Lanes: [],
     },
     no_users,
     logged_in,
@@ -64,12 +76,47 @@ export default {
     is_loaded,
   },
 
+  data () {
+    return {
+      timestamp: '',
+    };
+  },
+
+  created () {
+    H.setInterval(this.current_time, 1000);
+  },
+
+  methods: {
+    get_version () { return H.VERSION; },
+    email () { return H.user().emails[0].address; },
+    role () {
+      if (Users.findOne({ _id: H.user().emails[0].address }).harbormaster) {
+        return 'a Harbormaster';
+      }
+      const lanes_captained = Lanes.find({
+        captains: { $in: [H.user().emails[0].address] },
+      }).count();
+      let tokened_lanes = Lanes.find({ tokens: { $exists: true }}).fetch();
+      tokened_lanes = tokened_lanes.map(lane => {
+        const tokens = _.invert(lane.tokens);
+        if (tokens[H.user().emails[0].address]) return lane._id;
+      });
+      if (lanes_captained + tokened_lanes.length > 0) {
+        return `Captain of ${lanes_captained + tokened_lanes.length} lanes`;
+      }
+      return 'a User';
+    },
+    current_time () {
+      this.timestamp = new Date().toLocaleTimeString();
+    },
+  },
+
   components: {
     AddUser,
     Navigation,
     NewHarbormaster,
     Welcome,
-  }
+  },
 }
 </script>
 
@@ -83,6 +130,21 @@ export default {
   border-left: 2px solid #ffae00;
   border-right: 2px solid #0af;
   position: relative;
+  padding-bottom: 50px;
+}
+
+#router-view footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 50px;
+  background: #333;
+  border-top: 10px solid white;
+}
+
+#time-text {
+  float: right;
 }
 
 html body * {
