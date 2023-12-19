@@ -15,12 +15,12 @@
             </nav>
             <div id=router-view class="container mx-auto min-h-screen p-2">
               <router-view></router-view>
-              <footer v-if="$subReady.Lanes" class="p-2 px-16">
-                <span id="version-text" class="my-10">This is version
-                {{get_version()}}.  </span>
-                <span id="user-status">You're logged in as {{email()}}, with
-                permissions as {{role()}}.</span>
-                <span id="time-text">{{timestamp}}</span>
+              <footer v-if="$subReady.Lanes" class="p-2">
+                <div class="mx-auto container">
+                  <span id="version-text" class="my-10">v{{get_version()}}.  </span>
+                  <span id="user-status">Logged in: {{email()}}, as {{role()}}.</span>
+                  <span id="time-text">{{timestamp}}</span>
+                </div>
               </footer>
             </div>
           </div>
@@ -79,11 +79,16 @@ export default {
   data () {
     return {
       timestamp: '',
+      timer: null,
     };
   },
 
-  created () {
-    H.setInterval(this.current_time, 1000);
+  mounted () {
+    this.timer = H.setInterval(this.current_time, 1000);
+  },
+
+  unmounted () {
+    H.clearInterval(this.timer);
   },
 
   methods: {
