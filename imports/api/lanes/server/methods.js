@@ -205,6 +205,7 @@ const end_shipment = async function (lane, exit_code, manifest) {
     lane.salvage_runs = lane.salvage_runs >= 0 ? lane.salvage_runs + 1 : 1;
   }
 
+  let shipment;
   let shipment_id = manifest.shipment_id;
   let finished = new Date();
   let next_shipment_start_date = H.start_date();
@@ -221,8 +222,12 @@ const end_shipment = async function (lane, exit_code, manifest) {
       active: false,
     },
   });
-  let shipment = Shipments.findOne(shipment_id);
+  shipment = Shipments.findOne(shipment_id);
   lane.last_shipment = shipment;
+  lane.last_shipment.finished = finished;
+  lane.last_shipment.exit_code = exit_code;
+  lane.last_shipment.manifest = manifest;
+  lane.last_shipment.active = false;
   Lanes.update(lane._id, {
     $set: {
       last_shipment: lane.last_shipment,
