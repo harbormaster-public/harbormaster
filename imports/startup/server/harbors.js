@@ -11,7 +11,9 @@ import { Shipments } from "../../api/shipments";
 
 const harbors_dir = expandTilde("~/.harbormaster/harbors");
 const depot_dir = expandTilde("~/.harbormaster/depot");
+const upstream_dir = expandTilde("~/.harbormaster/upstream");
 const reload_exit_code = 10;
+const ROOT_DIR = process.cwd();
 
 H.harbors_dir = harbors_dir;
 H.depot_dir = depot_dir;
@@ -63,6 +65,20 @@ export const setup_harbor_dirs = () => {
     if (!H.isTest) console.log(`No depot directory found at ${depot_dir}`);
     mkdirp.sync(depot_dir);
     if (!H.isTest) console.log("Depot directory created.");
+  }
+
+  if (!fs.existsSync(upstream_dir)) {
+    if (!H.isTest) console.log(
+      `No upstream directory found at ${upstream_dir}`
+    );
+    mkdirp.sync(upstream_dir);
+    if (!H.isTest) console.log("Upstream directory created.");
+  }
+
+  if (!fs.existsSync(`${upstream_dir}/package.json`)) {
+    fs.writeFileSync(`${upstream_dir}/package.json`, JSON.stringify({
+      private: true,
+    }));
   }
 
   // https://nodejs.org/docs/latest/api/fs.html#fs_caveats
@@ -147,9 +163,10 @@ export const register_harbors = () => {
       let string = fs.readFileSync(harbor_path).toString();
       fs.watch(harbor_path, H.reload);
 
-      let entrypoint = eval(string);
       let harbor_name;
+      let harbor;
       let packages = [];
+      let entrypoint = eval(string);
       let register = entrypoint.register(Lanes, Users, Harbors, Shipments);
       harbor_name =
         typeof register === "object" && register.name
@@ -168,9 +185,13 @@ export const register_harbors = () => {
       if (register.pkgs instanceof Array) {
         register.pkgs.forEach((pkg) => {
           try {
-            /* istanbul ignore next */
-            if (!H.isTest) console.log(`Checking for: ${pkg}...`);
-            require(pkg);
+            process.chdir(upstream_dir);
+            /* istanbul ignore if */
+            if (!H.isTest) { // require.resolve doesn't easily override
+              console.log(`Checking for: ${pkg}...`);
+              require.resolve(pkg);
+            }
+            else require(pkg);
             /* istanbul ignore next */
             if (!H.isTest) console.log(`Found: ${pkg}`);
           }
@@ -182,14 +203,22 @@ export const register_harbors = () => {
         });
       }
       if (packages.length) {
-        packages = packages.join(" ");
         /* istanbul ignore next */
-        if (!H.isTest) console.log(`Installing packages: ${packages}`);
-        child_process.execSync(`meteor npm i -S ${packages}`);
+        if (!H.isTest) console.log(
+          `Installing packages: ${packages.join(' ')}`
+        );
+        process.chdir(upstream_dir);
+        packages.forEach(pkg => {
+          console.log(child_process.execSync(
+            `npm i --save -P -E ${pkg} --no-fund`
+          )?.toString());
+        });
+        register = entrypoint.register(Lanes, Users, Harbors, Shipments);
       }
 
-      let harbor = Harbors.findOne(harbor_name) || {};
+      harbor = Harbors.findOne(harbor_name) || {};
       H.harbors[harbor_name] = entrypoint;
+      process.chdir(upstream_dir);
       if (entrypoint.next) entrypoint.next();
       harbor.rendered_input = entrypoint.render_input();
       harbor.constraints = entrypoint.constraints && entrypoint.constraints();
@@ -197,6 +226,7 @@ export const register_harbors = () => {
       Harbors.upsert({ _id: harbor_name }, harbor);
       /* istanbul ignore next */
       if (!H.isTest) console.log(`Harbor registered: ${file}`);
+
     }
     catch (err) {
       /* istanbul ignore next */
@@ -208,6 +238,7 @@ export const register_harbors = () => {
   });
   /* istanbul ignore next */
   if (!H.isTest) console.log("All harbors registered.");
+  process.chdir(ROOT_DIR);
 };
 /* istanbul ignore next */
 if (!H.isTest) register_harbors();

@@ -82,13 +82,16 @@ describe("Harbors startup", () => {
     });
     it("creates a new depot dir if one is not found", () => {
       let first_call = true;
+      let second_call = false;
       fs.existsSync = ($path) => {
         if (first_call) {
           first_call = false;
           return true;
         }
+        if (second_call) return second_call;
         expect($path).to.eq(depot_dir);
-        return first_call;
+        second_call = true;
+        return second_call;
       };
       mkdirp.sync = ($path) => expect($path).to.eq(depot_dir);
       fs.watch = () => { };
@@ -226,7 +229,7 @@ describe("Harbors startup", () => {
       expect(called).to.eq(true);
     });
     it("installs missing dependencies", () => {
-      const expected = `meteor npm i -S test`;
+      const expected = `npm i --save -P -E test --no-fund`;
       let called;
       fs.readFileSync = () => (`module.exports = {
         register: () => ({
