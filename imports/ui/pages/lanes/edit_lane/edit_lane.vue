@@ -124,6 +124,9 @@
         </div>
       </form>
     </div>
+    <div v-else>
+      <h2>You do not have permission to edit this lane.</h2>
+    </div>
 
     <shipping-log></shipping-log>
   </div>

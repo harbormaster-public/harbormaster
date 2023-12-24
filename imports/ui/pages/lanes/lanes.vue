@@ -30,7 +30,10 @@
       <tbody v-else-if="ready()">
         <tr v-for="lane in lanes" :key="lane._id">
           <td class="name-column">
-            <button @click="handle_opts_click" class="lane-options">⋯</button>
+            <button 
+              v-if="can_ply(lane)"
+              @click="handle_opts_click" 
+              class="lane-options">☰</button>
             <span v-if="can_ply(lane)" class="admin">
               <router-link :to="`/lanes/${lane.slug}/charter`" class="charter">Charter</router-link>
               <router-link :to="`/lanes/${lane.slug}/ship`" class="ship-lane">Ship</router-link>
@@ -112,7 +115,7 @@ export default {
             .getAttribute('class')
             .replace(' active', ''),
         );
-        event.target.innerHTML = '⋯';
+        event.target.innerHTML = '☰';
         return event.target.setAttribute(
           'class',
           event.target.getAttribute('class').replace(' active', ''),

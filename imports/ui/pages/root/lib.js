@@ -47,8 +47,8 @@ const total_harbormasters = function () {
 
 const is_harbormaster = function () {
   return Users.findOne({
-    _id: H.user().emails[0].address,
-  }).harbormaster;
+    _id: H.user()?.emails[0].address,
+  })?.harbormaster;
 };
 
 const is_captain = function () {

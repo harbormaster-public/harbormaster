@@ -2,9 +2,14 @@
   <div id="ship-lane-page">
     <div v-if="$subReady.Lanes && lane.name && $subReady.Harbors && $subReady.Shipments">
       <h1 class="text-5xl my-2"><em>Ship to lane:</em>&nbsp;<strong>{{lane.name}}</strong></h1>
-      <h2 class="text-2xl my-2 px-2">Let's review.  Ready to ship?</h2>
-      <a :href="`/lanes/${lane.slug}/edit`" class="rounded-sm my-2 block edit-lane">Edit this lane</a>
-      <a href="/lanes/new/edit" class="rounded-sm my-2 block new-lane">New Lane</a>
+      <h2 v-if="can_ply(lane)"
+        class="text-2xl my-2 px-2">Let's review.  Ready to ship?</h2>
+      <h2 v-else
+        class="text-2xl my-2 px-2">You don't have permission to ship to this lane.</h2>
+      <a v-if="can_ply(lane)" :href="`/lanes/${lane.slug}/edit`" class="rounded-sm my-2 block edit-lane">Edit this lane</a>
+      <a 
+        v-if="$subReady.Users && is_harbormaster"
+        href="/lanes/new/edit" class="rounded-sm my-2 block new-lane">New Lane</a>
       <a :href="`/lanes/${lane.slug}/charter`" class="rounded-sm my-2 block lane-charter">Lane Charter</a>
     </div>
     <div v-else-if="this.$subReady.Lanes && !lane.name">
@@ -17,16 +22,22 @@
 
     <h3 class="text-xl my-2 px-2"><em>Shipment Active:</em>&nbsp;<strong>{{active}}</strong></h3>
     <div v-if="active">
-      <button @click.prevent="reset_shipment" class="rounded-sm my-2 block reset-shipment">Reset Shipment</button>
+      <button 
+        v-if="can_ply(lane)"
+        @click.prevent="reset_shipment" class="rounded-sm my-2 block reset-shipment">Reset Shipment</button>
     </div>
     <div v-else-if="working">
       <button class="rounded-sm my-2 block working" disabled>Working...</button>
     </div>
     <div v-else-if="installed">
-      <button @click.prevent="start_shipment" class="rounded-sm my-2 block start-shipment" :disabled="can_ship">Start Shipment</button>
+      <button 
+        v-if="can_ply(lane)"
+        @click.prevent="start_shipment" class="rounded-sm my-2 block start-shipment" :disabled="can_ship">Start Shipment</button>
     </div>
     <div v-if="any_active()">
-      <button @click.prevent="reset_all_active" class="rounded-sm my-2 block reset-all-active">Reset All Active Shipments</button>
+      <button 
+        v-if="can_ply(lane)"
+        @click.prevent="reset_all_active" class="rounded-sm my-2 block reset-all-active">Reset All Active Shipments</button>
     </div>
 
     <div v-if="lane">
@@ -149,14 +160,16 @@ import {
   start_shipment,
   has_work_output,
 } from './lib';
+import { can_ply } from '../lib';
+import { is_harbormaster } from '../../root/lib';
 import './ship_lane.css';
 import { Harbors } from '../../../../api/harbors';
 
 export default {
   meteor: {
     $subscribe: {
-      'Lanes': function () { return [this.$route.params.slug]; },
-      'Shipments': function () {
+      Lanes: function () { return [this.$route.params.slug]; },
+      Shipments: function () {
         return [
           {
             slug: this.$route.params.slug,
@@ -169,6 +182,7 @@ export default {
         ];
       },
       Harbors: [],
+      Users: [],
     },
     lane,
     work_preview,
@@ -178,7 +192,8 @@ export default {
       const $lane = lane(this.$route.params.slug);
       const harbor = Harbors.findOne($lane.type);
       if ($lane && harbor) return harbor;
-    }
+    },
+    is_harbormaster,
   },
   created,
 
@@ -201,7 +216,8 @@ export default {
     has_work_output,
     handle_scroll_change: function (evt) {
       this.$data.scroll_to = evt.target.checked;
-    }
+    },
+    can_ply,
   },
 
   updated () {
