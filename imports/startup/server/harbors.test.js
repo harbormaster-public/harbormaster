@@ -18,6 +18,7 @@ import { Harbors } from '../../api/harbors';
 const module_require = Module.prototype.require;
 const harbors_dir = expandTilde('~/.harbormaster/harbors');
 const depot_dir = expandTilde('~/.harbormaster/depot');
+const upstream_dir = expandTilde('~/.harbormaster/upstream');
 const fs_readdir_sync = fs.readdirSync;
 const fs_stat_sync = fs.statSync;
 const fs_read_file_sync = fs.readFileSync;
@@ -229,7 +230,9 @@ describe("Harbors startup", () => {
       expect(called).to.eq(true);
     });
     it("installs missing dependencies", () => {
-      const expected = `npm i --save -P -E test --no-fund`;
+      const expected = `npm i --save -P -E test --no-fund --prefix ${
+        upstream_dir
+      }`;
       let called;
       fs.readFileSync = () => (`module.exports = {
         register: () => ({

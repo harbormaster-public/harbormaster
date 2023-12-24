@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import expandTilde from "expand-tilde";
 import mkdirp from "mkdirp";
+import is_github_url from 'parse-github-url';
 import { checkSync } from "diskusage";
 import child_process from "child_process";
 import { Lanes } from "../../api/lanes";
@@ -187,9 +188,15 @@ export const register_harbors = () => {
           try {
             process.chdir(upstream_dir);
             /* istanbul ignore if */
-            if (!H.isTest) { // require.resolve doesn't easily override
+            if (!H.isTest) {
               console.log(`Checking for: ${pkg}...`);
-              require.resolve(pkg);
+              if (is_github_url(pkg).name) {
+                console.log(
+                  `Repo module, loading as "${is_github_url(pkg).name}"`
+                );
+                require(pkg.name);
+              }
+              else require(pkg);
             }
             else require(pkg);
             /* istanbul ignore next */
@@ -210,7 +217,7 @@ export const register_harbors = () => {
         process.chdir(upstream_dir);
         packages.forEach(pkg => {
           console.log(child_process.execSync(
-            `npm i --save -P -E ${pkg} --no-fund`
+            `npm i --save -P -E ${pkg} --no-fund --prefix ${upstream_dir}`
           )?.toString());
         });
         register = entrypoint.register(Lanes, Users, Harbors, Shipments);

@@ -1,6 +1,6 @@
 {
   "name": "harbormaster",
-  "version": "1.30.2",
+  "version": "1.30.3",
   "private": true,
   "babel": {
     "env": {
@@ -40,6 +40,7 @@
     "mkdirp": "^0.5.6",
     "motion-ui": "^2.0.5",
     "node-sass": "^8.0.0",
+    "parse-github-url": "^1.0.2",
     "scroll-to-element": "^2.0.3",
     "semver": "^7.5.4",
     "ssh2": "^1.14.0",
