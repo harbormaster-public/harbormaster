@@ -184,7 +184,9 @@ export const register_harbors = () => {
           if (packages.indexOf(pkg) == -1) packages.push(pkg);
         });
 
-        console.log(`Packages registered: ${register.pkgs.join(' ')}`);
+        if (!H.isTest) console.log(
+          `Packages registered: ${register.pkgs.join(' ')}`
+        );
       }
 
       H.harbors[harbor_name] = entrypoint;
@@ -206,9 +208,11 @@ export const register_harbors = () => {
       `Installing packages: ${packages.join(' ')}`
     );
     fs.writeFileSync(upstreams, packages.join('\n'));
-    console.log(child_process.execSync(
+    const stdout = child_process.execSync(
       `meteor npm i --save -P -E ${packages.join(' ')} --no-fund`
-    )?.toString());
+    )?.toString();
+    /* istanbul ignore next */
+    if (!H.isTest) console.log(stdout);
     for (const registered_harbor in H.harbors) {
       /* istanbul ignore next */
       if (H.harbors.hasOwnProperty(registered_harbor)) {

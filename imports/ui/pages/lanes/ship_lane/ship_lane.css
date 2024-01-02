@@ -19,6 +19,13 @@ pre {
 }
 
 .exit-code.code-10,
+.exit-code.code-9,
+.exit-code.code-8,
+.exit-code.code-7,
+.exit-code.code-6,
+.exit-code.code-5,
+.exit-code.code-4,
+.exit-code.code-3,
 .exit-code.code-2,
 .exit-code.code-1 {
   background-color: rgba(255, 0, 0, 0.5);
