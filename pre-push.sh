@@ -1,4 +1,5 @@
 #!/bin/sh
+set -e
 
 echo "`date`: Running pre-push hook."
 npm run coverage

@@ -1,4 +1,5 @@
 #!/bin/sh
+set -e
 
 echo "`date`: Running pre-commit hook."
 npm run test

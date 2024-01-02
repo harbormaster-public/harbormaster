@@ -18,7 +18,6 @@ import { Harbors } from '../../api/harbors';
 const module_require = Module.prototype.require;
 const harbors_dir = expandTilde('~/.harbormaster/harbors');
 const depot_dir = expandTilde('~/.harbormaster/depot');
-const upstream_dir = expandTilde('~/.harbormaster/upstream');
 const fs_readdir_sync = fs.readdirSync;
 const fs_stat_sync = fs.statSync;
 const fs_read_file_sync = fs.readFileSync;
@@ -151,13 +150,13 @@ describe("Harbors startup", () => {
     });
     it("logs a warning for non-git repos", () => {
       let called = '';
-      const expected_length = 128;
+      let expected = 'Unable to determine origin for "test"';
       const console_log = console.log;
       fs.statSync = () => ({ isDirectory: () => true });
       child_process.execSync = () => { throw new Error(); };
-      console.log = (warning) => called = warning;
+      console.log = warning => called = warning;
       scan_depot('test');
-      expect(called.length).to.eq(expected_length);
+      expect(called.match(expected)[0]).to.eq(expected);
       console.log = console_log;
     });
     it("updates the Harbors with the harbor added", () => {

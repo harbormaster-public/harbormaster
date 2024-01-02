@@ -1,4 +1,4 @@
-pre { 
+pre {
   white-space: inherit;
   overflow-x: auto;
 }
@@ -18,8 +18,11 @@ pre {
   border-color: rgba(0, 255, 0, 0.5);
 }
 
+.exit-code.code-10,
+.exit-code.code-2,
 .exit-code.code-1 {
-  background-color: rgba(255, 0, 0, 0.5);;
+  background-color: rgba(255, 0, 0, 0.5);
+  ;
   border-color: rgba(255, 0, 0, 0.5);
   color: #fff;
 }
@@ -168,9 +171,7 @@ pre {
   color: #ffae00;
 }
 
-@media all 
-  and (min-device-width: 280px)
-  and (max-device-width: 800px) {
+@media all and (min-device-width: 280px) and (max-device-width: 800px) {
 
   .container .reset-all-active,
   .container .start-shipment,

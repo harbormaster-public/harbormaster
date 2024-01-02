@@ -2,7 +2,6 @@ import fs from "fs";
 import path from "path";
 import expandTilde from "expand-tilde";
 import mkdirp from "mkdirp";
-import is_github_url from 'parse-github-url';
 import { checkSync } from "diskusage";
 import child_process from "child_process";
 import { Lanes } from "../../api/lanes";
