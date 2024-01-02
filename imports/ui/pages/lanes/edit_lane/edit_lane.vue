@@ -1,25 +1,25 @@
 <template>
-  <div v-if="this.$subReady.Lanes && this.$subReady.Users && this.$subReady.Harbors" id=edit-lane-page>
+  <div v-if="$subReady.Lanes && $subReady.Users && $subReady.Harbors" id=edit-lane-page>
     <h1 class="text-5xl my-2">Edit Lane</h1>
     <div v-if="plying">
 
       <form v-on:submit.prevent="submit_form" :key="harbor_refresh">
         <pre class="py-2">
           <label>Name:&nbsp;
-            <input 
-              @change.prevent="change_lane_name" 
+            <input
+              @change.prevent="change_lane_name"
               @keypress="prevent_enter_key"
               :value="get_lane_name()"
-              type=text 
-              required 
+              type=text
+              required
               class="lane-name"
             >
           </label>
           <br>
           <label class="url">Slug:&nbsp;
-            <input 
-              type=text 
-              disabled 
+            <input
+              type=text
+              disabled
               :value="slug(this.$route.params.slug, true)"
               class="slug"
             >
@@ -136,8 +136,6 @@
 </template>
 
 <script>
-import { Session } from 'meteor/session';
-import { Harbors } from '../../../../api/harbors';
 import { get_lane } from '../lib/util';
 import { moment } from 'meteor/momentjs:moment';
 import './edit_lane.css';

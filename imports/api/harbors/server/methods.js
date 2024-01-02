@@ -23,7 +23,7 @@ H.exec = promisify(cp.exec);
 const update_harbor = async function (lane, values) {
   try {
     let harbor = Harbors.findOne(lane.type);
-    let success = H.harbors[lane.type].update(lane, values);
+    let success = await H.harbors[lane.type].update(lane, values);
     if (success) {
       /* istanbul ignore next */
       harbor.lanes = harbor.lanes || {};

@@ -216,23 +216,8 @@ describe("Harbors startup", () => {
       expect(called).to.eq(true);
       console.error = console_error;
     });
-    it("scans for pre-installed dependencies", () => {
-      fs.readFileSync = () => (`module.exports = {
-        register: () => ({
-          pkgs: ['test'],
-          name: 'test',
-        }),
-        render_input: () => {},
-      }`);
-      let called = false;
-      Module.prototype.require = () => called = true;
-      register_harbors();
-      expect(called).to.eq(true);
-    });
     it("installs missing dependencies", () => {
-      const expected = `npm i --save -P -E test --no-fund --prefix ${
-        upstream_dir
-      }`;
+      const expected = `meteor npm i --save -P -E test --no-fund`;
       let called;
       fs.readFileSync = () => (`module.exports = {
         register: () => ({
@@ -278,6 +263,7 @@ describe("Harbors startup", () => {
           name: 'test',
         }),
         render_input: () => {},
+        next: () => {},
         constraints: () => H.harbors.test.constraints = true,
       }`);
       register_harbors();
