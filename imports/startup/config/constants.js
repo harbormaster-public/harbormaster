@@ -2,9 +2,9 @@
 
 H.AMOUNT_SHOWN = 20;
 
-H.CACHE_EXPIRE_MIN = 0;
+H.CACHE_EXPIRE_MIN = -1;
 
-H.CACHED_SUBS_MAX = 20;
+H.CACHED_SUBS_MAX = -1;
 
 H.VERSION = require('/package.json').version;
 

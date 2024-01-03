@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import expandTilde from "expand-tilde";
+import git_url from 'parse-github-url';
 import mkdirp from "mkdirp";
 import { checkSync } from "diskusage";
 import child_process from "child_process";
@@ -148,6 +149,27 @@ if (!H.isTest) H.scan_depot();
 
 export const register_harbors = () => {
   let packages = [];
+  let cached = [];
+
+  // Little use at this time testing coverage of loading 3rd party libs
+  /* istanbul ignore next */
+  try {
+    fs.readFileSync(upstreams).toString().split('\n').forEach(pkg => {
+      try {
+        const parsed = git_url(pkg);
+        if (parsed.name) { require(parsed.name); }
+        else { require(pkg); }
+        cached.push(pkg);
+        if (!H.isTest) console.log(`Cached upstream found: ${pkg}`);
+      }
+      catch (e) {
+        if (!H.isTest) console.error(
+          `Unable to load cache for upstream: ${pkg}`
+        );
+      }
+    });
+  }
+  catch (e) { console.error(e); }
 
   /* istanbul ignore next */
   if (!H.isTest) console.log(`Registering Harbors from: ${harbors_dir}`);
@@ -181,7 +203,10 @@ export const register_harbors = () => {
       /* istanbul ignore next */
       if (register.pkgs instanceof Array && register.pkgs.length) {
         register.pkgs.forEach((pkg) => {
-          if (packages.indexOf(pkg) == -1) packages.push(pkg);
+          if (
+            cached.indexOf(pkg) == -1 &&
+            packages.indexOf(pkg) == -1
+          ) packages.push(pkg);
         });
 
         if (!H.isTest) console.log(
