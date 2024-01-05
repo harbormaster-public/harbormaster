@@ -252,7 +252,6 @@ const render_harbor = function () {
     harbor_lane_reference.manifest :
     false
     ;
-  debugger;
   H.call(
     'Harbors#render_input',
     $lane,

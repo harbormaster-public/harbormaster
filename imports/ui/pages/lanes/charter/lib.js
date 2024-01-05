@@ -183,7 +183,6 @@ const handle_link_click = function (event, link) {
   /* istanbul ignore else */
   if (this.$route.path != url) this.$router.push(url);
   else console.log("Avoiding redundant navigation.");
-  debugger;
   return url;
 };
 

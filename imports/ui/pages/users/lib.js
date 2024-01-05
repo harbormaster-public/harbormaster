@@ -9,13 +9,13 @@ const is_harbormaster = function (user) {
 };
 
 const captain_lanes = function (user) {
-  var pliable_lanes = Lanes.find({
+  let pliable_lanes = Lanes.find({
     $or: [
       { captains: { $in: [user._id] } },
       { tokens: { $exists: true } },
     ],
   }).fetch();
-  var lane_names = [];
+  let lane_names = [];
 
   if (user.harbormaster) { return 'All'; }
   _.each(pliable_lanes, function (lane) {

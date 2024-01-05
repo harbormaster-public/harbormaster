@@ -160,7 +160,7 @@ const reload_timeout_ms = 10000;
 export default {
   meteor: {
     $subscribe: {
-      'Harbors': [],
+      'Harbors': ['/harbors'],
     }
   },
 

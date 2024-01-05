@@ -100,9 +100,20 @@ describe('Ship Lane View', () => {
       expect(exit_code()).to.eq(0);
       Shipments.findOne = shipments_find_one;
     });
+    it(
+      "returns the lane's last shipment exit code if no shipment is found",
+      () => {
+        Factory.create('lane');
+        this.$route = {
+          params: { slug: 'test' },
+        };
+        expect(exit_code()).to.eq(1);
+      }
+    );
   });
 
   describe('#work_preview', () => {
+    beforeEach(() => resetDatabase(null));
 
     after(() => {
       Harbors.findOne = harbors_find_one;
@@ -124,9 +135,14 @@ describe('Ship Lane View', () => {
       Shipments.findOne = shipments_find_one;
     });
     it('renders a work preview if none exist', () => {
+      Factory.create('lane', { rendered_work_preview: undefined });
       Harbors.findOne = () => ({ lanes: { test: { _id: 'test' } } });
       this.$route = { params: { slug: 'test', manifest: {} } };
-      H.call = (method) => expect(method).to.eq('Harbors#render_work_preview');
+      H.call = (method, $lane, manifest) => {
+        expect(method).to.eq('Harbors#render_work_preview');
+        expect($lane._id).to.eq('test');
+        expect(manifest).to.eq(false);
+      };
       work_preview();
     });
     it('upserts the lane and sets the Session on successful render', () => {
@@ -194,6 +210,7 @@ describe('Ship Lane View', () => {
 
   describe('#work_output', () => {
     it('returns the latest shipment for a lane', () => {
+      resetDatabase(null);
       const test_lane = { slug: 'test', last_shipment: { _id: 'foo' } };
       H.Session.set('lane', test_lane);
       this.$route = { params: { slug: 'test', date: 'test' } };

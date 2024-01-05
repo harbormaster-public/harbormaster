@@ -1,6 +1,7 @@
 import H from '../../../startup/config/namespace';
 import { Lanes } from '..';
 import { LatestShipment } from '../../shipments';
+import { DDPServer } from 'meteor/ddp-server';
 
 import {
   collect_latest_shipments,
@@ -20,6 +21,10 @@ import {
 Lanes.rawCollection().createIndex({ name: 1 }, { background: true });
 collect_latest_shipments();
 
+Meteor.server.setPublicationStrategy(
+  'Lanes',
+  DDPServer.publicationStrategies.SERVER_MERGE,
+);
 H.publish('Lanes', publish_lanes);
 
 /* istanbul ignore next */

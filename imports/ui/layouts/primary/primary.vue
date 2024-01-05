@@ -66,8 +66,7 @@ export default {
   
   meteor: {
     $subscribe: {
-      Users: [],
-      Lanes: [],
+      Users: ['*'],
     },
     no_users,
     logged_in,

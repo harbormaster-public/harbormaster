@@ -61,10 +61,18 @@ const exit_code = function () {
     Shipments.findOne({ start: date, lane: $lane._id }) :
     false
     ;
+  let code = '';
 
-  if (!shipment || shipment?.active) return '';
+  if (
+    shipment?.exit_code ||
+    shipment?.exit_code == 0
+  ) code = shipment.exit_code;
+  else if (
+    $lane.last_shipment?.exit_code ||
+    $lane.last_shipment?.exit_code == 0
+  ) code = $lane.last_shipment.exit_code;
 
-  return shipment.exit_code;
+  return code;
 };
 
 const work_preview = function () {
@@ -130,7 +138,7 @@ const has_work_output = function () {
       (shipment.stderr && Object.keys(shipment.stderr).length) ||
       shipment.exit_code == 0
     ) ||
-    any_shipment
+      any_shipment
   ) {
     return true;
   }

@@ -67,8 +67,8 @@ describe('Shipments', () => {
       });
       expect(last_shipped({ _id: 'test1' })._id).to.eq('test3');
       Factory.create('latest_shipment', {
-         _id: 'test1',
-          shipment: {
+        _id: 'test1',
+        shipment: {
           _id: 'test1',
         },
       });
@@ -102,7 +102,7 @@ describe('Shipments', () => {
     it('returns an object with locale string for the latest date', () => {
       Factory.create('shipment', { _id: 'test', lane: 'test', finished: 1 });
       Factory.create('lane', { _id: 'test', slug: 'test' });
-      Factory.create('lane', { _id: 'test2', name: 'test2' });
+      Factory.create('lane', { _id: 'test2', name: 'test2', slug: '' });
       expect(get_latest_date().lane).to.eq('test');
       Factory.create('shipment', { _id: 'test2', lane: 'test2', finished: 2 });
       expect(get_latest_date().lane).to.eq('test2');

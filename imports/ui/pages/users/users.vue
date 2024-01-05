@@ -59,7 +59,7 @@ import './users.css';
 export default {
   meteor: {
     $subscribe: {
-      Users: [],
+      Users: ['/users'],
     },
     users () { return Users.find({ expired: { $not: true }}) },
   },

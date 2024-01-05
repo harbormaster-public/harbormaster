@@ -13,6 +13,12 @@ const publish_shipments = function publish_shipments (lanes, options = {}) {
   }
   else if (lanes?.slug) {
     query.lane = Lanes.findOne({ slug: lanes.slug })?._id;
+    options.fields = {
+      stdin: 0,
+      stdout: 0,
+      stderr: 0,
+      manifest: 0,
+    };
   }
   const shipments = Shipments.find(query, options);
 

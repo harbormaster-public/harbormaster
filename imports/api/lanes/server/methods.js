@@ -61,16 +61,108 @@ const get_increment = function (lane, increment = 2) {
   return increment;
 };
 
-const publish_lanes = function publish_lanes (lane = {}) {
-  if (typeof lane == 'string') {
-    const single = Lanes.find(
-      { $or: [{ _id: lane }, { name: lane }, { slug: lane }] }
-    );
-
-    return single;
+const publish_lanes = function publish_lanes (view, slug) {
+  let published;
+  switch (view) {
+    case '/':
+      published = Lanes.find({}, { fields: {
+        _id: 1,
+        name: 1,
+        'last_shipment.exit_code': 1,
+        'last_shipment.active': 1,
+        'followup._id': 1,
+        'salvage_plan._id': 1,
+      } });
+      break;
+    case '/lanes':
+      published = Lanes.find({}, { fields: {
+        _id: 1,
+        name: 1,
+        captains: 1,
+        slug: 1,
+        type: 1,
+        shipment_count: 1,
+        salvage_runs: 1,
+        'last_shipment.actual': 1,
+        'last_shipment.start': 1,
+        'last_shipment.exit_code': 1,
+        'last_shipment.active': 1,
+        'followup.name': 1,
+        'salvage_plan.name': 1,
+      } });
+      break;
+    case '/charter':
+      published = Lanes.find({}, { fields: {
+        _id: 1,
+        name: 1,
+        slug: 1,
+        'last_shipment.exit_code': 1,
+        'last_shipment.active': 1,
+        'followup._id': 1,
+        'salvage_plan._id': 1,
+      } });
+      break;
+    case '/edit':
+      // Edit lane followup selection needs to become its own component, with
+      // its own subscription, before we can properly filter this by slug
+      // published = Lanes.find({ slug }, { fields: {
+      published = Lanes.find({ }, { fields: {
+        _id: 1,
+        name: 1,
+        captains: 1,
+        slug: 1,
+        type: 1,
+        rendered_input: 1,
+        minimum_complete: 1,
+        tokens: 1,
+        'last_shipment.exit_code': 1,
+        'last_shipment.active': 1,
+        'followup._id': 1,
+        'salvage_plan._id': 1,
+      } });
+      break;
+    case '/log':
+      published = Lanes.find( { slug }, { fields: {
+        _id: 1,
+        shipment_count: 1,
+        'last_shipment.exit_code': 1,
+        'last_shipment.active': 1,
+      } },
+      );
+      break;
+    case '/ship':
+      published = Lanes.find({ slug }, { fields: {
+        _id: 1,
+        name: 1,
+        captains: 1,
+        slug: 1,
+        type: 1,
+        rendered_work_preview: 1,
+        'last_shipment.exit_code': 1,
+        'last_shipment.active': 1,
+        'last_shipment.stdout': 1,
+        'last_shipment.stderr': 1,
+        'last_shipment.manifest': 1,
+        'last_shipment.finished': 1,
+        'followup.slug': 1,
+        'followup.name': 1,
+        'salvage_plan.slug': 1,
+        'salvage_plan.name': 1,
+      } });
+      break;
+    case '/profile':
+      published = Lanes.find({}, { fields: {
+        _id: 1,
+        name: 1,
+        slug: 1,
+        tokens: 1,
+        captains: 1,
+      } });
+      break;
+    default:
+      break;
   }
-  if (lane instanceof Array) return Lanes.find({ _id: { $in: lane } });
-  return Lanes.find(lane);
+  return published;
 };
 
 const get_total = async () => {
@@ -88,9 +180,7 @@ const update_webhook_token = function (lane_id, user_id, remove) {
     lane.tokens = _.invert(tokens);
   }
 
-  lane.tokens = lane.tokens || {};
-
-  if (!remove) lane.tokens[token] = user_id;
+  if (!remove) lane.tokens = { [token]: user_id };
 
   return Lanes.update(lane_id, { $set: { tokens: lane.tokens } });
 };
@@ -126,10 +216,7 @@ const start_shipment = async function (id, manifest, shipment_start_date) {
     { $set: { shipment: Shipments.findOne(shipment_id) } }
   );
 
-  lane.shipment_count = lane.shipment_count >= 0 ?
-    lane.shipment_count + 1
-    : 1
-  ;
+  lane.shipment_count = lane.shipment_count >= 0 ? lane.shipment_count + 1 : 1;
   manifest.shipment_start_date = shipment_start_date;
   manifest.shipment_id = shipment_id;
   Lanes.update(lane._id, { $set: { shipment_count: lane.shipment_count } });

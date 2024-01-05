@@ -61,8 +61,8 @@
         :key="rerenders"
         id="work-output"
         name="work-output"
-        :class="`my-4 rounded-sm work-output ${
-          active ? 'active' : ''
+        :class="`my-4 rounded-sm work-output${
+          active ? ' active' : ''
         } exit-code code-${exit_code}`"
       >
         <figcaption class="work-caption">Work Output</figcaption>
@@ -168,7 +168,7 @@ import { Harbors } from '../../../../api/harbors';
 export default {
   meteor: {
     $subscribe: {
-      Lanes: function () { return [this.$route.params.slug]; },
+      Lanes: function () { return ['/ship', this.$route.params.slug]; },
       Shipments: function () {
         return [
           {
@@ -181,8 +181,8 @@ export default {
           }
         ];
       },
-      Harbors: [],
-      Users: [],
+      Harbors: function () { return ['/ship', this.$route.params.slug]; },
+      Users: ['/ship'],
     },
     lane,
     work_preview,

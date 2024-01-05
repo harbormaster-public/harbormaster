@@ -182,9 +182,9 @@ export default {
 
   meteor: {
     $subscribe: {
-      'Lanes': [],
-      'Users': [],
-      'Harbors': [],
+      Lanes: function () { return ['/edit', this.$route.params.slug]; },
+      Users: ['/edit'],
+      Harbors: ['/edit'],
     },
     followup_lane,
     salvage_plan_lane,

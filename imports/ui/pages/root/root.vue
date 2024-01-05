@@ -24,7 +24,7 @@
       <figure id="all-charters">
         <figcaption>All Charters <span v-if="!$subReady.Lanes">(loading...)</span></figcaption>
         <svg></svg>
-        <div v-if="$subReady.Lanes && build_graph().length">
+        <div v-if="$subReady.Lanes&& build_graph().length">
           {{svg_graph()}}
         </div>
       </figure>
@@ -53,8 +53,8 @@ import {
 export default {
   meteor: {
     $subscribe: {
-      'Lanes': [],
-      'Users': [],
+      'Lanes': ['/'],
+      'Users': ['/'],
     },
   
     total_lanes () { return Lanes.find().count(); },

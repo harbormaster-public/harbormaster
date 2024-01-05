@@ -238,20 +238,22 @@ export const register_harbors = () => {
     )?.toString();
     /* istanbul ignore next */
     if (!H.isTest) console.log(stdout);
-    for (const registered_harbor in H.harbors) {
+  }
+
+  for (const registered_harbor in H.harbors) {
+    /* istanbul ignore next */
+    if (H.harbors.hasOwnProperty(registered_harbor)) {
+      let harbor = Harbors.findOne(registered_harbor) || {};
+      harbor.next = H.harbors[registered_harbor].next &&
+        H.harbors[registered_harbor].next();
+      harbor.constraints = H.harbors[registered_harbor].constraints &&
+          H.harbors[registered_harbor].constraints();
+      // console.error(H.harbors);
+      harbor.rendered_input = H.harbors[registered_harbor].render_input();
+      harbor.registered = true;
+      Harbors.upsert({ _id: registered_harbor }, harbor);
       /* istanbul ignore next */
-      if (H.harbors.hasOwnProperty(registered_harbor)) {
-        let harbor = Harbors.findOne(registered_harbor) || {};
-        harbor.next = H.harbors[registered_harbor].next &&
-          H.harbors[registered_harbor].next();
-        harbor.constraints = H.harbors[registered_harbor].constraints &&
-            H.harbors[registered_harbor].constraints();
-        harbor.rendered_input = H.harbors[registered_harbor].render_input();
-        harbor.registered = true;
-        Harbors.upsert({ _id: registered_harbor }, harbor);
-        /* istanbul ignore next */
-        if (!H.isTest) console.log(`Harbor registered: ${registered_harbor}`);
-      }
+      if (!H.isTest) console.log(`Harbor registered: ${registered_harbor}`);
     }
   }
   /* istanbul ignore next */

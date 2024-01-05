@@ -176,7 +176,10 @@ describe("Harbors startup", () => {
         isDirectory: () => false,
         isFile: () => true,
       });
+      fs.readFileSync = () => ({ toString: () => '' });
+      H.harbors = {};
       child_process.execSync = () => { };
+      resetDatabase(null);
     });
 
     afterEach(() => {
@@ -186,7 +189,6 @@ describe("Harbors startup", () => {
       fs.watch = fs_watch;
       child_process.exec_sync = exec_sync;
       Module.prototype.require = module_require;
-      resetDatabase(null);
     });
 
     it("returns undefined for a non-match", () => {
@@ -197,7 +199,7 @@ describe("Harbors startup", () => {
       fs.readdirSync = () => ['test.foo'];
       expect(register_harbors()).to.eq(undefined);
     });
-    it("loads the harbors found in the .harbors dir", () => {
+    it("loads the harbors found in the ~/.harbormaster/harbors dir", () => {
       let expected_folder;
       fs.readdirSync = (folder) => {
         expected_folder = folder;

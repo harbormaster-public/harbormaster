@@ -16,8 +16,9 @@
       @click="handle_paginator"
       :disabled="!can_paginate_next"
     >Next</button>
-    <span class="loading-shipments"
-    v-if="!is_ready()">Loading...</span>
+    <span 
+      class="loading-shipments" 
+      v-if="!is_ready()">Loading...</span>
     <div v-if="has_work_output()">
       <ul class="shipment-history">
         <li v-for="item in shipment_history" :key="item._id">
@@ -58,14 +59,14 @@ const options = {
 export default {
   meteor: {
     $subscribe: {
-      'Lanes': function () { return [this.$route.params.slug] },
+      Lanes: function () { return ['/log', this.$route.params.slug] },
     },
     lane,
     shipment_history,
   },
 
   mounted () {
-    shipment_sub = this.$subscribe('Shipments',
+    this.$data.shipment_sub = this.$subscribe('Shipments',
       { slug: this.$route.params.slug },
       {
         sort: { actual: -1 },
@@ -85,7 +86,7 @@ export default {
       );
     },
     handle_paginator (evt) {
-      shipment_sub.stopNow();
+      this.$data.shipment_sub.stop();
       switch (evt.target.id) {
         case 'paginator-next':
           this.$data.skip += H.AMOUNT_SHOWN;
@@ -110,7 +111,7 @@ export default {
           this.$data.can_paginate_next = true;
           break;
       }
-      shipment_sub = this.$subscribe('Shipments',
+      this.$data.shipment_sub = this.$subscribe('Shipments',
         { slug: this.$route.params.slug },
         {
           sort: { actual: -1 },
@@ -131,6 +132,7 @@ export default {
       shipping_log_amount_shown: H.AMOUNT_SHOWN,
       can_paginate_next: true,
       can_paginate_prev: false,
+      shipment_sub: null,
     };
   },
 }
@@ -217,6 +219,15 @@ export default {
   content: '✅';
 }
 
+.shipment-link.code-10:before,
+.shipment-link.code-9:before,
+.shipment-link.code-8:before,
+.shipment-link.code-7:before,
+.shipment-link.code-6:before,
+.shipment-link.code-5:before,
+.shipment-link.code-4:before,
+.shipment-link.code-3:before,
+.shipment-link.code-2:before,
 .shipment-link.code-1:before {
   content: '❌';
 }

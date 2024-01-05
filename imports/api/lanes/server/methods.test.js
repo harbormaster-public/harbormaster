@@ -27,8 +27,8 @@ describe('Lanes', function () {
   beforeEach(function () { resetDatabase(null); });
 
   describe('#trim_manifest', () => {
-    expect(trim_manifest({prior_manifest: true}).prior_manifest)
-    .to.eq(undefined);
+    expect(trim_manifest({ prior_manifest: true }).prior_manifest)
+      .to.eq(undefined);
   });
 
   describe('#collect_latest_shipments', () => {
@@ -69,23 +69,152 @@ describe('Lanes', function () {
   });
 
   describe('#publish_lanes', () => {
-    it('allows subscription by string matching _id, name, or slug', () => {
-      Factory.create('lane', { _id: 'test_id' });
-      Factory.create('lane', { name: 'test_name' });
-      Factory.create('lane', { slug: 'test_slug' });
-      expect(publish_lanes('test_id').fetch()[0]._id).to.eq('test_id');
-      expect(publish_lanes('test_name').fetch()[0].name).to.eq('test_name');
-      expect(publish_lanes('test_slug').fetch()[0].slug).to.eq('test_slug');
-    });
-    it('allows subscription to an array of lanes', () => {
-      Factory.create('lane', { _id: '1' });
-      Factory.create('lane', { _id: '2' });
-      Factory.create('lane', { _id: '3' });
-      expect(publish_lanes(['1', '2', '3']).fetch().length).to.eq(3);
-    });
-    it('allows subscription by default assignment object', () => {
+    beforeEach(() => {
+      resetDatabase(null);
       Factory.create('lane');
-      expect(publish_lanes().fetch().length).to.eq(1);
+    });
+    after(() => resetDatabase(null));
+
+    it('returns undefined for an invalid page subscription', () => {
+      expect(publish_lanes()).to.eq(undefined);
+    });
+    it('publishes the correct fields for the / (root) page', () => {
+      const result = publish_lanes('/').fetch()[0];
+      const expected_fields = [
+        '_id',
+        'name',
+        'last_shipment',
+        'followup',
+        'salvage_plan',
+      ];
+      expect(Object.keys(result).sort().join(''))
+        .to.eq(expected_fields.sort().join(''));
+      expect(result.last_shipment.exit_code).to.eq(1);
+      expect(result.last_shipment.active).to.eq(false);
+      expect(result.followup._id).to.eq('foo');
+      expect(result.salvage_plan._id).to.eq('bar');
+    });
+    it('publishes the correct fields for the /lanes page', () => {
+      const result = publish_lanes('/lanes').fetch()[0];
+      const expected_fields = [
+        '_id',
+        'name',
+        'captains',
+        'slug',
+        'type',
+        'shipment_count',
+        'salvage_runs',
+        'last_shipment',
+        'followup',
+        'salvage_plan',
+      ];
+      expect(Object.keys(result).sort().join(''))
+        .to.eq(expected_fields.sort().join(''));
+      expect(result.last_shipment.exit_code).to.eq(1);
+      expect(result.captains.length).to.eq(0);
+      expect(result.last_shipment.active).to.eq(false);
+      expect(result.last_shipment.actual instanceof Date).to.eq(true);
+      expect(result.last_shipment.start).to.eq('start-date');
+    });
+    it('publishes the correct fields for the /charter page', () => {
+      const result = publish_lanes('/charter').fetch()[0];
+      const expected_fields = [
+        '_id',
+        'name',
+        'slug',
+        'last_shipment',
+        'followup',
+        'salvage_plan',
+      ];
+      expect(Object.keys(result).sort().join(''))
+        .to.eq(expected_fields.sort().join(''));
+      expect(result.last_shipment.exit_code).to.eq(1);
+      expect(result.last_shipment.active).to.eq(false);
+      expect(result.followup._id).to.eq('foo');
+      expect(result.salvage_plan._id).to.eq('bar');
+    });
+    it('publishes the correct fields for the /edit page', () => {
+      const result = publish_lanes('/edit').fetch()[0];
+      const expected_fields = [
+        '_id',
+        'name',
+        'captains',
+        'slug',
+        'type',
+        'rendered_input',
+        'minimum_complete',
+        'tokens',
+        'last_shipment',
+        'followup',
+        'salvage_plan',
+      ];
+      expect(Object.keys(result).sort().join(''))
+        .to.eq(expected_fields.sort().join(''));
+      expect(result.last_shipment.exit_code).to.eq(1);
+      expect(result.last_shipment.active).to.eq(false);
+      expect(result.captains.length).to.eq(0);
+      expect(result.slug).to.eq('test');
+      expect(result.type).to.eq('test');
+      expect(result.rendered_input).to.eq('<form></form>');
+      expect(result.followup._id).to.eq('foo');
+      expect(result.salvage_plan._id).to.eq('bar');
+    });
+    it('publishes the correct fields for the /log component', () => {
+      const result = publish_lanes('/log').fetch()[0];
+      const expected_fields = [
+        '_id',
+        'shipment_count',
+        'last_shipment',
+      ];
+      expect(Object.keys(result).sort().join(''))
+        .to.eq(expected_fields.sort().join(''));
+      expect(result.last_shipment.exit_code).to.eq(1);
+      expect(result.last_shipment.active).to.eq(false);
+    });
+    it('publishes the correct fields for the /ship page', () => {
+      const result = publish_lanes('/ship').fetch()[0];
+      const expected_fields = [
+        '_id',
+        'name',
+        'captains',
+        'slug',
+        'type',
+        'rendered_work_preview',
+        'last_shipment',
+        'followup',
+        'salvage_plan',
+      ];
+      expect(Object.keys(result).sort().join(''))
+        .to.eq(expected_fields.sort().join(''));
+      expect(result.last_shipment.exit_code).to.eq(1);
+      expect(result.last_shipment.active).to.eq(false);
+      expect(Object.keys(result.last_shipment.stdout).length).to.eq(1);
+      expect(Object.keys(result.last_shipment.stderr).length).to.eq(1);
+      expect(result.captains.length).to.eq(0);
+      expect(result.slug).to.eq('test');
+      expect(result.type).to.eq('test');
+      expect(result.rendered_work_preview).to.eq('<figure></figure>');
+      expect(result.followup.name).to.eq('foo');
+      expect(result.followup.slug).to.eq('foo');
+      expect(result.salvage_plan.name).to.eq('bar');
+      expect(result.salvage_plan.slug).to.eq('bar');
+    });
+    it('publishes the correct fields for the /profile page', () => {
+      const result = publish_lanes('/profile').fetch()[0];
+      const expected_fields = [
+        '_id',
+        'name',
+        'slug',
+        'tokens',
+        'captains',
+      ];
+      expect(Object.keys(result).sort().join(''))
+        .to.eq(expected_fields.sort().join(''));
+      expect(result._id).to.eq('test');
+      expect(result.name).to.eq('test');
+      expect(result.slug).to.eq('test');
+      expect(result.tokens.foo).to.eq('test@harbormaster.io');
+      expect(result.captains.length).to.eq(0);
     });
   });
 
@@ -98,7 +227,7 @@ describe('Lanes', function () {
       expect(update_webhook_token('test', 'test@harbormaster.io', true))
         .to
         .eq(1)
-        ;
+      ;
       expect(Lanes.findOne('test').tokens.test_token).to.eq(undefined);
     });
     it('can assign a token to a given user', () => {
@@ -106,15 +235,15 @@ describe('Lanes', function () {
         _id: 'test',
       });
       update_webhook_token('test', 'test@harbormaster.io');
-      expect(_.invert(Lanes.findOne('test').tokens)['test@harbormaster.io'])
-        .to
-        .not
-        .eq('undefined')
-        ;
+      expect(
+        typeof _.invert(Lanes.findOne('test').tokens)['test@harbormaster.io']
+      ).to.eq('string');
     });
   });
 
   describe('#start_shipment', () => {
+    beforeEach(() => resetDatabase(null));
+
     it('starts a shipment', async () => {
       let called = false;
       Factory.create('lane', { _id: 'test', type: 'test' });
@@ -146,7 +275,9 @@ describe('Lanes', function () {
       expect(LatestShipment.find().count()).to.eq(1);
     });
     it("increases  the lane's shipment count", async () => {
-      Factory.create('lane', { _id: 'test', type: 'test' });
+      Factory.create('lane', {
+        _id: 'test', type: 'test', shipment_count: undefined,
+      });
       H.harbors.test = { work: () => { } };
       expect(Shipments.find().count()).to.eq(0);
       await start_shipment('test', {}, 'test_start_date');
@@ -193,6 +324,7 @@ describe('Lanes', function () {
     let $lane;
     let salvage_plan;
     beforeEach(() => {
+      resetDatabase(null);
       salvage_plan = Factory.create('lane', {
         _id: 'test_salvage_plan',
         type: 'test',
@@ -202,6 +334,10 @@ describe('Lanes', function () {
         type: 'test',
         followup: undefined,
         salvage_plan,
+        salvage_runs: undefined,
+      });
+      Factory.create('lane', {
+        _id: 'bar', salvage_plan: null, followup: null,
       });
 
       Lanes.update({ _id: 'test' }, $lane);
@@ -211,6 +347,7 @@ describe('Lanes', function () {
         lanes: {
           test_salvage_plan: { manifest: {} },
           test_followup: { manifest: {} },
+          bar: { manifest: {} },
         },
       });
     });
@@ -233,7 +370,9 @@ describe('Lanes', function () {
       }
     });
     it('increments salvage runs for a non-zero exit code', async () => {
-      await end_shipment($lane, 1, { shipment_id: 'test' });
+      await end_shipment($lane, 1, {
+        shipment_id: 'test', salvage_runs: undefined,
+      });
       expect(Lanes.findOne('test').salvage_runs).to.eq(1);
       await end_shipment($lane, 1, { shipment_id: 'test' });
       expect(Lanes.findOne('test').salvage_runs).to.eq(2);

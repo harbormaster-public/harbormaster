@@ -61,26 +61,26 @@ import { Harbors } from '../../api/harbors';
       return {
         find (selector) {
           switch (selector) {
-          case 'input, textarea':
-            return [
-              { type: 'text', value: 'foo', name: 'foo' },
-              { type: 'checkbox', value: 'bar', name: 'bar', checked: true },
-              { type: 'radio', value: 'baz', name: 'baz', checked: false },
-              { type: 'textarea', value: 'qux', name: 'qux' },
-            ];
-          default:
-            return [];
+            case 'input, textarea':
+              return [
+                { type: 'text', value: 'foo', name: 'foo' },
+                { type: 'checkbox', value: 'bar', name: 'bar', checked: true },
+                { type: 'radio', value: 'baz', name: 'baz', checked: false },
+                { type: 'textarea', value: 'qux', name: 'qux' },
+              ];
+            default:
+              return [];
           }
         },
         attr (selector) {
           switch (selector) {
-          default:
-          case 'data-type':
-            return 'test_type';
-          case 'data-value':
-            return 'test_value';
-          case 'data-lane-id':
-            return 'test';
+            default:
+            case 'data-type':
+              return 'test_type';
+            case 'data-value':
+              return 'test_value';
+            case 'data-lane-id':
+              return 'test';
           }
         },
         addClass (className) {
@@ -103,17 +103,47 @@ import { Harbors } from '../../api/harbors';
     if (!Accounts.resetPassword) Accounts.resetPassword = () => { };
 
     Factory.define('lane', Lanes, {
-      _id: '',
-      name: '',
+      _id: 'test',
+      name: 'test',
       captains: [],
-      type: '',
-      actual: new Date(),
-      last_shipment: { exit_code: 1 },
-      followup: { name: '' },
-      salvage_plan: {
-        name: '',
-        _id: '',
+      type: 'test',
+      slug: 'test',
+      shipment_count: 1,
+      salvage_runs: 1,
+      last_shipment: {
+        exit_code: 1,
+        active: false,
+        actual: new Date(),
+        stdout: {
+          [new Date()]: 'test output',
+        },
+        stderr: {
+          [new Date()]: 'test error',
+        },
+        stdin: [],
+        lane: 'test',
+        start: 'start-date',
+        manifest: {},
+        finished: new Date(),
       },
+      followup: {
+        _id: 'foo',
+        name: 'foo',
+        slug: 'foo',
+        type: 'test',
+      },
+      salvage_plan: {
+        _id: 'bar',
+        name: 'bar',
+        slug: 'bar',
+        type: 'test',
+      },
+      rendered_input: '<form></form>',
+      rendered_work_preview: '<figure></figure>',
+      tokens: {
+        foo: 'test@harbormaster.io',
+      },
+      minimum_complete: true,
     });
 
     Factory.define("user", Users, {

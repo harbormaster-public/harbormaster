@@ -31,9 +31,16 @@ describe('Users Page', () => {
       ;
     });
     it('returns a list of captained lane names in string format', () => {
-      Factory.create('lane', { name: 'test_1', captains: ['test@foo.bar'] });
       Factory.create('lane', {
+        _id: 'test_1',
+        name: 'test_1',
+        captains: ['test@foo.bar'],
+        tokens: null,
+      });
+      Factory.create('lane', {
+        _id: 'test_2',
         name: 'test_2',
+        captains: null,
         tokens: { 'test_token': 'test@foo.bar' },
       });
       expect(captain_lanes({ _id: 'test@foo.bar' })).to.eq('test_1, test_2');

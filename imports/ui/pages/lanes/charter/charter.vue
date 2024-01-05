@@ -163,7 +163,7 @@ const svg_graph = function svg_graph () {
 export default {
   meteor: {
     $subscribe: {
-      Lanes: [],
+      Lanes: ['/charter'],
 
       Shipments: function () {
         let list = node_list.get()?.map((node) => node.id);

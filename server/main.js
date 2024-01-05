@@ -17,4 +17,11 @@ import '../imports/api/harbors';
 console.log('Modules loaded.');
 Meteor.startup(() => {
   console.log('Server started.');
+  Meteor.settings.public.AMOUNT_SHOWN = process.env.AMOUNT_SHOWN ?
+    process.env.AMOUNT_SHOWN :
+    H.AMOUNT_SHOWN
+  ;
+  console.log(`Number of shipments to show at a time: ${
+    Meteor.settings.public.AMOUNT_SHOWN
+  }`);
 });

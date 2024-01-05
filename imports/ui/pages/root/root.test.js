@@ -122,15 +122,21 @@ describe('Root Page (/)', () => {
         _id: 'lane4',
         name: 'lane4',
         last_shipment: false,
+        followup: null,
+        salvage_plan: null,
       };
       lane3 = {
         _id: 'lane3',
         name: 'lane3',
+        followup: null,
+        salvage_plan: null,
         last_shipment: { active: true },
       };
       lane2 = {
         _id: 'lane2',
         name: 'lane2',
+        followup: null,
+        salvage_plan: null,
         last_shipment: { exit_code: 1 },
       };
       lane1 = {

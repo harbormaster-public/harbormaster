@@ -174,11 +174,12 @@ td.active {
 }
 
 td.ready {
-  color: #44aa99;
+  color: #4a9;
 }
 
 td.error {
-  color: red;
+  color: #d41159;
+  ;
 }
 
 .loading-text {

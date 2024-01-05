@@ -81,14 +81,15 @@ import {
   can_change_webhook,
   webhook_allowed,
   webhook_token,
+  get_user_id,
 } from './lib';
 import './profile.css';
 
 export default {
   meteor: {
     $subscribe: {
-      'Users': [],
-      'Lanes': [],
+      Users: function () { return ['/profile', get_user_id(this)]; },
+      Lanes: ['/profile'],
     }
   },
 

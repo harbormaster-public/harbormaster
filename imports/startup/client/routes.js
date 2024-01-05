@@ -81,13 +81,9 @@ const router = new VueRouter({
 router.afterEach((to) => {
   document.title = `H${to.path}`;
 });
-const subsCache = new SubsCache(H.CACHE_EXPIRE_MIN, H.CACHED_SUB_MAX);
 
 Meteor.startup(() => {
   Vue.use(VueMeteor);
-  Vue.config.meteor.subscribe = function (...args) {
-    return subsCache.subscribe(...args);
-  };
   new Vue({ router, render: (h) => h(layout) }).$mount('#app');
 });
 
