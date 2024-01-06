@@ -15,7 +15,7 @@
             </nav>
             <div id=router-view class="container mx-auto min-h-screen p-2">
               <router-view></router-view>
-              <footer v-if="$subReady.Lanes" class="p-2">
+              <footer v-if="$subReady.Users" class="p-2">
                 <div class="mx-auto container">
                   <span id="version-text" class="my-10">v{{get_version()}}.  </span>
                   <span id="user-status">Logged in: {{email()}}, as {{role()}}.</span>
