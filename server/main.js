@@ -14,6 +14,8 @@ import '../imports/api/shipments';
 import '../imports/api/users';
 import '../imports/api/harbors';
 
+import puppeteer from 'puppeteer';
+
 console.log('Modules loaded.');
 Meteor.startup(() => {
   console.log('Server started.');
@@ -24,4 +26,6 @@ Meteor.startup(() => {
   console.log(`Number of shipments to show at a time: ${
     Meteor.settings.public.AMOUNT_SHOWN
   }`);
+
+  console.log(`Puppeteer loaded: ${puppeteer._preferredRevision}`);
 });

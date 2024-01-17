@@ -1,6 +1,6 @@
 {
   "name": "harbormaster",
-  "version": "1.31.2",
+  "version": "1.32.0",
   "private": true,
   "babel": {
     "env": {
@@ -51,7 +51,8 @@
     "vue-d3-network": "^0.1.28",
     "vue-meteor-tracker": "^1.2.3",
     "vue-router": "^3.6.5",
-    "what-input": "^5.2.12"
+    "what-input": "^5.2.12",
+    "puppeteer": "^8.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.23.6",
@@ -64,8 +65,7 @@
     "nyc": "^15.1.0",
     "postcss": "^8.4.32",
     "postcss-import": "^14.1.0",
-    "postcss-load-config": "^2.1.2",
-    "puppeteer": "^8.0.0"
+    "postcss-load-config": "^2.1.2"
   },
   "overrides": {
     "semver": ">=5.7.2"
