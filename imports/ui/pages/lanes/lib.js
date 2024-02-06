@@ -265,11 +265,11 @@ const followup_name = function (lane) {
 };
 
 const last_shipped = function (lane) {
-  return lane.last_shipment.actual.toLocaleString();
+  return lane.last_shipment?.actual?.toLocaleString();
 };
 
 const latest_shipment = function (lane) {
-  return lane.last_shipment.start;
+  return lane.last_shipment?.start;
 };
 
 const salvage_plan_name = function (lane) {

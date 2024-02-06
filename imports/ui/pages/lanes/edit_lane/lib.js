@@ -77,18 +77,17 @@ const change_lane_name = function (event) {
   if (Lanes.findOne($lane._id)) update_lane($lane);
   else H.Session.set('lane', $lane);
 
-  const new_path = '/lanes/' + $lane.name + '/edit';
+  const new_path = slug($lane, true)
+    .replace(H.window.location.host, '')
+    .replace(/\/ship$/, '/edit');
 
   /* istanbul ignore else */
-  if (new_path != this.$route.path) this.$router.push(
-    '/lanes/' + $lane.name + '/edit'
-  );
+  if (new_path != this.$route.path) this.$router.push(new_path);
+  this.$data.lane_name = $lane.name;
 };
 
 const slug = function ($lane, render_only) {
-  const a = 'àáäâãåèéëêìíïîòóöôùúüûñçßÿœæŕśńṕẃǵǹḿǘẍźḧ·/_,:;';
-  const b = 'aaaaaaeeeeiiiioooouuuuncsyoarsnpwgnmuxzh------';
-  const p = new RegExp(a.split('').join('|'), 'g');
+  const p = new RegExp(('·/,:;_').split('').join('|'), 'g');
 
   $lane = $lane && $lane.name && $lane.name != 'new' ?
     $lane :
@@ -97,11 +96,9 @@ const slug = function ($lane, render_only) {
 
   if ($lane.name) {
     const $slug = $lane.name.toLowerCase()
-      // https://gist.github.com/matthagemann/382adfc57adbd5af078dc93feef01fe1
       .replace(/\s+/g, '-') // Replace spaces with -
-      .replace(p, c => b.charAt(a.indexOf(c))) // Replace special characters
+      .replace(p, '-') // Replace special characters with -
       .replace(/&/g, '-and-') // Replace & with 'and'
-      .replace(/[^\w\-]+/g, '') // Remove all non-word characters
       .replace(/\-\-+/g, '-') // Replace multiple - with single -
       .replace(/^-+/, '') // Trim - from start of text
       .replace(/-+$/, '') // Trim - from end of text

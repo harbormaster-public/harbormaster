@@ -94,7 +94,8 @@ let options = {
 export default {
   meteor: {
     $subscribe: {
-      'Lanes': ['/lanes'],
+      Lanes: ['/lanes'],
+      Harbors: ['/lanes'],
     },
     lanes () {
       return Lanes.find({});

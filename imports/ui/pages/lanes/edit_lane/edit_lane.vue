@@ -9,7 +9,7 @@
             <input
               @change.prevent="change_lane_name"
               @keypress="prevent_enter_key"
-              :value="get_lane_name()"
+              :value="lane_name"
               type=text
               required
               class="lane-name"

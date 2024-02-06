@@ -25,14 +25,14 @@ import { resetDatabase } from 'cleaner';
 const { expect } = chai;
 const test_shipments_find_one = function (options) {
   switch (options.lane) {
-  case 'success_plan_id':
-  case 'success_followup_id':
-    return { exit_code: 0 };
-  case 'fail_plan_id':
-  case 'fail_followup_id':
-    return { exit_code: 1 };
-  default:
-    return undefined;
+    case 'success_plan_id':
+    case 'success_followup_id':
+      return { exit_code: 0 };
+    case 'fail_plan_id':
+    case 'fail_followup_id':
+      return { exit_code: 1 };
+    default:
+      return undefined;
   }
 };
 const shipments_find_one = Shipments.findOne;
@@ -201,12 +201,12 @@ describe('Charter Page', () => {
     let result;
     const test_lanes_find_one = function (id) {
       switch (id) {
-      case 'followup':
-        return target.followup;
-      case 'salvage':
-        return target.salvage_plan;
-      default:
-        return undefined;
+        case 'followup':
+          return target.followup;
+        case 'salvage':
+          return target.salvage_plan;
+        default:
+          return undefined;
       }
     };
     const lanes_find_one = Lanes.findOne;

@@ -114,10 +114,16 @@ const assign_salvage = function (plan, $lane, parent_id, nodes, links) {
 const assign_children = ($lane, parent_id, nodes, links) => {
   let followup = Lanes.findOne($lane.followup?._id);
   let plan = Lanes.findOne($lane.salvage_plan?._id);
+  const node_ids = nodes.map((node) => node.id);
 
   assign_followup(followup, $lane, parent_id, nodes, links);
-
   assign_salvage(plan, $lane, parent_id, nodes, links);
+
+  if (
+    $lane._id != root_node?.get()?.id &&
+    node_ids.indexOf($lane._id) != -1 &&
+    (node_ids.indexOf(followup?._id) != -1 || node_ids.indexOf(plan?._id)) != -1
+  ) return $lane;
 
   $lane.children.forEach((child) => {
     child.children = [];

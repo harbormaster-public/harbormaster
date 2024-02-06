@@ -68,7 +68,7 @@ describe('Edit Lane Page', function () {
     });
     it('updates the saved record for the lane', () => {
       let called = false;
-      H.call = (method, $lane, values, callback) => {
+      H.call = (method, $lane, values) => {
         called = true;
         expect(method).to.eq('Harbors#update');
         expect(_.isEmpty($lane)).to.eq(true);
@@ -155,6 +155,7 @@ describe('Edit Lane Page', function () {
     beforeEach(() => {
       this.$route = {};
       this.$router = [];
+      this.$data = {};
       H.Session.set('lane', undefined);
       resetDatabase(null);
     });

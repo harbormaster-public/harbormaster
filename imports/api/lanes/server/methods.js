@@ -438,7 +438,7 @@ const update_slug = (lane) => {
 };
 
 const delete_lane = function (lane) {
-  Lanes.remove(lane);
+  Lanes.remove({ _id: lane._id });
   const harbor = Harbors.findOne(lane.type);
   delete harbor.lanes[lane._id];
   Harbors.update(harbor._id, harbor);
