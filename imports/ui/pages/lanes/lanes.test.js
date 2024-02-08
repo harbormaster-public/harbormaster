@@ -647,8 +647,8 @@ describe('Lanes Page', function () {
         called_filename = filename;
         called_yaml = yaml;
       };
-      this.files = [{ name: 'test', async text () { return 'test'; } }];
-      await handle_file_upload_change.bind(this)();
+      const files = [{ name: 'test', async text () { return 'test'; } }];
+      await handle_file_upload_change(files);
       expect(called_method).to.eq('Lanes#import_yaml');
       expect(called_filename).to.eq('test');
       expect(called_yaml).to.eq('test');

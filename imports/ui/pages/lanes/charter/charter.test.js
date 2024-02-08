@@ -50,25 +50,25 @@ describe('Charter Page', () => {
 
   describe('#assign_followup', () => {
     const target = {
-      _id: 'target_id',
+      slug: 'target_slug',
       recursive: false,
       children: [],
     };
     const recursive = {
-      _id: 'target_id',
+      slug: 'target_slug',
       children: [],
     };
     const success_followup = {
-      _id: 'success_followup_id',
+      slug: 'success_followup_slug',
       name: 'Followup',
       last_shipment: { exit_code: 0 },
     };
     const fail_followup = {
-      _id: 'fail_followup_id',
+      slug: 'fail_followup_slug',
       name: 'Followup',
       last_shipment: { exit_code: 1 },
     };
-    const parent_id = 'parent_id';
+    const parent_slug = 'parent_slug';
     const nodes = [
       {
         id: 'node_id',
@@ -89,25 +89,25 @@ describe('Charter Page', () => {
 
     before(() => {
       success = assign_followup(
-        success_followup, target, parent_id, nodes, links
+        success_followup, target, parent_slug, nodes, links
       );
-      assign_followup(fail_followup, target, parent_id, nodes, links);
+      assign_followup(fail_followup, target, parent_slug, nodes, links);
       success_followup_node = nodes.find(
-        (node) => node.id === 'success_followup_id'
+        (node) => node.id === 'success_followup_slug'
       );
       fail_followup_node = nodes.find(
-        (node) => node.id === 'fail_followup_id'
+        (node) => node.id === 'fail_followup_slug'
       );
       followup_link = links.find(
-        (link) => link.id === 'target_id:success_followup_id'
+        (link) => link.id === 'target_slug:success_followup_slug'
       );
     });
 
     it('assigns graph role, parent, and recursion', () => {
       expect(success_followup.role).to.equal(FOLLOWUP);
-      expect(success_followup.parent).to.equal('target_id');
+      expect(success_followup.parent).to.equal('target_slug');
       expect(success_followup.recursive).to.equal(false);
-      assign_followup(recursive, recursive, parent_id, [], []);
+      assign_followup(recursive, recursive, parent_slug, [], []);
       expect(recursive.recursive).to.eq(true);
     });
     it('adds the followup lane to the targets of the graph', () => {
@@ -115,13 +115,13 @@ describe('Charter Page', () => {
     });
     it('adds a decorated node to the nodes list if it does not exist', () => {
       expect(success_followup_node.name).to.equal('Followup');
-      expect(success_followup_node.cssClass).to.equal('success_followup_id');
+      expect(success_followup_node.cssClass).to.equal('success_followup_slug');
       expect(success_followup_node.color).to.eq(SUCCESS_COLOR);
       expect(fail_followup_node.color).to.eq(FAIL_COLOR);
     });
     it('adds a decorated link to the links list', () => {
-      expect(followup_link.sid).to.equal('target_id');
-      expect(followup_link.tid).to.equal('success_followup_id');
+      expect(followup_link.sid).to.equal('target_slug');
+      expect(followup_link.tid).to.equal('success_followup_slug');
       expect(followup_link.name).to.equal(FOLLOWUP);
     });
     it('returns true if successful, false otherwise', () => {
@@ -134,75 +134,77 @@ describe('Charter Page', () => {
     let nodes;
     let links;
     let target;
-    let parent_id;
+    let parent_slug;
     let plan;
     let failed_plan;
-    const recursive = { _id: 'target_id', children: [] };
+    const recursive = { slug: 'target_slug', children: [] };
 
     beforeEach(() => {
       nodes = [];
       links = [];
-      target = { _id: 'target_id', recursive: false, children: [] };
-      parent_id = 'parent_id';
+      target = { slug: 'target_slug', recursive: false, children: [] };
+      parent_slug = 'parent_slug';
       plan = {
-        _id: 'success_plan_id',
+        slug: 'success_plan_slug',
         name: 'Plan Name',
         last_shipment: { exit_code: 0 },
       };
       failed_plan = {
-        _id: 'failed_plan_id',
+        slug: 'failed_plan_slug',
         name: 'Failed Plan',
         last_shipment: { exit_code: 1 },
       };
     });
 
     it('assigns graph role, parent, and recursion', () => {
-      assign_salvage(plan, target, parent_id, nodes, links);
+      assign_salvage(plan, target, parent_slug, nodes, links);
       expect(plan.role).to.eq(SALVAGE);
-      expect(plan.parent).to.eq(target._id);
+      expect(plan.parent).to.eq(target.slug);
       expect(plan.recursive).to.eq(false);
-      assign_salvage(recursive, recursive, parent_id, [], []);
+      assign_salvage(recursive, recursive, parent_slug, [], []);
       expect(recursive.recursive).to.eq(true);
     });
     it('adds the salvage plan lane to the targets of the graph', () => {
-      assign_salvage(plan, target, parent_id, nodes, links);
+      assign_salvage(plan, target, parent_slug, nodes, links);
       expect(target.children.length).to.eq(1);
       expect(target.children[0]).to.eq(plan);
     });
     it('adds a decorated node to the nodes list if it does not exist', () => {
-      assign_salvage(plan, target, parent_id, nodes, links);
-      assign_salvage(failed_plan, target, parent_id, nodes, links);
+      assign_salvage(plan, target, parent_slug, nodes, links);
+      assign_salvage(failed_plan, target, parent_slug, nodes, links);
       expect(nodes.length).to.eq(2);
       expect(nodes[0].name).to.eq(plan.name);
-      expect(nodes[0].cssClass).to.eq(plan._id);
+      expect(nodes[0].cssClass).to.eq(plan.slug);
       expect(nodes[0].color).to.eq(SUCCESS_COLOR);
       expect(nodes[1].color).to.eq(FAIL_COLOR);
     });
     it('adds a decorated link to the links list', () => {
-      assign_salvage(plan, target, parent_id, nodes, links);
+      assign_salvage(plan, target, parent_slug, nodes, links);
       expect(links.length).to.eq(1);
-      expect(links[0].id).to.eq(`${target._id}:${plan._id}`);
+      expect(links[0].id).to.eq(`${target.slug}:${plan.slug}`);
       expect(links[0].name).to.eq(SALVAGE);
     });
     it('returns true if successful, false otherwise', () => {
-      expect(assign_salvage(plan, target, parent_id, nodes, links)).to.eq(true);
+      expect(assign_salvage(plan, target, parent_slug, nodes, links))
+        .to.eq(true);
       expect(assign_salvage()).to.eq(false);
     });
   });
 
   describe('#assign_children', () => {
-    const rootNode = { _id: 'root' };
+    const rootNode = { slug: 'root' };
     const target = {
-      _id: 'target',
-      followup: { _id: 'followup' },
-      salvage_plan: { _id: 'salvage' },
+      slug: 'target',
+      followup: { slug: 'followup' },
+      salvage_plan: { slug: 'salvage' },
       children: [],
     };
     const nodes = [];
     const links = [];
     let result;
-    const test_lanes_find_one = function (id) {
-      switch (id) {
+    const test_lanes_find_one = function (query) {
+      const { slug } = query;
+      switch (slug) {
         case 'followup':
           return target.followup;
         case 'salvage':
@@ -215,7 +217,7 @@ describe('Charter Page', () => {
 
     before(() => {
       Lanes.findOne = test_lanes_find_one;
-      result = assign_children(target, rootNode._id, nodes, links);
+      result = assign_children(target, rootNode.slug, nodes, links);
     });
     after(() => {
       Lanes.findOne = lanes_find_one;
@@ -231,19 +233,18 @@ describe('Charter Page', () => {
       expect(result.children[0]).to.deep.eq(target.followup);
     });
     it('returns the lane if it and its downstreams are already added', () => {
-      expect(assign_children(target, rootNode._id, ['followup'], [])._id)
+      expect(assign_children(target, rootNode.slug, ['followup'], []).slug)
         .to.eq('target');
-      // .to.eq(true);
     });
   });
 
   describe('#build_graph', () => {
-
     beforeEach(() => {
+      resetDatabase(null);
       node_list.set(undefined);
       link_list.set(undefined);
       root_node.set(undefined);
-      H.Session.set('lane', { _id: 'test_lane', name: 'test' });
+      H.Session.set('lane', { slug: 'test_lane', name: 'test' });
     });
 
     it('returns false with an invalid lane slug', () => {
@@ -263,14 +264,14 @@ describe('Charter Page', () => {
       build_graph();
       expect(root_node.get().color).to.eq(ROOT_COLOR);
       H.Session.set('lane', {
-        _id: 'test_lane',
+        slug: 'test_lane',
         name: 'test',
         last_shipment: { exit_code: 0 },
       });
       build_graph();
       expect(root_node.get().color).to.eq(SUCCESS_COLOR);
       H.Session.set('lane', {
-        _id: 'test_lane',
+        slug: 'test_lane',
         name: 'test',
         last_shipment: { exit_code: 1 },
       });
@@ -300,7 +301,7 @@ describe('Charter Page', () => {
       'returns the active lane based on slug or Session, or an empty object',
       () => {
         this.$route = { params: { slug: 'test' } };
-        H.Session.set('lane', { _id: 'test_lane', name: 'test' });
+        H.Session.set('lane', { slug: 'test_lane', name: 'test' });
         expect(lane()).to.eq(H.Session.get('lane'));
         H.Session.set('lane', undefined);
         expect(_.isEmpty(lane())).to.eq(true);

@@ -103,7 +103,9 @@ const publish_lanes = function publish_lanes (view, slug) {
         'last_shipment.exit_code': 1,
         'last_shipment.active': 1,
         'followup._id': 1,
+        'followup.slug': 1,
         'salvage_plan._id': 1,
+        'salvage_plan.slug': 1,
       } });
       break;
     case '/edit':
@@ -503,11 +505,11 @@ const download_charter_yaml = (slug) => {
       manifest: harbor.lanes[lane._id].manifest,
     };
     if (lane.followup && !charter[lane.followup.slug]) {
-      followup = Lanes.findOne(lane.followup._id);
+      followup = Lanes.findOne({ slug: lane.followup.slug });
       add_downstreams(followup);
     }
     if (lane.salvage_plan && !charter[lane.salvage_plan.slug]) {
-      salvage_plan = Lanes.findOne(lane.salvage_plan._id);
+      salvage_plan = Lanes.findOne({ slug: lane.salvage_plan.slug });
       add_downstreams(salvage_plan);
     }
   };
@@ -526,7 +528,11 @@ const download_charter_yaml = (slug) => {
   const $lane = Lanes.findOne({ slug }, { fields });
 
   if (slug && $lane) { add_downstreams($lane); }
-  else { Lanes.find({}, { fields }).fetch().forEach(add_downstreams); }
+  else {
+    Lanes.find({}, { fields }).fetch().forEach((lane) => {
+      add_downstreams(lane);
+    });
+  }
 
   const lane_yaml = YAML.stringify(charter);
   return lane_yaml;

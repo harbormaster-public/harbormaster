@@ -40,44 +40,44 @@ const handle_download_yaml = function () {
   });
 };
 
-const assign_followup = function (followup, $lane, parent_id, nodes, links) {
-  if (followup && !$lane?.recursive && followup?._id != parent_id) {
+const assign_followup = function (followup, $lane, parent_slug, nodes, links) {
+  if (followup && !$lane?.recursive && followup?.slug != parent_slug) {
     let last_shipment = followup.last_shipment;
     let color = FOLLOWUP_COLOR;
-    let followup_id = followup._id;
+    let followup_slug = followup.slug;
 
     if (last_shipment?.exit_code == 0) color = SUCCESS_COLOR;
     else if (last_shipment?.exit_code) color = FAIL_COLOR;
 
     followup.role = FOLLOWUP;
-    followup.parent = $lane._id;
-    followup.recursive = followup._id == $lane._id ? true : false;
+    followup.parent = $lane.slug;
+    followup.recursive = followup.slug == $lane.slug ? true : false;
     $lane.children.push(followup);
 
     /* istanbul ignore else */
-    if (nodes.map((node) => node.id).indexOf(followup_id) == -1) {
+    if (nodes.map((node) => node.id).indexOf(followup_slug) == -1) {
       nodes.push({
-        id: followup_id,
+        id: followup_slug,
         name: followup.name,
         color: color,
-        cssClass: followup_id,
+        cssClass: followup_slug,
         stroke: FOLLOWUP_COLOR,
         stroke_width: STROKE_WIDTH,
         lane: followup,
-        shipment: Shipments.findOne({ lane: followup._id }),
+        shipment: Shipments.findOne({ lane: followup.slug }),
         x: null,
         y: null,
       });
 
     }
     links.push({
-      id: `${$lane._id}:${followup_id}`,
-      sid: $lane._id,
-      tid: followup_id,
+      id: `${$lane.slug}:${followup_slug}`,
+      sid: $lane.slug,
+      tid: followup_slug,
       color: FOLLOWUP_LINK_COLOR,
       name: FOLLOWUP,
-      source: $lane._id,
-      target: followup._id,
+      source: $lane.slug,
+      target: followup.slug,
     });
 
     return true;
@@ -86,44 +86,44 @@ const assign_followup = function (followup, $lane, parent_id, nodes, links) {
   return false;
 };
 
-const assign_salvage = function (plan, $lane, parent_id, nodes, links) {
-  if (plan && !$lane.recursive && plan._id != parent_id) {
+const assign_salvage = function (plan, $lane, parent_slug, nodes, links) {
+  if (plan && !$lane.recursive && plan.slug != parent_slug) {
     let last_shipment = plan.last_shipment;
     let color = SALVAGE_COLOR;
-    let salvage_id = plan._id;
+    let salvage_slug = plan.slug;
 
     plan.role = SALVAGE;
-    plan.parent = $lane._id;
-    plan.recursive = plan._id == $lane._id ? true : false;
+    plan.parent = $lane.slug;
+    plan.recursive = plan.slug == $lane.slug ? true : false;
     $lane.children.push(plan);
 
     if (last_shipment?.exit_code == 0) color = SUCCESS_COLOR;
     else if (last_shipment?.exit_code) color = FAIL_COLOR;
 
     /* istanbul ignore else */
-    if (nodes.map((node) => node.id).indexOf(salvage_id) == -1) {
+    if (nodes.map((node) => node.id).indexOf(salvage_slug) == -1) {
       nodes.push({
-        id: salvage_id,
+        id: salvage_slug,
         name: plan.name,
         color: color,
-        cssClass: salvage_id,
+        cssClass: salvage_slug,
         stroke: SALVAGE_COLOR,
         stroke_width: STROKE_WIDTH,
         lane: plan,
-        shipment: Shipments.findOne({ lane: plan._id }),
+        shipment: Shipments.findOne({ lane: plan.slug }),
         x: null,
         y: null,
       });
 
     }
     links.push({
-      id: `${$lane._id}:${salvage_id}`,
-      sid: $lane._id,
-      tid: salvage_id,
+      id: `${$lane.slug}:${salvage_slug}`,
+      sid: $lane.slug,
+      tid: salvage_slug,
       color: SALVAGE_LINK_COLOR,
       name: SALVAGE,
-      source: $lane._id,
-      target: plan._id,
+      source: $lane.slug,
+      target: plan.slug,
     });
 
     return true;
@@ -132,26 +132,29 @@ const assign_salvage = function (plan, $lane, parent_id, nodes, links) {
   return false;
 };
 
-const assign_children = ($lane, parent_id, nodes, links) => {
-  let followup = Lanes.findOne($lane.followup?._id);
-  let plan = Lanes.findOne($lane.salvage_plan?._id);
-  const node_ids = nodes.map((node) => node.id);
+const assign_children = ($lane, parent_slug, nodes, links) => {
+  let followup = Lanes.findOne({ slug: $lane.followup?.slug });
+  let plan = Lanes.findOne({ slug: $lane.salvage_plan?.slug });
+  const node_slugs = nodes.map((node) => node.id);
 
-  assign_followup(followup, $lane, parent_id, nodes, links);
-  assign_salvage(plan, $lane, parent_id, nodes, links);
+  assign_followup(followup, $lane, parent_slug, nodes, links);
+  assign_salvage(plan, $lane, parent_slug, nodes, links);
 
   if (
-    $lane._id != root_node?.get()?.id &&
-    node_ids.indexOf($lane._id) != -1 &&
-    (node_ids.indexOf(followup?._id) != -1 || node_ids.indexOf(plan?._id)) != -1
+    $lane.slug != root_node?.get()?.id &&
+    node_slugs.indexOf($lane.slug) != -1 &&
+    (
+      node_slugs.indexOf(followup?.slug) != -1 ||
+      node_slugs.indexOf(plan?.slug) != -1
+    )
   ) return $lane;
 
   $lane.children.forEach((child) => {
     child.children = [];
 
     /* istanbul ignore else */
-    if (!child.recursive && child._id != root_node?.get()?.id) assign_children(
-      child, $lane._id, nodes, links
+    if (!child.recursive && child.slug != root_node?.get()?.id) assign_children(
+      child, $lane.slug, nodes, links
     );
   });
 
@@ -163,7 +166,7 @@ const build_graph = function () {
   let nodes = [];
   let links = [];
 
-  if (!$lane._id || !$lane.name) return false;
+  if (!$lane.slug || !$lane.name) return false;
 
   $lane.children = [];
   $lane.role = ROOT;
@@ -173,10 +176,10 @@ const build_graph = function () {
   else if (last_shipment && last_shipment.exit_code) color = FAIL_COLOR;
 
   root_node.set({
-    id: $lane._id,
+    id: $lane.slug,
     name: $lane.name,
     color: color,
-    cssClass: $lane._id,
+    cssClass: $lane.slug,
     lane: $lane,
     stroke: ROOT_COLOR,
     stroke_width: STROKE_WIDTH,
@@ -186,6 +189,8 @@ const build_graph = function () {
   });
   nodes.push(root_node.get());
 
+  // console.error($lane);
+  // console.error(nodes);
   assign_children($lane, false, nodes, links);
 
   node_list.set(nodes);

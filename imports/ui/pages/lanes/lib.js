@@ -287,9 +287,9 @@ const total_captains = function (lane) {
   return lane.captains.length;
 };
 
-const handle_file_upload_change = async function (evt) {
-  const yaml = await this.files[0].text();
-  const filename = this.files[0].name;
+const handle_file_upload_change = async function (files, evt) {
+  const yaml = await files[0].text();
+  const filename = files[0].name;
   console.log("%cUploading yaml:\n", "color: #fa0", `${yaml}`);
   /* istanbul ignore next reason: no meaningful logic */
   H.call('Lanes#import_yaml', filename, yaml, (err, res) => {
@@ -326,18 +326,20 @@ const import_yaml_callback = function (err, res, evt) {
   }
 };
 
-const handle_import_yaml = (evt) => {
+const handle_import_yaml = (click_event) => {
   const upload = document.createElement('input');
   upload.setAttribute('type', 'file');
   upload.setAttribute('accept', '.yml', '.yaml');
   /* istanbul ignore next reason: no meaningful logic */
-  upload.addEventListener('change', () => handle_file_upload_change(evt));
-  upload.addEventListener('cancel', () => {
-    evt.target.innerHTML = 'Import from YAML';
-    evt.target.removeAttribute('disabled');
+  upload.addEventListener('change', (change_event) => {
+    handle_file_upload_change(change_event.target.files, click_event);
   });
-  evt.target.innerHTML = 'Working...';
-  evt.target.setAttribute('disabled', true);
+  upload.addEventListener('cancel', () => {
+    click_event.target.innerHTML = 'Import from YAML';
+    click_event.target.removeAttribute('disabled');
+  });
+  click_event.target.innerHTML = 'Working...';
+  click_event.target.setAttribute('disabled', true);
   upload.click();
 };
 
