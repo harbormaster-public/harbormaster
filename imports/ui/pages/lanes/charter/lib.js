@@ -19,6 +19,27 @@ export const root_node = new H.ReactiveVar();
 const node_list = new H.ReactiveVar([]);
 const link_list = new H.ReactiveVar([]);
 
+const handle_download_yaml = function () {
+  const { slug } = this.$route.params;
+  H.call('Lanes#download_charter_yaml', slug, (err, res) => {
+    if (err) {
+      H.alert('Something went wrong!  See the console (F12) for details.');
+      throw err;
+    }
+    const localISOdate = new Date(
+      new Date().getTime() - (new Date().getTimezoneOffset() * 60000)
+    ).toISOString().replace('Z', '');
+    const charter_filename = `${slug}_${localISOdate}_charter.yml`;
+    const download_link = document.createElement('a');
+    download_link.setAttribute(
+      'href',
+      `data:text/plain;charset=utf-8,${encodeURIComponent(res)}`
+    );
+    download_link.setAttribute('download', charter_filename);
+    download_link.click();
+  });
+};
+
 const assign_followup = function (followup, $lane, parent_id, nodes, links) {
   if (followup && !$lane?.recursive && followup?._id != parent_id) {
     let last_shipment = followup.last_shipment;
@@ -224,6 +245,7 @@ export {
   lane,
   graph_options,
   handle_link_click,
+  handle_download_yaml,
   node_list,
   link_list,
 };

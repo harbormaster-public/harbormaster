@@ -1,6 +1,10 @@
 <template>
   <div id=lanes-page>
     <h1 class="text-5xl my-2">Lanes</h1>
+    <button 
+      v-on:click="handle_import_yaml"
+      id="import-yaml" 
+      class="p-2 border-2 rounded-sm my-2">Import from YAML</button>
     <router-link to="/lanes/new/edit" class="p-2 border-2 rounded-sm my-2 block" id="new-lane" @click="set_new_lane">New
       Lane</router-link>
     <table class="lanes-table table-auto my-2">
@@ -62,6 +66,10 @@
         </tr>
       </tbody>
     </table>
+    <button 
+      v-on:click="handle_download_yaml"
+      id="download-yaml" 
+      class="p-2 border-2 rounded-sm my-2">Download as YAML</button>
   </div>
 </template>
 
@@ -84,6 +92,8 @@ import {
   lane_ids,
   empty,
   lanes,
+  handle_import_yaml,
+  handle_download_yaml,
 } from './lib';
 import './lanes.css';
 
@@ -149,6 +159,8 @@ export default {
     latest_shipment,
     salvage_plan_name,
     total_captains,
+    handle_import_yaml,
+    handle_download_yaml,
   },
 
   created () {

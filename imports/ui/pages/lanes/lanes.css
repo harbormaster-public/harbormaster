@@ -1,3 +1,51 @@
+#import-yaml {
+  position: absolute;
+  top: 15px;
+  right: 10px;
+  z-index: 1;
+  background: #333;
+  border-width: 0;
+  height: 40px;
+}
+
+#import-yaml:before {
+  content: '';
+  top: 0;
+  left: -35px;
+  height: 100%;
+  border: 20px solid #333;
+  border-left-color: transparent;
+  position: absolute;
+}
+
+#import-yaml:hover {
+  background: #0af;
+}
+
+#import-yaml:hover:before {
+  border-color: #0af;
+  border-left-color: transparent;
+}
+
+#import-yaml:active {
+  background: #fa0;
+}
+
+#import-yaml:active:before {
+  border-color: #fa0;
+  border-left-color: transparent;
+}
+
+#import-yaml:disabled {
+  background: #444;
+  cursor: not-allowed;
+}
+
+#import-yaml:disabled:before {
+  border-color: #444;
+  border-left-color: transparent;
+}
+
 .lanes-table th,
 td {
   border: 1px solid lightgrey;
@@ -231,6 +279,14 @@ a#new-lane:after {
   border-color: transparent;
   border-right-color: #666;
   border-width: 21px;
+}
+
+#lanes-page {
+  margin-bottom: 70px;
+}
+
+#lanes-page #download-yaml {
+  z-index: 0;
 }
 
 @media all and (max-width: 1023px) {

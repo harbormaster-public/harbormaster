@@ -16,6 +16,8 @@ import {
   delete_lane,
   upsert,
   duplicate,
+  download_charter_yaml,
+  import_yaml,
 } from './methods';
 
 Lanes.rawCollection().createIndex({ name: 1 }, { background: true });
@@ -43,4 +45,6 @@ H.methods({
   'Lanes#delete': delete_lane,
   'Lanes#upsert': upsert,
   'Lanes#duplicate': duplicate,
+  'Lanes#download_charter_yaml': download_charter_yaml,
+  'Lanes#import_yaml': import_yaml,
 });

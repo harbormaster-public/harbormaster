@@ -2,14 +2,13 @@
   <div v-if="$subReady.Lanes && $subReady.Users && $subReady.Harbors" id=edit-lane-page>
     <h1 class="text-5xl my-2">Edit Lane</h1>
     <div v-if="plying">
-
       <form v-on:submit.prevent="submit_form" :key="harbor_refresh">
         <pre class="py-2">
           <label>Name:&nbsp;
             <input
               @change.prevent="change_lane_name"
               @keypress="prevent_enter_key"
-              :value="lane_name"
+              :value="get_lane_name"
               type=text
               required
               class="lane-name"
@@ -88,9 +87,9 @@
         <div v-if="choose_followup">
           <fieldset v-on:change.prevent="change_followup_lane" class="fieldset followup">
             <legend>Followup: {{followup_lane}}</legend>
-            <div v-for="followup in lanes" :key="followup._id">
+            <div v-for="followup in lanes" :key="followup.slug">
               <label>
-                <input :checked="chosen_followup(followup)" type=radio name="followup_lanes" :value="followup._id">
+                <input :checked="chosen_followup(followup)" type=radio name="followup_lanes" :value="followup.slug">
                 {{followup.name}}
               </label>
             </div>
@@ -109,10 +108,10 @@
         <div v-if="choose_salvage_plan">
           <fieldset v-on:change.prevent="change_salvage_plan" class="fieldset salvage-plan">
             <legend>Salvage Plan: {{salvage_plan_lane}}</legend>
-            <div v-for="salvage_lane in lanes" :key="salvage_lane._id">
+            <div v-for="salvage_lane in lanes" :key="salvage_lane.slug">
               <label>
                 <input :checked="chosen_salvage_plan(salvage_lane)" type=radio name="salvage_plan_lanes"
-                  :value="salvage_lane._id">
+                  :value="salvage_lane.slug">
                 {{salvage_lane.name}}
               </label>
             </div>
@@ -205,12 +204,12 @@ export default {
     render_harbor,
     validating_fields() { return H.Session.get('validating_fields') },
     can_save() { return not_found.get() ? 'disabled' : '' },
+    get_lane_name,
   },
 
   data() {
     return {
       harbor_refresh: 0,
-      lane_name: this.get_lane_name(),
     };
   },
 
@@ -241,7 +240,6 @@ export default {
     add_followup_lane() { return H.Session.set('choose_followup', true) },
     add_salvage_plan() { return H.Session.set('choose_salvage_plan', true) },
     new_lane() { H.Session.set('lane', {}) },
-    get_lane_name,
     duplicate_lane() {
       const lane = get_lane(this.$route.params.slug);
       const warn = `Duplicate this lane, and then edit the new lane?`

@@ -1,3 +1,40 @@
+#download-yaml {
+  position: absolute;
+  right: 10px;
+  z-index: 1;
+  background: #333;
+  border-width: 0;
+  height: 40px;
+}
+
+#download-yaml:before {
+  content: '';
+  top: 0;
+  left: -35px;
+  height: 100%;
+  border: 20px solid #333;
+  border-left-color: transparent;
+  position: absolute;
+}
+
+#download-yaml:hover {
+  background: #0af;
+}
+
+#download-yaml:hover:before {
+  border-color: #0af;
+  border-left-color: transparent;
+}
+
+#download-yaml:active {
+  background: #fa0;
+}
+
+#download-yaml:active:before {
+  border-color: #fa0;
+  border-left-color: transparent;
+}
+
 #charter-page .link {
   filter: brightness(0.5);
 }

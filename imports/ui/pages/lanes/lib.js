@@ -258,7 +258,7 @@ const current_state = function (lane) {
 };
 
 const followup_name = function (lane) {
-  let followup = Lanes.findOne(lane?.followup?._id);
+  let followup = Lanes.findOne({ slug: lane?.followup?.slug });
 
   if (lane?.followup?.name && !followup) return lane.followup.name;
   return followup ? followup.name : '';
@@ -273,7 +273,7 @@ const latest_shipment = function (lane) {
 };
 
 const salvage_plan_name = function (lane) {
-  let salvage_plan = Lanes.findOne(lane?.salvage_plan?._id);
+  let salvage_plan = Lanes.findOne({ slug: lane?.salvage_plan?.slug });
 
   if (lane?.salvage_plan?.name && !salvage_plan) return lane.salvage_plan.name;
   return salvage_plan ? salvage_plan.name : '';
@@ -285,6 +285,81 @@ const total_captains = function (lane) {
   }
 
   return lane.captains.length;
+};
+
+const handle_file_upload_change = async function (evt) {
+  const yaml = await this.files[0].text();
+  const filename = this.files[0].name;
+  console.log("%cUploading yaml:\n", "color: #fa0", `${yaml}`);
+  /* istanbul ignore next reason: no meaningful logic */
+  H.call('Lanes#import_yaml', filename, yaml, (err, res) => {
+    import_yaml_callback(err, res, evt);
+  });
+};
+
+const import_yaml_callback = function (err, res, evt) {
+  if (err) {
+    H.alert('Something went wrong.  See the browser console for details.');
+    throw err;
+  }
+  else {
+    let msg = 'Import complete.';
+
+    /* istanbul ignore next reason: no meaningful logic */
+    if (res.found.length) {
+      msg += '\nSome lanes were found already, and skipped.';
+      console.log(`Lanes found: ${res.found.join(', ')}`);
+    }
+    /* istanbul ignore next reason: no meaningful logic */
+    if (res.missing.length) {
+      msg += '\nSome harbors are missing, so their lanes were skipped.';
+      console.log(`Harbors missing: ${res.missing.join(', ')}`);
+    }
+    /* istanbul ignore next reason: no meaningful logic */
+    if (res.created.length) console.log(
+      `Lanes created: ${res.created.join(', ')}`
+    );
+    msg += '\nSee the browser console (F12) for more details.';
+    H.alert(msg);
+    evt.target.innerHTML = 'Import from YAML';
+    evt.target.removeAttribute('disabled');
+  }
+};
+
+const handle_import_yaml = (evt) => {
+  const upload = document.createElement('input');
+  upload.setAttribute('type', 'file');
+  upload.setAttribute('accept', '.yml', '.yaml');
+  /* istanbul ignore next reason: no meaningful logic */
+  upload.addEventListener('change', () => handle_file_upload_change(evt));
+  upload.addEventListener('cancel', () => {
+    evt.target.innerHTML = 'Import from YAML';
+    evt.target.removeAttribute('disabled');
+  });
+  evt.target.innerHTML = 'Working...';
+  evt.target.setAttribute('disabled', true);
+  upload.click();
+};
+
+const handle_download_yaml = () => {
+  H.call('Lanes#download_charter_yaml', (err, res) => {
+    if (err) {
+      H.alert('Something went wrong!  See the console (F12) for details.');
+      throw err;
+    }
+    const localISOdate = new Date(
+      new Date().getTime() - (new Date().getTimezoneOffset() * 60000)
+    ).toISOString().replace('Z', '');
+    const { host } = location;
+    const charter_filename = `${host}_${localISOdate}_all_charters.yml`;
+    const download_link = document.createElement('a');
+    download_link.setAttribute(
+      'href',
+      `data:text/plain;charset=utf-8,${encodeURIComponent(res)}`
+    );
+    download_link.setAttribute('download', charter_filename);
+    download_link.click();
+  });
 };
 
 export {
@@ -310,4 +385,8 @@ export {
   lane_ids,
   empty,
   lanes,
+  handle_import_yaml,
+  handle_download_yaml,
+  handle_file_upload_change,
+  import_yaml_callback,
 };

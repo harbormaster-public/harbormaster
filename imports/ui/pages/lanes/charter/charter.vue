@@ -1,6 +1,10 @@
 <template>
   <div id=charter-page>
     <h1 class="text-5xl my-2">Lane Charter</h1>
+    <button 
+      v-on:click="handle_download_yaml"
+      id="download-yaml" 
+      class="p-2 border-2 rounded-sm my-2">Download as YAML</button>
     <figure v-if="this.$subReady.Lanes && lane.name" class="charter">
       <figcaption class="text-2xl">
         Starting with lane:
@@ -27,6 +31,7 @@ import {
   lane,
   graph_options,
   handle_link_click,
+  handle_download_yaml,
 } from './lib';
 import './charter.css';
 
@@ -36,14 +41,17 @@ const options = {
 };
 
 const svg_graph = function svg_graph () {
-  build_graph.bind(this)();
+  // Always render a fresh graph
+  if (H.$('.charter svg g').length) H.$('.charter svg').html('');
+
   const width = H.$('.charter').width();
   const height = H.$('.charter').height();
 
   const simulation = d3.forceSimulation(node_list.get())
     .force("link", d3.forceLink(link_list.get()).distance(250).id(d => d.id))
-    .force("charge", d3.forceManyBody())
+    .force("charge", d3.forceManyBody().strength(-250))
     .force("center", d3.forceCenter(width / 2, height / 2))
+    .force('radial', d3.forceRadial(250, width / 2, height / 2))
     .on("tick", ticked);
 
   const svg = d3.select('svg')
@@ -176,6 +184,7 @@ export default {
 
   methods: {
     build_graph,
+    handle_download_yaml,
   }
 };
 </script>

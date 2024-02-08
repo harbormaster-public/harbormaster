@@ -22,6 +22,10 @@ import {
   total_captains,
   empty,
   lanes,
+  handle_import_yaml,
+  handle_download_yaml,
+  handle_file_upload_change,
+  import_yaml_callback,
 } from './lib';
 import { expect } from 'chai';
 import { Lanes } from '../../../api/lanes';
@@ -46,12 +50,12 @@ describe('Lanes Page', function () {
     beforeEach(() => {
       Shipments.find = ({ lane } = shipment) => {
         switch (lane) {
-        default:
-          return { fetch: () => ([]) };
-        case 'test_1':
-          return { fetch: () => ([{ actual: new Date(0) }]) };
-        case 'test_2':
-          return { fetch: () => ([{ actual: new Date(1) }]) };
+          default:
+            return { fetch: () => ([]) };
+          case 'test_1':
+            return { fetch: () => ([{ actual: new Date(0) }]) };
+          case 'test_2':
+            return { fetch: () => ([{ actual: new Date(1) }]) };
         }
       };
     });
@@ -94,11 +98,11 @@ describe('Lanes Page', function () {
     beforeEach(() => {
       Shipments.find = ({ lane } = shipment) => {
         switch (lane) {
-        default:
-        case 'test_1':
-          return { fetch: () => ([{}]) };
-        case 'test_2':
-          return { fetch: () => ([{}, {}]) };
+          default:
+          case 'test_1':
+            return { fetch: () => ([{}]) };
+          case 'test_2':
+            return { fetch: () => ([{}, {}]) };
         }
       };
     });
@@ -138,11 +142,11 @@ describe('Lanes Page', function () {
     beforeEach(() => {
       Shipments.find = ({ lane } = shipment) => {
         switch (lane) {
-        default:
-        case 'test_1':
-          return { fetch: () => ([{}]) };
-        case 'test_2':
-          return { fetch: () => ([{}, {}]) };
+          default:
+          case 'test_1':
+            return { fetch: () => ([{}]) };
+          case 'test_2':
+            return { fetch: () => ([{}, {}]) };
         }
       };
     });
@@ -599,6 +603,97 @@ describe('Lanes Page', function () {
     });
     it('returns the number of captains assigned to a lane', () => {
       expect(total_captains({ captains: ['foo', 'bar'] })).to.eq(2);
+    });
+  });
+
+  describe('#handle_import_yaml', () => {
+    const evt = { target: {
+      innerHTML: '',
+      removeAttribute: () => {},
+      setAttribute: () => {},
+    } };
+    before(() => {
+      this.files = [{ name: 'test', async text () { return 'test'; } }];
+      let cb;
+      // eslint-disable-next-line no-native-reassign
+      document = {
+        createElement: () => ({
+          setAttribute: () => {},
+          addEventListener: (event, callback) => {
+            cb = callback.bind(this);
+          },
+          click: () => { cb(); },
+        }),
+      };
+    });
+    after(() => {
+      // eslint-disable-next-line no-native-reassign
+      document = null;
+    });
+
+    it('uploads filename and YAML text to the server', () => {
+      handle_import_yaml.bind(this)(evt);
+      expect(evt.target.innerHTML).to.eq('Import from YAML');
+    });
+  });
+
+  describe('#handle_file_upload_change', () => {
+    it('passes the filename and yaml text to the server', async () => {
+      let called_method;
+      let called_filename;
+      let called_yaml;
+      H.call = (method, filename, yaml) => {
+        called_method = method;
+        called_filename = filename;
+        called_yaml = yaml;
+      };
+      this.files = [{ name: 'test', async text () { return 'test'; } }];
+      await handle_file_upload_change.bind(this)();
+      expect(called_method).to.eq('Lanes#import_yaml');
+      expect(called_filename).to.eq('test');
+      expect(called_yaml).to.eq('test');
+      H.call = call_method;
+    });
+  });
+
+  describe('#import_yaml_callback', () => {
+    it('throws when it receives an error', () => {
+      expect(() => import_yaml_callback({})).to.throw();
+    });
+    it('alerts the user with the results', () => {
+      const evt = { target: { innerHTML: '', removeAttribute: () => {} } };
+      let called = false;
+      H.alert = () => called = true;
+      import_yaml_callback
+        .bind(this)(null, { found: [], missing: [], created: [] }, evt);
+      expect(called).to.eq(true);
+    });
+  });
+
+  describe('#handle_download_yaml', () => {
+    it('triggers a download from ther server', () => {
+      // eslint-disable-next-line no-native-reassign
+      location = { host: 'test' };
+      // eslint-disable-next-line no-native-reassign
+      document = {
+        createElement: () => ({
+          setAttribute: () => {},
+          addEventListener: (event, callback) => {
+            cb = callback.bind(this);
+          },
+          click: () => {},
+        }),
+      };
+      let called_method;
+      H.call = (method, callback) => {
+        called_method = method;
+        callback(null, 'test');
+      };
+      handle_download_yaml();
+      expect(called_method).to.eq('Lanes#download_charter_yaml');
+      H.call = (method, callback) => callback(true);
+      expect(handle_download_yaml).to.throw();
+      H.call = call_method;
     });
   });
 });

@@ -7,6 +7,7 @@ import {
 import { Harbors } from '../../harbors';
 import uuid from 'uuid';
 import _ from 'lodash';
+import YAML from 'yaml';
 
 const trim_manifest = (manifest) => {
   if (manifest.prior_manifest) delete manifest.prior_manifest;
@@ -88,10 +89,13 @@ const publish_lanes = function publish_lanes (view, slug) {
         'last_shipment.exit_code': 1,
         'last_shipment.active': 1,
         'followup.name': 1,
+        'followup.slug': 1,
         'salvage_plan.name': 1,
+        'salvage_plan.slug': 1,
       } });
       break;
     case '/charter':
+      //TODO: filter this by the lane slug, and its downstreams
       published = Lanes.find({}, { fields: {
         _id: 1,
         name: 1,
@@ -103,7 +107,7 @@ const publish_lanes = function publish_lanes (view, slug) {
       } });
       break;
     case '/edit':
-      // Edit lane followup selection needs to become its own component, with
+      // Edit lane downstream selection needs to become its own component, with
       // its own subscription, before we can properly filter this by slug
       // published = Lanes.find({ slug }, { fields: {
       published = Lanes.find({ }, { fields: {
@@ -118,7 +122,11 @@ const publish_lanes = function publish_lanes (view, slug) {
         'last_shipment.exit_code': 1,
         'last_shipment.active': 1,
         'followup._id': 1,
+        'followup.slug': 1,
+        'followup.name': 1,
         'salvage_plan._id': 1,
+        'salvage_plan.slug': 1,
+        'salvage_plan.name': 1,
       } });
       break;
     case '/log':
@@ -479,6 +487,82 @@ const duplicate = (lane) => {
   return `/lanes/${lane.slug}/edit`;
 };
 
+const download_charter_yaml = (slug) => {
+  const charter = {};
+  const add_downstreams = (lane) => {
+    let followup;
+    let salvage_plan;
+    const harbor = Harbors.findOne(lane.type);
+    charter[lane.slug] = {
+      name: lane.name,
+      type: lane.type,
+      tokens: lane.tokens,
+      captains: lane.captains,
+      followup: lane.followup?.slug,
+      salvage_plan: lane.salvage_plan?.slug,
+      manifest: harbor.lanes[lane._id].manifest,
+    };
+    if (lane.followup && !charter[lane.followup.slug]) {
+      followup = Lanes.findOne(lane.followup._id);
+      add_downstreams(followup);
+    }
+    if (lane.salvage_plan && !charter[lane.salvage_plan.slug]) {
+      salvage_plan = Lanes.findOne(lane.salvage_plan._id);
+      add_downstreams(salvage_plan);
+    }
+  };
+  const fields = {
+    _id: 1,
+    name: 1,
+    slug: 1,
+    type: 1,
+    'followup._id': 1,
+    'followup.slug': 1,
+    'salvage_plan._id': 1,
+    'salvage_plan.slug': 1,
+    tokens: 1,
+    captains: 1,
+  };
+  const $lane = Lanes.findOne({ slug }, { fields });
+
+  if (slug && $lane) { add_downstreams($lane); }
+  else { Lanes.find({}, { fields }).fetch().forEach(add_downstreams); }
+
+  const lane_yaml = YAML.stringify(charter);
+  return lane_yaml;
+};
+
+const import_yaml = (filename, yaml) => {
+  const charter = YAML.parse(yaml);
+  console.log(`Importing YAML from: ${filename}`);
+  const found = [];
+  const missing = [];
+  const created = [];
+
+  _.forOwn(charter, (values, slug) => {
+    if (Lanes.findOne({ slug })) found.push(slug);
+    else if (!Harbors.findOne(charter[slug].type)) missing.push(slug);
+    else {
+      const new_lane = {
+        slug,
+        type: values.type,
+        name: values.name,
+      };
+      if (values.followup) new_lane.followup = { slug: values.followup };
+      if (values.salvage_plan) {
+        new_lane.salvage_plan = { slug: values.salvage_plan };
+      }
+      const lane_id = Lanes.insert(new_lane);
+      const harbor = Harbors.findOne(values.type);
+      harbor.lanes[lane_id] = { manifest: values.manifest };
+      Harbors.update(harbor._id, harbor);
+      created.push(slug);
+    }
+  });
+
+  return { found, missing, created };
+};
+
 export {
   trim_manifest,
   collect_latest_shipments,
@@ -494,4 +578,6 @@ export {
   delete_lane,
   upsert,
   duplicate,
+  download_charter_yaml,
+  import_yaml,
 };

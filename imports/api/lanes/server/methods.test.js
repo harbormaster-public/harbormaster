@@ -14,6 +14,8 @@ import {
   start_shipment,
   update_slug,
   update_webhook_token,
+  download_charter_yaml,
+  import_yaml,
 } from './methods';
 import { expect } from 'chai';
 import { LatestShipment } from '../../shipments';
@@ -547,6 +549,123 @@ describe('Lanes', function () {
     it('returns a path matching format: /lanes/:slug/edit', () => {
       const result = '/lanes/test_slug2/edit';
       expect(duplicate($lane)).to.eq(result);
+    });
+  });
+
+  describe('#download_charter_yaml', () => {
+    let expected_yaml = 'test:\n';
+    expected_yaml += '  name: test\n';
+    expected_yaml += '  type: test_type\n';
+    expected_yaml += '  tokens:\n';
+    expected_yaml += '    foo: test@harbormaster.io\n';
+    expected_yaml += '  captains: []\n';
+    expected_yaml += '  followup: test-followup\n';
+    expected_yaml += '  salvage_plan: test-salvage-plan\n';
+    expected_yaml += '  manifest: {}\n';
+    expected_yaml += 'test-followup:\n';
+    expected_yaml += '  name: test followup\n';
+    expected_yaml += '  type: test_type\n';
+    expected_yaml += '  tokens:\n';
+    expected_yaml += '    foo: test@harbormaster.io\n';
+    expected_yaml += '  captains: []\n';
+    expected_yaml += '  manifest: {}\n';
+    expected_yaml += 'test-salvage-plan:\n';
+    expected_yaml += '  name: test salvage plan\n';
+    expected_yaml += '  type: test_type\n';
+    expected_yaml += '  tokens:\n';
+    expected_yaml += '    foo: test@harbormaster.io\n';
+    expected_yaml += '  captains: []\n';
+    expected_yaml += '  manifest: {}\n';
+
+    beforeEach(() => {
+      Factory.create('lane', {
+        _id: 'test_lane',
+        name: 'test',
+        slug: 'test',
+        type: 'test_type',
+        followup: {
+          _id: 'test_followup_lane',
+          slug: 'test-followup',
+        },
+        salvage_plan: {
+          _id: 'test_salvage_plan',
+          slug: 'test-salvage-plan',
+        },
+      });
+      Factory.create('lane', {
+        _id: 'test_salvage_plan',
+        slug: 'test-salvage-plan',
+        type: 'test_type',
+        name: 'test salvage plan',
+        followup: undefined,
+        salvage_plan: undefined,
+      });
+      Factory.create('lane', {
+        _id: 'test_followup_lane',
+        slug: 'test-followup',
+        type: 'test_type',
+        name: 'test followup',
+        followup: undefined,
+        salvage_plan: undefined,
+      });
+      Factory.create('harbor', {
+        _id: 'test_type',
+        lanes: {
+          test_lane: { manifest: {} },
+          test_salvage_plan: { manifest: {} },
+          test_followup_lane: { manifest: {} },
+        },
+      });
+    });
+    it('provides the YAML text for a specific lane charter', () => {
+      expect(download_charter_yaml('test')).to.eq(expected_yaml);
+    });
+    it('provides the YAML text for all lanes without a slug', () => {
+      expect(download_charter_yaml()).to.eq(expected_yaml);
+    });
+  });
+
+  describe('#import_yaml', () => {
+    let test_yaml = 'test:\n';
+    test_yaml += '  name: test\n';
+    test_yaml += '  type: test\n';
+    test_yaml += '  manifest: {}\n';
+    test_yaml += 'foo:\n';
+    test_yaml += '  name: foo\n';
+    test_yaml += '  type: foo\n';
+    test_yaml += '  manifest: {}\n';
+    test_yaml += 'bar:\n';
+    test_yaml += '  name: bar\n';
+    test_yaml += '  type: test\n';
+    test_yaml += '  manifest: {}\n';
+    test_yaml += '  followup: foo\n';
+    test_yaml += '  salvage_plan: test\n';
+    test_yaml += 'baz:\n';
+    test_yaml += '  name: baz\n';
+    test_yaml += '  type: test\n';
+    test_yaml += '  manifest: {}\n';
+
+    beforeEach(() => {
+      Factory.create('lane');
+      Factory.create('harbor');
+    });
+    it('returns a list of slugs for pre-existing lanes', () => {
+      expect(import_yaml('test', test_yaml).found.length).to.eq(1);
+      expect(import_yaml('test', test_yaml).found[0]).to.eq('test');
+    });
+    it('returns a list of missing harbors not installed', () => {
+      expect(import_yaml('test', test_yaml).missing.length).to.eq(1);
+      expect(import_yaml('test', test_yaml).missing[0]).to.eq('foo');
+    });
+    it('assigns downstreams and returns a list of lanes it created', () => {
+      const results = import_yaml('test', test_yaml);
+      expect(results.created.length).to.eq(2);
+      expect(results.created[0]).to.eq('bar');
+      expect(results.created[1]).to.eq('baz');
+      expect(Lanes.findOne({ slug: 'bar' }).followup.slug).to.eq('foo');
+      expect(Lanes.findOne({ slug: 'bar' }).salvage_plan.slug).to.eq('test');
+      expect(Lanes.findOne({ slug: 'baz' }).followup).to.eq(undefined);
+      expect(Lanes.findOne({ slug: 'baz' }).salvage_plan).to.eq(undefined);
     });
   });
 });

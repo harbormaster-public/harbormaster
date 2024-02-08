@@ -152,7 +152,7 @@ import { Harbors } from '../../api/harbors';
 
     Factory.define('shipment', Shipments, {
       _id: '',
-      lane: '',
+      lane: 'test',
       actual: new Date(),
       finished: new Date(),
     });
@@ -163,7 +163,7 @@ import { Harbors } from '../../api/harbors';
     });
 
     Factory.define('harbor', Harbors, {
-      _id: '',
+      _id: 'test',
       lanes: {},
     });
 
@@ -173,8 +173,12 @@ import { Harbors } from '../../api/harbors';
   H.Session = Session;
   H.ReactiveVar = ReactiveVar;
   H.$ = $;
-  H.alert = H.isClient ? alert : console.warn;
-  H.confirm = H.isClient ? args => window.confirm(args) : console.warn;
+  H.alert = H.isClient ? alert : function () {
+    if (!H.isTest) console.warn.apply(null, arguments);
+  };
+  H.confirm = H.isClient ? args => window.confirm(args) : function () {
+    if (!H.isTest) console.warn.apply(null, arguments);
+  };
   H.window = H.isClient ? window : {
     location: {
       host: 'localhost:4040',

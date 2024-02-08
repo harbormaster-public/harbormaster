@@ -1,6 +1,6 @@
 {
   "name": "harbormaster",
-  "version": "1.32.1",
+  "version": "1.33.0",
   "private": true,
   "babel": {
     "env": {
@@ -12,7 +12,7 @@
     }
   },
   "scripts": {
-    "coverage": "BABEL_ENV=COVERAGE COVERAGE=1 COVERAGE_VERBOSE=1 COVERAGE_OUT_JSON=1 COVERAGE_OUT_TEXT_SUMMARY=1 COVERAGE_APP_FOLDER=/$PWD/ npm run test && nyc report --reporter html --reporter text -t .coverage --report-dir .coverage/summary --check-coverage --statements 100 --functions 100 --lines 100 --branches 100",
+    "coverage": "BABEL_ENV=COVERAGE COVERAGE=1 COVERAGE_VERBOSE=1 COVERAGE_OUT_JSON=1 COVERAGE_OUT_TEXT_SUMMARY=1 COVERAGE_APP_FOLDER=/$PWD/ npm run test && nyc report --reporter html --reporter text -t .coverage --report-dir .coverage/summary --check-coverage --statements 100 --functions 100 --lines 100 --branches 100 --verbose",
     "test": "npm run test:watch -- --once",
     "test:watch": "MOCHA_TIMEOUT=30000 WHEN_USING_OLD_API=1 BROWSERSLIST_IGNORE_OLD_DATA=1 NODE_OPTIONS='--trace-warnings' ROOT_URL='' MONGO_URL='' NO_HMR=1 meteor test --port=4040 --driver-package meteortesting:mocha",
     "start": "NO_HMR=1 meteor run",
@@ -41,6 +41,7 @@
     "motion-ui": "^2.0.5",
     "node-sass": "^8.0.0",
     "parse-github-url": "^1.0.2",
+    "puppeteer": "^8.0.0",
     "scroll-to-element": "^2.0.3",
     "semver": "^7.5.4",
     "ssh2": "^1.14.0",
@@ -52,7 +53,7 @@
     "vue-meteor-tracker": "^1.2.3",
     "vue-router": "^3.6.5",
     "what-input": "^5.2.12",
-    "puppeteer": "^8.0.0"
+    "yaml": "^2.3.4"
   },
   "devDependencies": {
     "@babel/core": "^7.23.6",

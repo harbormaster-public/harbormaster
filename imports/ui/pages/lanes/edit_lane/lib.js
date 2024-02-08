@@ -281,7 +281,7 @@ const chosen_followup = function (followup) {
   let $lane = get_lane(this.$route?.params?.slug);
 
   return followup._id && $lane._id ?
-    followup._id == $lane.followup?._id :
+    followup.slug == $lane.followup?.slug :
     false
   ;
 };
@@ -290,7 +290,7 @@ const chosen_salvage_plan = function (salvage_lane) {
   let $lane = get_lane(this.$route?.params?.slug);
 
   return salvage_lane._id && $lane._id ?
-    salvage_lane._id == $lane.salvage_plan?._id :
+    salvage_lane.slug == $lane.salvage_plan?.slug :
     false
   ;
 };
@@ -319,6 +319,7 @@ const submit_form = function () {
 const change_followup_lane = function (event) {
   let $lane = get_lane(this.$route?.params?.slug);
   let $followup_lane = Lanes.findOne(event?.target?.value);
+  console.log($lane);
 
   if (
     $lane.name &&

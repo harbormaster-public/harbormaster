@@ -83,7 +83,7 @@ describe('Shipments', () => {
       Factory.create('shipment', { exit_code: 0 });
       expect(total_completed_shipments()).to.eq(1);
       Factory.create('shipment', { lane: 'test', exit_code: 0 });
-      expect(total_completed_shipments({ _id: 'test' })).to.eq(1);
+      expect(total_completed_shipments({ _id: 'test' })).to.eq(2);
     });
   });
 
@@ -94,7 +94,7 @@ describe('Shipments', () => {
       Factory.create('shipment', { exit_code: 1 });
       expect(total_salvage_runs()).to.eq(1);
       Factory.create('shipment', { lane: 'test', exit_code: 1 });
-      expect(total_salvage_runs({ _id: 'test' })).to.eq(1);
+      expect(total_salvage_runs({ _id: 'test' })).to.eq(2);
     });
   });
 

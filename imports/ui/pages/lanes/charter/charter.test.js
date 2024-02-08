@@ -15,6 +15,7 @@ import {
   ROOT_COLOR,
   FAIL_COLOR,
   SUCCESS_COLOR,
+  handle_download_yaml,
 } from './lib';
 import { Shipments } from "../../../../api/shipments";
 import { Lanes } from "../../../../api/lanes";
@@ -37,6 +38,7 @@ const test_shipments_find_one = function (options) {
 };
 const shipments_find_one = Shipments.findOne;
 const shipments_find_none = () => ({});
+const call_method = H.call;
 
 describe('Charter Page', () => {
   before(() => {
@@ -228,6 +230,11 @@ describe('Charter Page', () => {
       expect(result.children.length).to.eq(2);
       expect(result.children[0]).to.deep.eq(target.followup);
     });
+    it('returns the lane if it and its downstreams are already added', () => {
+      expect(assign_children(target, rootNode._id, ['followup'], [])._id)
+        .to.eq('target');
+      // .to.eq(true);
+    });
   });
 
   describe('#build_graph', () => {
@@ -346,6 +353,38 @@ describe('Charter Page', () => {
       });
       expected_url = '/lanes/qux/charter';
       expect(handle3).to.eq(expected_url);
+    });
+  });
+
+  describe('#handle_download_yaml', () => {
+    it('triggers a download from ther server', () => {
+      // eslint-disable-next-line no-native-reassign
+      document = {
+        createElement: () => ({
+          setAttribute: () => {},
+          addEventListener: (event, callback) => {
+            cb = callback.bind(this);
+          },
+          click: () => {},
+        }),
+      };
+      let called_method;
+      let called_slug;
+      this.$route = { params: { slug: 'test' } };
+      H.call = (method, slug, callback) => {
+        called_method = method;
+        called_slug = slug;
+        callback(null, 'test');
+      };
+      handle_download_yaml.bind(this)();
+      expect(called_method).to.eq('Lanes#download_charter_yaml');
+      expect(called_slug).to.eq('test');
+      H.call = (method, slug, callback) => callback(true);
+      expect(handle_download_yaml).to.throw();
+      // eslint-disable-next-line no-native-reassign
+      document = null;
+      H.call = call_method;
+      delete this.$route;
     });
   });
 });
