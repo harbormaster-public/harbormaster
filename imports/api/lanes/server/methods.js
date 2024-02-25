@@ -130,9 +130,11 @@ const publish_lanes = function publish_lanes (view, slug) {
         'followup._id': 1,
         'followup.slug': 1,
         'followup.name': 1,
+        'followup.type': 1,
         'salvage_plan._id': 1,
         'salvage_plan.slug': 1,
         'salvage_plan.name': 1,
+        'salvage_plan.type': 1,
       } });
       break;
     case '/log':
@@ -351,7 +353,8 @@ const end_shipment = async function (lane, exit_code, manifest) {
   );
 
   if (exit_code != 0 && lane.salvage_plan) {
-    let salvage_manifest = Harbors.findOne(lane.salvage_plan.type)
+    let salvage_lane = Lanes.findOne({ slug: lane.salvage_plan.slug });
+    let salvage_manifest = Harbors.findOne(salvage_lane.type)
       .lanes[lane.salvage_plan._id]
       .manifest
       ;
@@ -372,7 +375,8 @@ const end_shipment = async function (lane, exit_code, manifest) {
   }
 
   if (exit_code == 0 && lane.followup) {
-    let followup_manifest = Harbors.findOne(lane.followup.type)
+    let followup_lane = Lanes.findOne({ slug: lane.followup.slug });
+    let followup_manifest = Harbors.findOne(followup_lane.type)
       .lanes[lane.followup._id]
       .manifest
       ;
