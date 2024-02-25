@@ -59,31 +59,33 @@ const update_harbor_method = function (err, res) {
 };
 
 const update_lane = ($lane) => {
-  return H.call('Lanes#upsert', $lane, (err, res) => {
+  return H.call('Lanes#upsert', $lane, (err, updated) => {
     /* istanbul ignore next */
     if (err) throw err;
     /* istanbul ignore next */
-    if (!H.isTest) console.log(`Lane "${$lane.name}" updated: ${res}`);
+    if (!H.isTest) console.log(`Lane "${updated.name}" updated`);
 
-    H.Session.set('lane', $lane);
-    return res;
+    // H.Session.set('lane', $lane);
+    H.Session.set('lane', updated);
+    return updated;
   });
 };
 
 const change_lane_name = function (event) {
   let $lane = H.Session.get('lane') || {};
   $lane.name = event.target.value;
+  const render_only = Lanes.findOne($lane._id) ? false : true;
 
-  if (Lanes.findOne($lane._id)) update_lane($lane);
-  else H.Session.set('lane', $lane);
+  const new_slug = slug($lane, render_only);
+  let new_path = `/lanes/${new_slug}/edit`;
 
-  const new_path = slug($lane, true)
-    .replace(H.window.location.host, '')
-    .replace(/\/ship$/, '/edit');
+  if (render_only) {
+    $lane.slug = new_slug;
+    H.Session.set('lane', $lane);
+  }
 
   /* istanbul ignore else */
   if (new_path != this.$route.path) this.$router.push(new_path);
-  this.$data.lane_name = $lane.name;
 };
 
 const slug = function ($lane, render_only) {
@@ -102,15 +104,15 @@ const slug = function ($lane, render_only) {
       .replace(/\-\-+/g, '-') // Replace multiple - with single -
       .replace(/^-+/, '') // Trim - from start of text
       .replace(/-+$/, '') // Trim - from end of text
+      .replace(/\(|\)|\[|\]|\{|\}/g, '')
       ;
 
     $lane.slug = $slug;
     if (!render_only) {
       update_lane($lane);
-      return $slug;
     }
+    return $slug;
 
-    return `${H.window.location.host}/lanes/${$slug}/ship`;
   }
 
   return '';

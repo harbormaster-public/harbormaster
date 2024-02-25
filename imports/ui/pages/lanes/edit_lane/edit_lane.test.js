@@ -94,7 +94,7 @@ describe('Edit Lane Page', function () {
     it('updates the Session lane and validation state', () => {
       H.Session.set('lane', false);
       H.Session.set('validating_fields', undefined);
-      H.call = (method, $lane, callback) => callback();
+      H.call = (method, $lane, callback) => callback(null, $lane);
       update_harbor_method(null, {
         lane: { name: 'test' },
         success: true,
@@ -136,7 +136,7 @@ describe('Edit Lane Page', function () {
       expect(called).to.eq(true);
     });
     it('updates the Session record for the current lane', () => {
-      H.call = (method, $lane, callback) => callback(null, true);
+      H.call = (method, $lane, callback) => callback(null, $lane);
       const $lane = { name: 'test' };
       update_lane($lane);
       expect(H.Session.get('lane')).to.eq($lane);
@@ -192,8 +192,8 @@ describe('Edit Lane Page', function () {
       expect((/test/i).test(slug($lane))).to.eq(true);
       expect((/lane/i).test(slug($lane))).to.eq(true);
     });
-    it('returns the slug url', () => {
-      const expected_url_regex = /localhost:4040\/lanes\/test-lane\/ship/;
+    it('returns the slug', () => {
+      const expected_url_regex = /test-lane/;
       expect(expected_url_regex.test(slug($lane, true))).to.eq(true);
     });
     it('returns empty string if the lane has no name yet', () => {
@@ -705,7 +705,7 @@ describe('Edit Lane Page', function () {
       expect(H.Session.get('lane').type).to.eq('test_type');
     });
     it('updates the lane slug and returns true', () => {
-      H.call = (method, $lane, callback) => callback();
+      H.call = (method, $lane, callback) => callback(null, $lane);
       H.Session.set('lane', { _id: 'test', name: 'test' });
       expect(choose_harbor_type()).to.eq(true);
       expect(H.Session.get('lane').slug).to.eq('test');

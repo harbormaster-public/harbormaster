@@ -30,7 +30,7 @@ const get_lane = (string) => {
   if (lane && (
     lane.name == string || lane.slug == string || lane._id == string
   )) return lane;
-  if (lane && !string) return lane;
+  if (lane && !string || lane?.name) return lane;
   return {};
 };
 

@@ -121,6 +121,10 @@ const publish_lanes = function publish_lanes (view, slug) {
         rendered_input: 1,
         minimum_complete: 1,
         tokens: 1,
+        'last_shipment._id': 1,
+        'last_shipment.start': 1,
+        'last_shipment.actual': 1,
+        'last_shipment.finished': 1,
         'last_shipment.exit_code': 1,
         'last_shipment.active': 1,
         'followup._id': 1,
@@ -463,7 +467,7 @@ const upsert = function (lane = {}) {
   if (_id && Lanes.findOne(_id)) Lanes.update({ _id }, lane);
   else Lanes.insert(lane);
 
-  return true;
+  return Lanes.findOne(_id);
 };
 
 const duplicate = (lane) => {
