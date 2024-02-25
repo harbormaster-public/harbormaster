@@ -622,33 +622,40 @@ describe('Edit Lane Page', function () {
       () => {
         const $lane = { _id: 'test', name: 'test', type: 'test' };
         H.Session.set('lane', $lane);
-        expect(change_followup_lane()).to.eq($lane);
+        this.$route = { params: { slug: 'test' } };
+        expect(change_followup_lane.bind(this)()).to.eq($lane);
         Lanes.findOne = () => {};
-        expect(change_followup_lane()).to.eq($lane);
+        expect(change_followup_lane.bind(this)()).to.eq($lane);
       });
     it('returns false if no update is made', () => {
       H.Session.set('lane', { _id: 'test_no_update' });
-      expect(change_followup_lane()).to.eq(false);
+      this.$route = { params: { slug: 'test' } };
+      expect(change_followup_lane.bind(this)()).to.eq(false);
     });
   });
 
   describe('#change_salvage_plan', function () {
+    beforeEach(() => {
+      Lanes.findOne = () => ({
+        _id: 'test_salvage',
+      });
+    });
     afterEach(() => { Lanes.findOne = lanes_find_one; });
     it(
       'assigns a new salvage plan lane or null and returns the updated lane',
       () => {
         const $lane = { _id: 'test', name: 'test', type: 'test' };
         H.Session.set('lane', $lane);
-        expect(change_salvage_plan()).to.eq($lane);
-        Lanes.findOne = () => ({
-          _id: 'test_followup',
-        });
-        expect(change_salvage_plan()).to.eq($lane);
+        this.$route = { params: { slug: 'test' } };
+        expect(change_salvage_plan.bind(this)()).to.eq($lane);
+        Lanes.findOne = () => {};
+        expect(change_salvage_plan.bind(this)()).to.eq($lane);
       }
     );
     it('returns false if no update is made', () => {
       H.Session.set('lane', { _id: 'test_no_update' });
-      expect(change_salvage_plan()).to.eq(false);
+      this.$route = { params: { slug: 'test' } };
+      expect(change_salvage_plan.bind(this)()).to.eq(false);
     });
   });
 
@@ -657,6 +664,7 @@ describe('Edit Lane Page', function () {
       H.call = (name, lane_to_update) => {
         H.Session.set('lane', lane_to_update);
       };
+      Lanes.findOne = () => H.Session.get('lane');
       const $lane = {
         _id: 'test',
         name: 'test',
@@ -664,17 +672,19 @@ describe('Edit Lane Page', function () {
         captains: ['test'],
       };
       H.Session.set('lane', $lane);
-      change_captains({
+      this.$route = { params: { slug: 'test' } };
+      change_captains.bind(this)({
         target: { value: 'test_added_captain', checked: true },
       });
       expect(H.Session.get('lane').captains.length).to.eq(2);
       delete $lane.captains;
       H.Session.set('lane', $lane);
-      change_captains({
+      change_captains.bind(this)({
         target: { value: 'test_added_captain', checked: false },
       });
       expect(H.Session.get('lane').captains.length).to.eq(0);
       H.call = call_method;
+      Lanes.findOne = lanes_find_one;
     });
   });
 

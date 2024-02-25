@@ -1,6 +1,7 @@
 import { Lanes } from "../../../../api/lanes";
 import { Shipments } from "../../../../api/shipments";
 import { get_lane } from "../lib/util";
+import { slug } from "../edit_lane/lib";
 
 export const ROOT = "ROOT";
 export const FOLLOWUP = "FOLLOWUP➡️";
@@ -162,7 +163,7 @@ const assign_children = ($lane, parent_slug, nodes, links) => {
 };
 
 const build_graph = function () {
-  let $lane = get_lane(this.$route?.params?.slug);
+  let $lane = get_lane(slug(this.$route?.params?.slug, true));
   let nodes = [];
   let links = [];
 
@@ -189,8 +190,6 @@ const build_graph = function () {
   });
   nodes.push(root_node.get());
 
-  // console.error($lane);
-  // console.error(nodes);
   assign_children($lane, false, nodes, links);
 
   node_list.set(nodes);

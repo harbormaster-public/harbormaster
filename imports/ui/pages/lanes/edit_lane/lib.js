@@ -119,14 +119,14 @@ const slug = function ($lane, render_only) {
 };
 
 const followup_lane = function () {
-  let $lane = get_lane(this.$route?.params?.slug);
+  let $lane = get_lane(slug(this.$route?.params?.slug, true));
   if (!$lane.followup && !$lane.name) return false;
 
   return $lane.followup?.name || '';
 };
 
 const salvage_plan_lane = function () {
-  let $lane = get_lane(this.$route?.params?.slug);
+  let $lane = get_lane(slug(this.$route?.params?.slug, true));
   if (!$lane.salvage_plan && !$lane.name) return false;
 
   return $lane.salvage_plan?.name || '';
@@ -137,7 +137,7 @@ const lanes = function () {
 };
 
 const lane = function () {
-  let $lane = get_lane(this.$route?.params?.slug);
+  let $lane = get_lane(slug(this.$route?.params?.slug, true));
 
   return $lane;
 };
@@ -151,7 +151,7 @@ const shipment_history = function () {
 };
 
 const no_followup = function () {
-  let $lane = get_lane(this.$route?.params?.slug);
+  let $lane = get_lane(slug(this.$route?.params?.slug, true));
 
   return Lanes.find().count() < 2 ||
     $lane && $lane.followup ||
@@ -160,7 +160,7 @@ const no_followup = function () {
 };
 
 const no_salvage = function () {
-  let $lane = get_lane(this.$route?.params?.slug);
+  let $lane = get_lane(slug(this.$route?.params?.slug, true));
 
   return Lanes.find().count() < 2 ||
     $lane && $lane.salvage_plan ||
@@ -169,13 +169,13 @@ const no_salvage = function () {
 };
 
 const choose_followup = function () {
-  let $lane = get_lane(this.$route?.params?.slug);
+  let $lane = get_lane(slug(this.$route?.params?.slug, true));
 
   return H.Session.get('choose_followup') || $lane && $lane.followup;
 };
 
 const choose_salvage_plan = function () {
-  let $lane = get_lane(this.$route?.params?.slug);
+  let $lane = get_lane(slug(this.$route?.params?.slug, true));
 
   return H.Session.get('choose_salvage_plan') || $lane && $lane.salvage_plan;
 };
@@ -274,13 +274,13 @@ const render_harbor = function () {
 };
 
 const validate_done = function () {
-  let $lane = get_lane(this.$route?.params?.slug);
+  let $lane = get_lane(slug(this.$route?.params?.slug, true));
 
   return $lane && $lane.minimum_complete;
 };
 
 const chosen_followup = function (followup) {
-  let $lane = get_lane(this.$route?.params?.slug);
+  let $lane = get_lane(slug(this.$route?.params?.slug, true));
 
   return followup._id && $lane._id ?
     followup.slug == $lane.followup?.slug :
@@ -289,7 +289,7 @@ const chosen_followup = function (followup) {
 };
 
 const chosen_salvage_plan = function (salvage_lane) {
-  let $lane = get_lane(this.$route?.params?.slug);
+  let $lane = get_lane(slug(this.$route?.params?.slug, true));
 
   return salvage_lane._id && $lane._id ?
     salvage_lane.slug == $lane.salvage_plan?.slug :
@@ -298,7 +298,7 @@ const chosen_salvage_plan = function (salvage_lane) {
 };
 
 const submit_form = function () {
-  let $lane = get_lane(this.$route?.params?.slug);
+  let $lane = get_lane(slug(this.$route?.params?.slug, true));
   if (!$lane._id && !$lane.name) return false;
 
   if (
@@ -319,9 +319,8 @@ const submit_form = function () {
 };
 
 const change_followup_lane = function (event) {
-  let $lane = get_lane(this.$route?.params?.slug);
-  let $followup_lane = Lanes.findOne(event?.target?.value);
-  console.log($lane);
+  let $lane = get_lane(slug(this.$route?.params?.slug, true));
+  let $followup_lane = Lanes.findOne({ slug: event?.target?.value });
 
   if (
     $lane.name &&
@@ -336,8 +335,8 @@ const change_followup_lane = function (event) {
 };
 
 const change_salvage_plan = function (event) {
-  let $lane = get_lane(this.$route?.params?.slug);
-  let $salvage_plan_lane = Lanes.findOne(event?.target?.value);
+  let $lane = get_lane(slug(this.$route?.params?.slug, true));
+  let $salvage_plan_lane = Lanes.findOne({ slug: event?.target?.value });
 
   if (
     $lane.name &&
@@ -353,7 +352,7 @@ const change_salvage_plan = function (event) {
 };
 
 const change_captains = function (event) {
-  let $lane = get_lane(this.$route?.params?.slug);
+  let $lane = get_lane(slug(this.$route?.params?.slug, true));
   let captains = $lane && $lane.captains ? $lane.captains : [];
   let user = event?.target?.value;
 
