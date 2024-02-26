@@ -83,7 +83,7 @@
                 <div v-for="entry in Object.keys(work_output().stdout)" :key="entry.finished">
                   <em><div class="timestamp">{{entry}}:</div></em>
                   <div class="result">
-                    <span v-html="work_output().stdout[entry]"></span>
+                    <pre><span v-html="work_output().stdout[entry]"></span></pre>
                   </div>
                 </div>
               </div>

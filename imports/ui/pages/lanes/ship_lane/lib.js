@@ -148,16 +148,13 @@ const has_work_output = function () {
 
 const work_output = function () {
   let $lane = get_lane(this.$route.params.slug);
-  let date = this.$route.params.date;
-  let shipment = $lane.last_shipment ?
-    $lane.last_shipment :
-    Shipments.findOne({
-      lane: $lane?._id,
-      start: date,
-    })
-    ;
-
-  return shipment;
+  let { date: start } = this.$route.params;
+  const last_shipment = Shipments.findOne({
+    lane: $lane?._id,
+    start,
+  });
+  if (last_shipment) return last_shipment;
+  return $lane.last_shipment;
 };
 
 const shipment_history = function () {
