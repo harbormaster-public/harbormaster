@@ -42,7 +42,8 @@ const expire_user = function (user) {
       /* istanbul ignore next */
       if (err) throw err;
 
-      console.log('User expired:', res);
+      /* istanbul ignore next */
+      if (!H.isTest) console.log('User expired:', res);
       H.alert(`User expired: ${res}`);
     });
   }

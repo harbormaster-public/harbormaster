@@ -548,7 +548,8 @@ const download_charter_yaml = (slug) => {
 
 const import_yaml = (filename, yaml) => {
   const charter = YAML.parse(yaml);
-  console.log(`Importing YAML from: ${filename}`);
+  /* istanbul ignore next */
+  if (!H.isTest) console.log(`Importing YAML from: ${filename}`);
   const found = [];
   const missing = [];
   const created = [];

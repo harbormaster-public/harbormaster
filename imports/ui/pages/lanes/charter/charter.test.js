@@ -14,8 +14,15 @@ import {
   SALVAGE,
   ROOT_COLOR,
   FAIL_COLOR,
+  ACTIVE_COLOR,
   SUCCESS_COLOR,
   handle_download_yaml,
+  svg_graph,
+  dragged,
+  dragstarted,
+  dragended,
+  clamp,
+  click,
 } from './lib';
 import { Shipments } from "../../../../api/shipments";
 import { Lanes } from "../../../../api/lanes";
@@ -68,6 +75,11 @@ describe('Charter Page', () => {
       name: 'Followup',
       last_shipment: { exit_code: 1 },
     };
+    const active_followup = {
+      slug: 'active_followup_slug',
+      name: 'Followup',
+      last_shipment: { active: true },
+    };
     const parent_slug = 'parent_slug';
     const nodes = [
       {
@@ -92,6 +104,7 @@ describe('Charter Page', () => {
         success_followup, target, parent_slug, nodes, links
       );
       assign_followup(fail_followup, target, parent_slug, nodes, links);
+      assign_followup(active_followup, target, parent_slug, nodes, links);
       success_followup_node = nodes.find(
         (node) => node.id === 'success_followup_slug'
       );
@@ -107,11 +120,16 @@ describe('Charter Page', () => {
       expect(success_followup.role).to.equal(FOLLOWUP);
       expect(success_followup.parent).to.equal('target_slug');
       expect(success_followup.recursive).to.equal(false);
+      expect(active_followup.parent).to.eq('target_slug');
       assign_followup(recursive, recursive, parent_slug, [], []);
       expect(recursive.recursive).to.eq(true);
     });
     it('adds the followup lane to the targets of the graph', () => {
-      expect(target.children).to.deep.equal([success_followup, fail_followup]);
+      expect(target.children).to.deep.equal([
+        success_followup,
+        fail_followup,
+        active_followup,
+      ]);
     });
     it('adds a decorated node to the nodes list if it does not exist', () => {
       expect(success_followup_node.name).to.equal('Followup');
@@ -137,6 +155,7 @@ describe('Charter Page', () => {
     let parent_slug;
     let plan;
     let failed_plan;
+    let active_plan;
     const recursive = { slug: 'target_slug', children: [] };
 
     beforeEach(() => {
@@ -154,13 +173,20 @@ describe('Charter Page', () => {
         name: 'Failed Plan',
         last_shipment: { exit_code: 1 },
       };
+      active_plan = {
+        slug: 'active_plan_slug',
+        name: 'Active Plan',
+        last_shipment: { active: true },
+      };
     });
 
     it('assigns graph role, parent, and recursion', () => {
       assign_salvage(plan, target, parent_slug, nodes, links);
+      assign_salvage(active_plan, target, parent_slug, nodes, links);
       expect(plan.role).to.eq(SALVAGE);
       expect(plan.parent).to.eq(target.slug);
       expect(plan.recursive).to.eq(false);
+      expect(active_plan.parent).to.eq(target.slug);
       assign_salvage(recursive, recursive, parent_slug, [], []);
       expect(recursive.recursive).to.eq(true);
     });
@@ -277,6 +303,13 @@ describe('Charter Page', () => {
       });
       build_graph();
       expect(root_node.get().color).to.eq(FAIL_COLOR);
+      H.Session.set('lane', {
+        slug: 'test_lane',
+        name: 'test',
+        last_shipment: { active: true },
+      });
+      build_graph();
+      expect(root_node.get().color).to.eq(ACTIVE_COLOR);
       Shipments.findOne = shipments_find_one;
     });
     it('adds the root node to the nodes list', () => {
@@ -386,6 +419,126 @@ describe('Charter Page', () => {
       document = null;
       H.call = call_method;
       delete this.$route;
+    });
+  });
+
+  describe('#svg_graph', () => {
+    beforeEach(() => {
+      resetDatabase(null);
+      // eslint-disable-next-line no-native-reassign
+      document = {
+        querySelector: () => {},
+        createElement: () => ({
+          setAttribute: () => {},
+          addEventListener: (event, callback) => {
+            cb = callback.bind(this);
+          },
+          click: () => {},
+        }),
+      };
+    });
+
+    it('should set any prior svg contents to an empty string', () => {
+      svg_graph();
+      expect(H.html_calls['.charter svg']).to.eq('');
+    });
+    it('should return an empty string', () => {
+      expect(svg_graph()).to.eq('');
+    });
+  });
+
+  describe('#dragged', () => {
+    const event = { x: 100, y: 2000 };
+    const width = 1024;
+    const height = 768;
+    const d = {};
+    const simulation = {
+      alpha: () => ({ restart: () => { called = true; } }),
+    };
+    let called = false;
+    it('should assign clamped coords to the data node passed to it', () => {
+      dragged(event, d, width, height, simulation);
+      expect(d.fx).to.eq(100);
+      expect(d.fy).to.eq(height);
+      expect(called).to.eq(true);
+    });
+  });
+
+  describe('#dragstarted', () => {
+    const event = {
+      active: true,
+      subject: { x: 100, y: 250 },
+      sourceEvent: { target: { parentElement: '' } },
+    };
+    let classed_called = false;
+    let restart_called = false;
+    const d3 = {
+      select: () => ({ classed: () => { classed_called = true; } }),
+    };
+    const simulation = {
+      alphaTarget: () => ({ restart: () => { restart_called = true; } }),
+    };
+    it('should assign fixed coords for its current position', () => {
+      dragstarted(event, simulation, d3);
+      expect(event.subject.fx).to.eq(event.subject.x);
+      expect(event.subject.fy).to.eq(event.subject.y);
+    });
+    it('should add the "fixed" class to the calling element', () => {
+      classed_called = false;
+      dragstarted(event, simulation, d3);
+      expect(classed_called).to.eq(true);
+    });
+    it('should restart the simulation if not actively moving', () => {
+      restart_called = false;
+      event.active = false;
+      dragstarted(event, simulation, d3);
+      expect(restart_called).to.eq(true);
+    });
+  });
+
+  describe('#dragended', () => {
+    const event = { active: false };
+    called = false;
+    const simulation = { alphaTarget: () => { called = true; } };
+    it('stops the simulation when no longer actively being moved', () => {
+      dragended(event, simulation);
+      expect(called).to.eq(true);
+    });
+  });
+
+  describe('#clamp', () => {
+    it('should clamp a number passed to within the bounds passed', () => {
+      expect(clamp(1, 2, 3)).to.eq(2);
+      expect(clamp(4, 2, 3)).to.eq(3);
+      expect(clamp(2, 1, 3)).to.eq(2);
+    });
+  });
+
+  describe('#click', () => {
+    const event = { target: { parentElement: '' } };
+    let classed_called;
+    let restart_called;
+    const d3 = {
+      select: () => ({ classed: () => { classed_called = true; } }),
+    };
+    const simulation = {
+      alpha: () => ({ restart: () => { restart_called = true; } }),
+    };
+    const d = { fx: 100, fy: 200 };
+    it('should remove any fixed coords', () => {
+      click(event, d, simulation, d3);
+      expect(d.fx).to.eq(undefined);
+      expect(d.fy).to.eq(undefined);
+    });
+    it('should remove the "fixed" class from the calling element', () => {
+      classed_called = false;
+      click(event, d, simulation, d3);
+      expect(classed_called).to.eq(true);
+    });
+    it('should restart the simulation', () => {
+      restart_called = false;
+      click(event, d, simulation, d3);
+      expect(restart_called).to.eq(true);
     });
   });
 });

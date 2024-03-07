@@ -65,7 +65,6 @@ const update_lane = ($lane) => {
     /* istanbul ignore next */
     if (!H.isTest) console.log(`Lane "${updated.name}" updated`);
 
-    // H.Session.set('lane', $lane);
     H.Session.set('lane', updated);
     return updated;
   });
@@ -79,10 +78,8 @@ const change_lane_name = function (event) {
   const new_slug = slug($lane, render_only);
   let new_path = `/lanes/${new_slug}/edit`;
 
-  if (render_only) {
-    $lane.slug = new_slug;
-    H.Session.set('lane', $lane);
-  }
+  $lane.slug = new_slug;
+  if (render_only) H.Session.set('lane', $lane);
 
   /* istanbul ignore else */
   if (new_path != this.$route.path) this.$router.push(new_path);
@@ -394,7 +391,6 @@ const get_lane_name = function () {
   var name = this.$route.params.slug;
   var $lane = get_lane(name);
   H.Session.set('lane', $lane);
-
   return ($lane.name == 'New' || !$lane.name) ? '' : $lane.name;
 };
 

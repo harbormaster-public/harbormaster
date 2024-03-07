@@ -51,6 +51,7 @@ const users_find_one = Users.findOne;
 const harbors_find_one = Harbors.findOne;
 
 describe('Edit Lane Page', function () {
+  beforeEach(() => resetDatabase(null));
   afterEach(() => {
     H.call = call_method;
   });
@@ -723,12 +724,15 @@ describe('Edit Lane Page', function () {
   });
 
   describe('#get_lane_name', function () {
+    afterEach(() => resetDatabase(null));
     it('sets the active session lane', () => {
+      Factory.create('lane');
       this.$route = { params: { slug: 'test' } };
       get_lane_name.bind(this)();
       expect(H.Session.get('lane').name).to.eq('test');
     });
     it('returns the lane name or an empty string if lane is new', () => {
+      Factory.create('lane');
       this.$route = { params: { slug: 'test' } };
       H.Session.set('lane', undefined);
       expect(get_lane_name.bind(this)()).to.eq('test');

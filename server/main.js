@@ -20,7 +20,7 @@ console.log('Modules loaded.');
 Meteor.startup(() => {
   console.log('Server started.');
   Meteor.settings.public.AMOUNT_SHOWN = process.env.AMOUNT_SHOWN ?
-    process.env.AMOUNT_SHOWN :
+    parseInt(process.env.AMOUNT_SHOWN, 10) :
     H.AMOUNT_SHOWN
   ;
   console.log(`Number of shipments to show at a time: ${

@@ -16,7 +16,7 @@ Meteor.publish('Harbors', function (view, slug) {
   switch (view) {
     case '/ship':
       const lane = Lanes.findOne({ slug });
-      harbors = Harbors.find({ _id: lane.type });
+      harbors = Harbors.find({ _id: lane?.type });
       break;
     default:
     case '/harbors':

@@ -84,6 +84,7 @@ describe('Ship Lane View', () => {
   });
 
   describe('#exit_code', () => {
+    beforeEach(() => resetDatabase(null));
     it('returns an empty string for a non-existant or active shipment', () => {
       this.$route = { params: { slug: 'test', date: 'test' } };
       Shipments.findOne = () => { };

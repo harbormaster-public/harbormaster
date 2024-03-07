@@ -290,7 +290,8 @@ const total_captains = function (lane) {
 const handle_file_upload_change = async function (files, evt) {
   const yaml = await files[0].text();
   const filename = files[0].name;
-  console.log("%cUploading yaml:\n", "color: #fa0", `${yaml}`);
+  /* istanbul ignore next */
+  if (!H.isTest) console.log("%cUploading yaml:\n", "color: #fa0", `${yaml}`);
   /* istanbul ignore next reason: no meaningful logic */
   H.call('Lanes#import_yaml', filename, yaml, (err, res) => {
     import_yaml_callback(err, res, evt);

@@ -24,6 +24,7 @@ describe('Users Page', () => {
   });
 
   describe('#captain_lanes', function () {
+    beforeEach(() => resetDatabase(null));
     it('returns "All" if the user is a harbormaster', () => {
       expect(captain_lanes({ _id: 'test@foo.bar', harbormaster: true }))
         .to

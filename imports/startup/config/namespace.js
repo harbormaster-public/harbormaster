@@ -56,6 +56,7 @@ import { Harbors } from '../../api/harbors';
       };
     };
 
+    H.html_calls = {};
     // eslint-disable-next-line no-native-reassign
     if (!$) $ = function (target) {
       return {
@@ -95,7 +96,8 @@ import { Harbors } from '../../api/harbors';
         parents () { return H.$(target.parents); },
         width () { return H.window.render_null ? false : 1024; },
         height () { return H.window.render_null ? false : 768; },
-        html () {},
+        html (str) { H.html_calls[target] = str; },
+        length: 1,
       };
     };
 

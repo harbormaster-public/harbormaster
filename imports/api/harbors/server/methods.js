@@ -184,7 +184,8 @@ const register = function (harbor) {
 const remove = function (harbor) {
   try {
     let depotpath = path.join(H.depot_dir, harbor._id);
-    console.log(`Removing ${depotpath}...`);
+    /* istanbul ignore next */
+    if (!H.isTest) console.log(`Removing ${depotpath}...`);
     Harbors.remove(harbor);
     fs.rmSync(depotpath, { recursive: true });
     /* istanbul ignore next */

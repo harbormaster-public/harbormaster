@@ -478,6 +478,7 @@ describe('Lanes', function () {
   });
 
   describe('#update_slug', () => {
+    beforeEach(() => resetDatabase(null));
     it('returns true when the slug has been updated', () => {
       const $lane = Factory.create('lane', { _id: 'test' });
       $lane.slug = 'foo';
@@ -488,6 +489,7 @@ describe('Lanes', function () {
   describe('#delete', () => {
     let $lane;
     beforeEach(() => {
+      resetDatabase(null);
       $lane = Factory.create('lane', { _id: 'test', type: 'test' });
       Factory.create('harbor', { _id: 'test', lanes: { test: {} } });
     });
@@ -508,6 +510,7 @@ describe('Lanes', function () {
     let $lane;
     const expected_string = 'test2';
     beforeEach(() => {
+      resetDatabase(null);
       $lane = Factory.create('lane', {
         _id: 'test_lane',
         name: 'test',
@@ -578,6 +581,7 @@ describe('Lanes', function () {
     expected_yaml += '  manifest: {}\n';
 
     beforeEach(() => {
+      resetDatabase(null);
       Factory.create('lane', {
         _id: 'test_lane',
         name: 'test',
@@ -646,6 +650,7 @@ describe('Lanes', function () {
     test_yaml += '  manifest: {}\n';
 
     beforeEach(() => {
+      resetDatabase(null);
       Factory.create('lane');
       Factory.create('harbor');
     });

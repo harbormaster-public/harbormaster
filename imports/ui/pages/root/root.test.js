@@ -85,6 +85,7 @@ describe('Root Page (/)', () => {
 
   describe('#moniker', function () {
     it('returns the user role and username', () => {
+      resetDatabase(null);
       Factory.create('user', { _id: 'test@harbormaster.io' });
       expect(moniker()).to.eq('User test@harbormaster.io');
       Factory.create('lane', { captains: ['test@harbormaster.io'] });

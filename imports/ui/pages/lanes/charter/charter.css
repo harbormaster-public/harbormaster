@@ -40,7 +40,6 @@
 }
 
 #charter-page .link:hover {
-  cursor: pointer;
   filter: brightness(0.75);
 }
 

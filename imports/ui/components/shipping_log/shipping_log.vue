@@ -78,8 +78,11 @@ export default {
 
   methods: {
     is_ready () {
-      console.log(`Shipments sub ready? ${this.$subReady.Shipments}`);
-      console.log(`Lanes sub ready? ${this.$subReady.Lanes}`);
+      /* istanbul ignore next */
+      if (!H.isTest) {
+        console.log(`Shipments sub ready? ${this.$subReady.Shipments}`);
+        console.log(`Lanes sub ready? ${this.$subReady.Lanes}`);
+      }
       return (
         this.$subReady.Shipments &&
         this.$subReady.Lanes

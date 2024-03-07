@@ -247,7 +247,10 @@ export default {
       H.call('Harbors#remove', harbor, (err, res) => {
         if (err) H.alert(err);
         else if (res) {
-          console.log(`Harbor ${harbor._id} removed, reloading.`);
+          /* istanbul ignore next */
+          if (!H.isTest) console.log(
+            `Harbor ${harbor._id} removed, reloading.`
+          );
           H.window.location.reload();
         }
       });
