@@ -32,7 +32,7 @@ const handle_download_yaml = function () {
     const localISOdate = new Date(
       new Date().getTime() - (new Date().getTimezoneOffset() * 60000)
     ).toISOString().replace('Z', '');
-    const charter_filename = `${slug}_${localISOdate}_charter.yml`;
+    const charter_filename = `${slug_string}_${localISOdate}_charter.yml`;
     const download_link = document.createElement('a');
     download_link.setAttribute(
       'href',

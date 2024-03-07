@@ -514,11 +514,21 @@ const download_charter_yaml = (slug) => {
     };
     if (lane.followup && !charter[lane.followup.slug]) {
       followup = Lanes.findOne({ slug: lane.followup.slug });
-      add_downstreams(followup);
+      /* istanbul ignore else */
+      if (followup) add_downstreams(followup);
+      /* istanbul ignore next */
+      if (!followup && !H.isTest) console.error(
+        `Unable to find lane by slug: ${lane.followup.slug}`
+      );
     }
     if (lane.salvage_plan && !charter[lane.salvage_plan.slug]) {
       salvage_plan = Lanes.findOne({ slug: lane.salvage_plan.slug });
-      add_downstreams(salvage_plan);
+      /* istanbul ignore else */
+      if (salvage_plan) add_downstreams(salvage_plan);
+      /* istanbul ignore next */
+      if (!followup && !H.isTest) console.error(
+        `Unable to find lane by slug ${lane.salvage_plan.slug}`
+      );
     }
   };
   const fields = {
