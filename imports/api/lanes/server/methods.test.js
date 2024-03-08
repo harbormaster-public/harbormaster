@@ -630,6 +630,7 @@ describe('Lanes', function () {
   });
 
   describe('#import_yaml', () => {
+    let harbor;
     let test_yaml = 'test:\n';
     test_yaml += '  name: test\n';
     test_yaml += '  type: test\n';
@@ -652,7 +653,7 @@ describe('Lanes', function () {
     beforeEach(() => {
       resetDatabase(null);
       Factory.create('lane');
-      Factory.create('harbor');
+      harbor = Factory.create('harbor');
     });
     it('returns a list of slugs for pre-existing lanes', () => {
       expect(import_yaml('test', test_yaml).found.length).to.eq(1);
@@ -661,6 +662,12 @@ describe('Lanes', function () {
     it('returns a list of missing harbors not installed', () => {
       expect(import_yaml('test', test_yaml).missing.length).to.eq(1);
       expect(import_yaml('test', test_yaml).missing[0]).to.eq('foo');
+    });
+    it('assigns a key for Lane manifests in a Harobr if needed', () => {
+      delete harbor.lanes;
+      Harbors.update(harbor._id, harbor);
+      const results = import_yaml('test', test_yaml);
+      expect(results.created.length).to.eq(2);
     });
     it('assigns downstreams and returns a list of lanes it created', () => {
       const results = import_yaml('test', test_yaml);

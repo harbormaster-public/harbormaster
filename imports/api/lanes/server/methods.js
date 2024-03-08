@@ -579,6 +579,7 @@ const import_yaml = (filename, yaml) => {
       }
       const lane_id = Lanes.insert(new_lane);
       const harbor = Harbors.findOne(values.type);
+      harbor.lanes = (harbor.lanes || {});
       harbor.lanes[lane_id] = { manifest: values.manifest };
       Harbors.update(harbor._id, harbor);
       created.push(slug);
