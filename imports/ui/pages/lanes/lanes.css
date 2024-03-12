@@ -311,7 +311,7 @@ a#new-lane:after {
     background: #0af;
     box-shadow: 0 0 5px 5px #ffae00;
     border-left-color: transparent;
-    font-size: 50px;
+    font-size: 35px;
     width: 800px;
   }
 
@@ -453,6 +453,7 @@ a#new-lane:after {
   .lane-options {
     font-size: 60px;
     line-height: 0;
+    width: 70px;
   }
 
   .lane-options.active {
@@ -471,4 +472,17 @@ a#new-lane:after {
   figure section {
     margin: 50px 0 0;
   }
+
+  #router-view #download-yaml,
+  #router-view #import-yaml {
+    height: 80px;
+    font-size: 40px;
+  }
+
+  #router-view #download-yaml:before,
+  #router-view #import-yaml:before {
+    left: -75px;
+    border-width: 40px;
+  }
+
 }

@@ -182,11 +182,21 @@ html body a:hover {
 
   #router-view {
     max-width: 100%;
+    padding-bottom: 200px;
   }
 
   html body a,
   html body a:visited {
     border-bottom: 5px dotted #0af;
+  }
+
+  #router-view footer {
+    height: 100px;
+  }
+
+  footer .mx-auto {
+    max-width: 100%;
+    font-size: 35px;
   }
 }
 </style>
