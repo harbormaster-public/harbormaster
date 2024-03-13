@@ -17,6 +17,7 @@ services:
       # Optional:
       MAIL_URL: ${MAIL_URL}
       DEBUG: ${DEBUG}
+      AMOUNT_SHOWN: ${AMOUNT_SHOWN}
     volumes:
       - ~/.harbormaster:/root/.harbormaster
       - ~/.ssh:/root/.ssh
