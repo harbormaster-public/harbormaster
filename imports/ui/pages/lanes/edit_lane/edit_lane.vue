@@ -80,52 +80,27 @@
             v-on:click.prevent="duplicate_lane">Duplicate This Lane</button>
         </div>
 
-        <div v-if="!no_followup">
-          <button v-on:click.prevent="add_followup_lane" class="add-followup rounded-sm my-2 block">Add Followup
-            Destination</button>
-        </div>
-        <div v-if="choose_followup">
-          <fieldset v-on:change.prevent="change_followup_lane" class="fieldset followup">
-            <legend>Followup: {{followup_lane}}</legend>
-            <div v-for="followup in lanes" :key="followup.slug">
-              <label>
-                <input :checked="chosen_followup(followup)" type=radio name="followup_lanes" :value="followup.slug">
-                {{followup.name}}
-              </label>
-            </div>
-            <label>
-              <input type=radio name="followup_lanes" value="">
-              No Followup
-            </label>
-          </fieldset>
-        </div>
-
-        <div v-if="!no_salvage">
-          <button v-on:click.prevent="add_salvage_plan" class="warning add-salvage-plan rounded-sm my-2 block">
-            Add a Salvage Plan
-          </button>
-        </div>
-        <div v-if="choose_salvage_plan">
-          <fieldset v-on:change.prevent="change_salvage_plan" class="fieldset salvage-plan">
-            <legend>Salvage Plan: {{salvage_plan_lane}}</legend>
-            <div v-for="salvage_lane in lanes" :key="salvage_lane.slug">
-              <label>
-                <input :checked="chosen_salvage_plan(salvage_lane)" type=radio name="salvage_plan_lanes"
-                  :value="salvage_lane.slug">
-                {{salvage_lane.name}}
-              </label>
-            </div>
-            <label>
-              <input type=radio name="followup_lanes" value="">
-              No Salvage Plan
-            </label>
-          </fieldset>
-        </div>
       </form>
     </div>
     <div v-else>
       <h2>You do not have permission to edit this lane.</h2>
     </div>
+
+    <choose-downstreams
+      :no_followup="no_followup"
+      :add_followup_lane="add_followup_lane"
+      :choose_followup="choose_followup"
+      :change_followup_lane="change_followup_lane"
+      :followup_lane="followup_lane"
+      :lanes="lanes"
+      :chosen_followup="chosen_followup"
+      :no_salvage="no_salvage"
+      :add_salvage_plan="add_salvage_plan"
+      :choose_salvage_plan="choose_salvage_plan"
+      :change_salvage_plan="change_salvage_plan"
+      :salvage_plan_lane="salvage_plan_lane"
+      :chosen_salvage_plan="chosen_salvage_plan"
+    ></choose-downstreams>
 
     <shipping-log></shipping-log>
   </div>
@@ -171,12 +146,14 @@ import {
   not_found,
 } from './lib';
 import ShippingLog from '../../../components/shipping_log';
+import ChooseDownstreams from '../../../components/choose_downstreams';
 
 const options = { sort: { actual: -1 }, limit: H.AMOUNT_SHOWN };
 
 export default {
   components: {
-    ShippingLog
+    ShippingLog,
+    ChooseDownstreams,
   },
 
   meteor: {

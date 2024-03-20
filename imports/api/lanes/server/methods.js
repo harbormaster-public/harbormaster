@@ -109,10 +109,7 @@ const publish_lanes = function publish_lanes (view, slug) {
       } });
       break;
     case '/edit':
-      // Edit lane downstream selection needs to become its own component, with
-      // its own subscription, before we can properly filter this by slug
-      // published = Lanes.find({ slug }, { fields: {
-      published = Lanes.find({ }, { fields: {
+      published = Lanes.find({ slug }, { fields: {
         _id: 1,
         name: 1,
         captains: 1,
@@ -135,6 +132,13 @@ const publish_lanes = function publish_lanes (view, slug) {
         'salvage_plan.slug': 1,
         'salvage_plan.name': 1,
         'salvage_plan.type': 1,
+      } });
+      break;
+    case '/downstreams':
+      published = Lanes.find({}, { fields: {
+        _id: 1,
+        slug: 1,
+        name: 1,
       } });
       break;
     case '/log':

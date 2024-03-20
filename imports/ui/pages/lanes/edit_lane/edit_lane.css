@@ -15,6 +15,7 @@ form pre {
 
 fieldset {
   padding: 5px 15px;
+  border-radius: 2px;
 }
 
 .followup label,

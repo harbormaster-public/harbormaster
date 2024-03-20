@@ -161,6 +161,19 @@ describe('Lanes', function () {
       expect(result.followup._id).to.eq('foo');
       expect(result.salvage_plan._id).to.eq('bar');
     });
+    it('publishes the correct fields for the /downstreams component', () => {
+      const result = publish_lanes('/downstreams').fetch()[0];
+      const expected_fields = [
+        '_id',
+        'slug',
+        'name',
+      ];
+      expect(Object.keys(result).sort().join(''))
+        .to.eq(expected_fields.sort().join(''));
+      expect(result._id).to.eq('test');
+      expect(result.slug).to.eq('test');
+      expect(result.name).to.eq('test');
+    });
     it('publishes the correct fields for the /log component', () => {
       const result = publish_lanes('/log').fetch()[0];
       const expected_fields = [
