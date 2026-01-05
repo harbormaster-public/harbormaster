@@ -22,7 +22,7 @@ H.exec = promisify(cp.exec);
 
 const update_harbor = async function (lane, values) {
   try {
-    let harbor = Harbors.findOne(lane.type);
+    let harbor = await Harbors.findOneAsync(lane.type);
     let success = await H.harbors[lane.type].update(lane, values);
     if (success) {
       /* istanbul ignore next */
@@ -30,7 +30,7 @@ const update_harbor = async function (lane, values) {
       harbor.lanes[lane._id] = {
         manifest: values,
       };
-      await Harbors.update(harbor._id, harbor);
+      await Harbors.updateAsync(harbor._id, { $set: { lanes: harbor.lanes } });
       lane = await H.call('Harbors#render_work_preview', lane, values);
       lane.minimum_complete = success;
     }
@@ -43,13 +43,13 @@ const update_harbor = async function (lane, values) {
         salvage_runs: 0,
       };
 
-      LatestShipment.upsert(
-        lane._id,
-        { shipment: lane.last_shipment }
+      await LatestShipment.upsertAsync(
+        { _id: lane._id },
+        { $set: { shipment: lane.last_shipment } },
       );
     }
 
-    if (success) Lanes.update(lane._id, lane);
+    if (success) await Lanes.updateAsync(lane._id, lane);
 
     return { lane, success };
 
@@ -65,14 +65,17 @@ const render_input = async function (lane, manifest) {
   const new_lane_name = 'New';
 
   try {
-    if (lane.name == new_lane_name || !lane.type) return false;
+    if (!lane || lane.name == new_lane_name || !lane.type) return 404;
 
-    lane.rendered_input = H.harbors[lane.type].render_input(manifest, lane);
+    lane.rendered_input = await H.harbors[lane.type].render_input(
+      manifest,
+      lane,
+    );
     lane.rendered_work_preview = await H
       .harbors[lane.type]
       .render_work_preview(manifest, lane)
     ;
-    Lanes.update(lane._id, {
+    await Lanes.updateAsync(lane._id, {
       $set: {
         rendered_input: lane.rendered_input,
         rendered_work_preview: lane.rendered_work_preview,
@@ -88,7 +91,7 @@ const render_input = async function (lane, manifest) {
 };
 
 const render_work_preview = async function (lane, manifest) {
-  if (!H.harbors[lane?.type]) return 404;
+  if (!lane || !H.harbors[lane?.type]) return 404;
   try {
     lane.rendered_work_preview = await H
       .harbors[lane.type]
@@ -97,15 +100,15 @@ const render_work_preview = async function (lane, manifest) {
     if (manifest?.shipment_id) {
       /* istanbul ignore next */
       if (!H.isTest) console.log(
-        `Updating rendered work for shipment: ${manifest.shipment_id}`
+        `Updating rendered work for shipment: ${manifest.shipment_id}`,
       );
-      Shipments.update(manifest.shipment_id, {
+      await Shipments.updateAsync(manifest.shipment_id, {
         $set: {
           rendered_work_preview: lane.rendered_work_preview,
         },
       });
     }
-    Lanes.update(lane._id, {
+    await Lanes.updateAsync(lane._id, {
       $set: {
         rendered_work_preview: lane.rendered_work_preview,
       },
@@ -116,19 +119,19 @@ const render_work_preview = async function (lane, manifest) {
   catch (err) { return not_found(err); }
 };
 
-const get_constraints = function (name) {
+const get_constraints = async function (name) {
   const key = `constraints.${name}`;
   const constraints = {
     global: [],
     [name]: [],
   };
-  constraints[name] = [];
-  Harbors.find({
+  const constrained_harbors = await Harbors.find({
     $or: [
       { 'constraints.global': { $exists: true } },
       { [key]: { $exists: true } },
     ],
-  }).forEach((doc) => {
+  }).fetchAsync();
+  constrained_harbors.forEach(doc => {
     /* istanbul ignore else */
     if (doc.constraints.global) {
       constraints.global = constraints.global.concat(doc.constraints.global);
@@ -142,9 +145,12 @@ const get_constraints = function (name) {
   return constraints;
 };
 
-const register = function (harbor) {
+const register = async function (harbor) {
   harbor.registered = !harbor.registered;
-  Harbors.update(harbor._id, harbor);
+  await Harbors.updateAsync(
+    harbor._id,
+    { $set: { registered: harbor.registered } },
+  );
   let files = [];
 
   if (harbor.registered) {
@@ -181,12 +187,12 @@ const register = function (harbor) {
   return 404;
 };
 
-const remove = function (harbor) {
+const remove = async function (harbor) {
   try {
     let depotpath = path.join(H.depot_dir, harbor._id);
     /* istanbul ignore next */
     if (!H.isTest) console.log(`Removing ${depotpath}...`);
-    Harbors.remove(harbor);
+    await Harbors.removeAsync(harbor?._id);
     fs.rmSync(depotpath, { recursive: true });
     /* istanbul ignore next */
     if (!H.isTest) console.log(`Successfully removed harbor: ${harbor._id}`);

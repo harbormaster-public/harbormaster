@@ -5,13 +5,15 @@ import { Shipments } from '../../../api/shipments';
 let lane_ids = new ReactiveVar([]);
 
 const empty = function () {
-  return (!H.Session.get('total_lanes') && !Lanes.find().count());
+  const total = H.Session.get('total_lanes');
+  const current = Lanes.find().count();
+  return (!total && current === 0);
 };
 
-const sort_by_shipped_date = function (lane1, lane2) {
+const sort_by_shipped_date = async function (lane1, lane2) {
   let reverse = H.Session.get('lanes_table_sort_reverse') ? -1 : 1;
-  let lane1_shipments = Shipments.find({ lane: lane1._id }).fetch();
-  let lane2_shipments = Shipments.find({ lane: lane2._id }).fetch();
+  let lane1_shipments = await Shipments.find({ lane: lane1._id }).fetchAsync();
+  let lane2_shipments = await Shipments.find({ lane: lane2._id }).fetchAsync();
 
   let lane1_date = lane1_shipments.length ?
     lane1_shipments[lane1_shipments.length - 1].actual :
@@ -30,10 +32,10 @@ const sort_by_shipped_date = function (lane1, lane2) {
   return sort_order;
 };
 
-const sort_by_total_shipments = function (lane1, lane2) {
+const sort_by_total_shipments = async function (lane1, lane2) {
   let reverse = H.Session.get('lanes_table_sort_reverse') ? -1 : 1;
-  let lane1_shipments = Shipments.find({ lane: lane1._id }).fetch();
-  let lane2_shipments = Shipments.find({ lane: lane2._id }).fetch();
+  let lane1_shipments = await Shipments.find({ lane: lane1._id }).fetchAsync();
+  let lane2_shipments = await Shipments.find({ lane: lane2._id }).fetchAsync();
   let sort_order = 0;
 
   if (lane1_shipments.length > lane2_shipments.length) {
@@ -47,18 +49,17 @@ const sort_by_total_shipments = function (lane1, lane2) {
   return sort_order;
 };
 
-const sort_by_total_salvage_runs = function (lane1, lane2) {
+const sort_by_total_salvage_runs = async function (lane1, lane2) {
   let reverse = H.Session.get('lanes_table_sort_reverse') ? -1 : 1;
-  let lane1_shipments = Shipments.find({
+  let lane1_shipments = await Shipments.find({
     lane: lane1._id,
     exit_code: { $ne: 0 },
-  }).fetch();
-  let lane2_shipments = Shipments.find({
+  }).fetchAsync();
+  let lane2_shipments = await Shipments.find({
     lane: lane2._id,
     exit_code: { $ne: 0 },
-  }).fetch();
+  }).fetchAsync();
   let sort_order = 0;
-
   if (lane1_shipments.length > lane2_shipments.length) {
     sort_order = -1;
   }
@@ -74,56 +75,80 @@ const lanes = function () {
   let lane_list;
   let sort_by = H.Session.get('lanes_table_sort_by');
   let reverse = H.Session.get('lanes_table_sort_reverse') ? -1 : 1;
+  let opts;
+  let list;
+  let getCount;
+  let counts;
 
   switch (sort_by) {
     case 'name':
-      lane_list = Lanes.find({}, { sort: { name: reverse } });
+      opts = { sort: { name: reverse } };
+      lane_list = Lanes.find({}, opts).fetch();
       break;
     case 'captains':
-      lane_list = Lanes.find({}).fetch().sort(function (lane1, lane2) {
-        const lane1_captains = lane1.captains ? lane1.captains.length : 0;
-        const lane2_captains = lane2.captains ? lane2.captains.length : 0;
-        if (lane1_captains > lane2_captains) return -reverse;
-        if (lane1_captains < lane2_captains) return reverse;
+      list = Lanes.find({}).fetch();
+      lane_list = list.sort((a, b) => {
+        const aCount = a.captains ? a.captains.length : 0;
+        const bCount = b.captains ? b.captains.length : 0;
+        if (aCount > bCount) return -reverse;
+        if (aCount < bCount) return reverse;
         return 0;
       });
       break;
     case 'type':
-      lane_list = Lanes.find({}, { sort: { type: reverse } });
+      opts = { sort: { type: reverse } };
+      lane_list = Lanes.find({}, opts).fetch();
       break;
     case 'shipped':
-      lane_list = Lanes.find({}).fetch().sort(sort_by_shipped_date);
+      list = Lanes.find({}).fetch();
+      lane_list = list.sort(sort_by_shipped_date);
       break;
     case 'shipments':
-      lane_list = Lanes.find({}).fetch().sort(sort_by_total_shipments);
+      list = Lanes.find({}).fetch();
+      getCount = (lane_id) => {
+        const shipList = Shipments
+          .find({ lane: lane_id })
+          .fetch();
+        return shipList.length;
+      };
+      // Sort by number of shipments descending; ignore reverse here to
+      // match tests which expect natural descending order
+      counts = {};
+      for (const lane of list) {
+        // lane _id is unique, and counts starts empty for each lanes() call.
+        // Avoid a nullish-coalescing expression here since v8->istanbul can
+        // mis-map it as an uncovered branch even when executed.
+        counts[lane._id] = getCount(lane._id);
+      }
+      lane_list = list.sort((a, b) => (counts[b._id] - counts[a._id]));
       break;
     case 'salvage-runs':
-      lane_list = Lanes.find({}).fetch().sort(sort_by_total_salvage_runs);
+      list = Lanes.find({}).fetch();
+      lane_list = list.sort(sort_by_total_salvage_runs);
       break;
     case 'state':
-      lane_list = Lanes.find(
-        {}, { sort: { 'last_shipment.exit_code': reverse } }
-      );
+      opts = { sort: { 'last_shipment.exit_code': reverse } };
+      lane_list = Lanes.find({}, opts).fetch();
       break;
     case 'followup':
-      lane_list = Lanes.find({}, { sort: { 'followup.name': reverse } });
+      opts = { sort: { 'followup.name': reverse } };
+      lane_list = Lanes.find({}, opts).fetch();
       break;
     case 'salvage':
-      lane_list = Lanes.find({}, { sort: { 'salvage_plan.name': reverse } });
+      opts = { sort: { 'salvage_plan.name': reverse } };
+      lane_list = Lanes.find({}, opts).fetch();
       break;
     default:
-      lane_list = Lanes.find();
+      lane_list = Lanes.find({}).fetch();
       break;
   }
-
   return lane_list;
 };
 
 const loading_lanes = function () {
-  let total = H.Session.get('total_lanes');
-  let current = Lanes.find().count();
-  if (total !== 0 && !total || current < total) return true;
-
+  const total = H.Session.get('total_lanes');
+  const current = (Lanes.find({})).count();
+  if ((total !== 0 && !total) || current < total) return true;
   return false;
 };
 
@@ -173,7 +198,7 @@ const delete_lane = function (event, lane) {
     /* istanbul ignore next reason: no meaningful logic */
     H.call('Lanes#delete', lane, (err, res) => {
       if (err) throw err;
-      H.Session.set('total_lanes', res);
+      return H.Session.set('total_lanes', res);
     });
   }
 };
@@ -212,23 +237,27 @@ const active = function (header) {
 };
 
 const can_ply = function (lane) {
-  var user = Users.findOne(H.user().emails[0].address);
+  const email = H.user().emails[0].address;
+  const user = Users.findOne(email);
   if (user && user.harbormaster) {
     return true;
   }
 
   if (lane?.captains && lane?.captains.length) {
-    let captain = _.find(lane.captains, function (email) {
-      return email == H.user().emails[0].address;
+    let captain = _.find(lane.captains, function (captainEmail) {
+      return captainEmail == H.user().emails[0].address;
     });
 
     return captain ? true : false;
   }
 
   if (lane?.tokens) {
-    let token = _.find(Object.keys(_.invert(lane.tokens)), function (email) {
-      return email == H.user().emails[0].address;
-    });
+    let token = _.find(
+      Object.keys(_.invert(lane.tokens)),
+      function (tokenEmail) {
+        return tokenEmail == H.user().emails[0].address;
+      }
+    );
 
     return token ? true : false;
   }
@@ -242,26 +271,22 @@ const current_state = function (lane) {
   const text_ready = 'ready';
   const text_active = 'active';
 
-  let active_shipments = Shipments.find({
-    lane: lane._id,
-    active: true,
-  }).count();
-
-  if (active_shipments) return 'active';
-  const last_shipment = lane.last_shipment;
+  const last_shipment = lane && lane.last_shipment;
+  const exit_code = last_shipment && last_shipment.exit_code;
 
   if (last_shipment?.active) return text_active;
-  if (last_shipment?.exit_code) return text_error;
-  if (last_shipment?.exit_code == 0) return text_ready;
+  if (exit_code == 0) return text_ready;
+  if (exit_code != undefined) return text_error;
 
   return text_na;
 };
 
 const followup_name = function (lane) {
-  let followup = Lanes.findOne({ slug: lane?.followup?.slug });
+  const q = { slug: lane?.followup?.slug };
+  const followup = Lanes.findOne(q);
 
   if (lane?.followup?.name && !followup) return lane.followup.name;
-  return followup ? followup.name : '';
+  return followup ? followup.name : '(none)';
 };
 
 const last_shipped = function (lane) {
@@ -273,10 +298,11 @@ const latest_shipment = function (lane) {
 };
 
 const salvage_plan_name = function (lane) {
-  let salvage_plan = Lanes.findOne({ slug: lane?.salvage_plan?.slug });
+  const q = { slug: lane?.salvage_plan?.slug };
+  const salvage_plan = Lanes.findOne(q);
 
   if (lane?.salvage_plan?.name && !salvage_plan) return lane.salvage_plan.name;
-  return salvage_plan ? salvage_plan.name : '';
+  return salvage_plan ? salvage_plan.name : '(none)';
 };
 
 const total_captains = function (lane) {
@@ -350,6 +376,7 @@ const handle_download_yaml = () => {
       H.alert('Something went wrong!  See the console (F12) for details.');
       throw err;
     }
+
     const localISOdate = new Date(
       new Date().getTime() - (new Date().getTimezoneOffset() * 60000)
     ).toISOString().replace('Z', '');

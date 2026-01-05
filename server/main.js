@@ -1,31 +1,21 @@
-import '../imports/startup/server';
-import '../imports/startup/config/login';
-import '../imports/startup/config/constants';
-import '../imports/api/lanes/server';
-import '../imports/api/users/server';
-import '../imports/api/harbors/server';
-import '../imports/api/shipments/server';
+/**
+ * These modules are automatically imported by jorgenvatle:vite.
+ * You can commit these to your project or move them elsewhere if you'd like,
+ * but they must be imported somewhere in your Meteor mainModule.
+ *
+ * More info:
+ * https://github.com/JorgenVatle/meteor-vite#lazy-loaded-meteor-packages
+ **/
+import "../_vite-bundle/server/_entry.mjs";
+/** End of vite auto-imports **/
+// Server entrypoint for Meteor.
 
-import { Meteor } from 'meteor/meteor';
-import '../imports/api/captains';
-import '../imports/api/harbormasters';
-import '../imports/api/lanes';
-import '../imports/api/shipments';
-import '../imports/api/users';
-import '../imports/api/harbors';
+import '../imports/startup/server/index';
 
-import puppeteer from 'puppeteer';
+// Ensure server-side methods/publications are registered.
+import '../imports/api/users/server/index';
+import '../imports/api/harbors/server/index';
+import '../imports/api/lanes/server/index';
+import '../imports/api/shipments/server/index';
 
-console.log('Modules loaded.');
-Meteor.startup(() => {
-  console.log('Server started.');
-  Meteor.settings.public.AMOUNT_SHOWN = process.env.AMOUNT_SHOWN ?
-    parseInt(process.env.AMOUNT_SHOWN, 10) :
-    H.AMOUNT_SHOWN
-  ;
-  console.log(`Number of shipments to show at a time: ${
-    Meteor.settings.public.AMOUNT_SHOWN
-  }`);
 
-  console.log(`Puppeteer loaded: ${puppeteer._preferredRevision}`);
-});

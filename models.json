@@ -1,0 +1,20 @@
+{
+  "models": [
+    {
+      "name": "dolphin-mistral",
+      "tagline": "recommended"
+    },
+    {
+      "name": "llama2",
+      "tagline": "generalist"
+    },
+    {
+      "name": "deepseek-coder",
+      "tagline": "trained on code"
+    },
+    {
+      "name": "neural-chat",
+      "tagline": "trained technically"
+    }
+  ]
+}

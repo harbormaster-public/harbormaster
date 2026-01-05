@@ -17,7 +17,9 @@ const update_harbor = function () {
   // Capture the user form values from component-agnostic rendering
   let inputs = H.$('.harbor').find('input, textarea');
   let values = {};
-  let $lane = H.Session.get('lane');
+  const routeSlug = this?.$route?.params?.slug;
+  let $lane = routeSlug ? get_lane(routeSlug) : H.Session.get('lane');
+  if (!$lane) $lane = {};
 
   _.each(inputs, function (element) {
     let type = element.type;
@@ -53,7 +55,7 @@ const update_harbor_method = function (err, res) {
   if (!res.success && validating_fields) H.alert('Invalid values.');
   update_lane(res.lane);
   H.Session.set('validating_fields', false);
-  this.harbor_refresh += 1;
+  if (this && typeof this.harbor_refresh === 'number') this.harbor_refresh += 1;
 
   return H.Session.get('lane');
 };
@@ -63,26 +65,35 @@ const update_lane = ($lane) => {
     /* istanbul ignore next */
     if (err) throw err;
     /* istanbul ignore next */
-    if (!H.isTest) console.log(`Lane "${updated.name}" updated`);
+    if (!H.isTest && updated.name) {
+      console.log(`Lane "${updated.name}" updated`);
+    }
 
     H.Session.set('lane', updated);
     return updated;
   });
 };
 
-const change_lane_name = function (event) {
+const change_lane_name = async function (event) {
   let $lane = H.Session.get('lane') || {};
   $lane.name = event.target.value;
-  const render_only = Lanes.findOne($lane._id) ? false : true;
+  // For new lanes, _id is unset; never call findOneAsync(undefined) as it can
+  // return an arbitrary lane and cause accidental overwrites.
+  let render_only = true;
+  if ($lane._id) {
+    const existing = await Lanes.findOneAsync($lane._id);
+    render_only = !existing;
+  }
 
-  const new_slug = slug($lane, render_only);
+  const new_slug = await slug.call(this, $lane, render_only);
   let new_path = `/lanes/${new_slug}/edit`;
 
   $lane.slug = new_slug;
   if (render_only) H.Session.set('lane', $lane);
+  else await update_lane($lane);
 
   /* istanbul ignore else */
-  if (new_path != this.$route.path) this.$router.push(new_path);
+  if (new_path != this.$route?.path) this.$router?.push(new_path);
 };
 
 const slug = function ($lane, render_only) {
@@ -116,14 +127,18 @@ const slug = function ($lane, render_only) {
 };
 
 const followup_lane = function () {
-  let $lane = get_lane(slug(this.$route?.params?.slug, true));
+  let $lane = get_lane(
+    slug.call(this, this.$route?.params?.slug, true)
+  );
   if (!$lane.followup && !$lane.name) return false;
 
   return $lane.followup?.name || '';
 };
 
 const salvage_plan_lane = function () {
-  let $lane = get_lane(slug(this.$route?.params?.slug, true));
+  let $lane = get_lane(
+    slug.call(this, this.$route?.params?.slug, true)
+  );
   if (!$lane.salvage_plan && !$lane.name) return false;
 
   return $lane.salvage_plan?.name || '';
@@ -134,7 +149,9 @@ const lanes = function () {
 };
 
 const lane = function () {
-  let $lane = get_lane(slug(this.$route?.params?.slug, true));
+  let $lane = get_lane(
+    slug.call(this, this.$route?.params?.slug, true)
+  );
 
   return $lane;
 };
@@ -148,31 +165,39 @@ const shipment_history = function () {
 };
 
 const no_followup = function () {
-  let $lane = get_lane(slug(this.$route?.params?.slug, true));
+  let $lane = get_lane(
+    slug.call(this, this.$route?.params?.slug, true)
+  );
 
-  return Lanes.find().count() < 2 ||
-    $lane && $lane.followup ||
-    H.Session.get('choose_followup') ||
-    false;
+  if ($lane && $lane.followup) return $lane.followup;
+  if (H.Session.get('choose_followup')) return H.Session.get('choose_followup');
+  return false;
 };
 
 const no_salvage = function () {
-  let $lane = get_lane(slug(this.$route?.params?.slug, true));
+  let $lane = get_lane(
+    slug.call(this, this.$route?.params?.slug, true)
+  );
 
-  return Lanes.find().count() < 2 ||
-    $lane && $lane.salvage_plan ||
-    H.Session.get('choose_salvage_plan') ||
-    false;
+  if ($lane && $lane.salvage_plan) return $lane.salvage_plan;
+  if (H.Session.get('choose_salvage_plan')) {
+    return H.Session.get('choose_salvage_plan');
+  }
+  return false;
 };
 
 const choose_followup = function () {
-  let $lane = get_lane(slug(this.$route?.params?.slug, true));
+  let $lane = get_lane(
+    slug.call(this, this.$route?.params?.slug, true)
+  );
 
   return H.Session.get('choose_followup') || $lane && $lane.followup;
 };
 
 const choose_salvage_plan = function () {
-  let $lane = get_lane(slug(this.$route?.params?.slug, true));
+  let $lane = get_lane(
+    slug.call(this, this.$route?.params?.slug, true)
+  );
 
   return H.Session.get('choose_salvage_plan') || $lane && $lane.salvage_plan;
 };
@@ -187,8 +212,12 @@ const can_ply = function (user, $lane) {
 
 const captain_list = function () {
   const $lane = H.Session.get('lane') || {};
-  const users = Users.find({ expired: { $not: { $exists: true } } }).fetch();
-  const you = Users.findOne(H.userId);
+  let you;
+
+  let users = Users.find({ expired: { $not: { $exists: true } } })
+    .fetch();
+  you = Users.findOne(H.user().emails[0].address);
+
   const captains = users.map(user => ({
     ...user,
     can_ply: can_ply(user, $lane),
@@ -200,13 +229,19 @@ const captain_list = function () {
 
 const plying = function () {
   var $lane = H.Session.get('lane');
-  var user = Users.findOne(H.user().emails[0].address);
+  var user;
+  var currentUserEmail;
 
+  currentUserEmail = H.user()?.emails?.[0]?.address;
+
+  if (!currentUserEmail) return false;
+
+  user = Users.findOne(currentUserEmail);
   if (user && user.harbormaster) { return true; }
 
   if ($lane?.captains && $lane?.captains?.length) {
     let captain = _.find($lane.captains, function (email) {
-      return email == H.user().emails[0].address;
+      return email == currentUserEmail;
     });
 
     return captain ? true : false;
@@ -216,30 +251,30 @@ const plying = function () {
 };
 
 const harbors = function () {
-  let $harbors = Harbors.find({ registered: true }).fetch();
-
-  return $harbors;
+  return Harbors.find({ registered: true }).fetch();
 };
 
 const current_lane = function () {
   let name = this.$route?.params?.slug;
-  let $lane = H.Session.get('lane') || get_lane(name);
+  let $lane = get_lane(name);
 
   return !_.isEmpty($lane) ? $lane : { type: false };
 };
 
 const lane_type = function () {
   let name = this.$route?.params?.slug;
-  let $lane = H.Session.get('lane') || get_lane(name);
+  let $lane = get_lane(name);
 
   return $lane && $lane.type;
 };
 
 const render_harbor = function () {
-  let name = this.$route?.params?.slug;
+  let name = this?.$route?.params?.slug;
   let $lane = get_lane(name);
   if (!$lane._id && !$lane.name) return 'Assign a Name first!';
+
   let harbor = $lane.type ? Harbors.findOne($lane.type) : {};
+
   let harbor_lane_reference = harbor?.lanes ?
     harbor.lanes[$lane._id] :
     false
@@ -259,7 +294,10 @@ const render_harbor = function () {
       if (active_lane == 404) return not_found.set(true);
 
       /* istanbul ignore next */
-      if (active_lane) return H.Session.set('lane', active_lane);
+      if (active_lane) {
+        not_found.set(false);
+        return H.Session.set('lane', active_lane);
+      }
       return false;
     });
 
@@ -271,13 +309,17 @@ const render_harbor = function () {
 };
 
 const validate_done = function () {
-  let $lane = get_lane(slug(this.$route?.params?.slug, true));
+  let $lane = get_lane(
+    slug.call(this, this.$route?.params?.slug, true)
+  );
 
   return $lane && $lane.minimum_complete;
 };
 
 const chosen_followup = function (followup) {
-  let $lane = get_lane(slug(this.$route?.params?.slug, true));
+  let $lane = get_lane(
+    slug.call(this, this.$route?.params?.slug, true)
+  );
 
   return followup._id && $lane._id ?
     followup.slug == $lane.followup?.slug :
@@ -286,7 +328,9 @@ const chosen_followup = function (followup) {
 };
 
 const chosen_salvage_plan = function (salvage_lane) {
-  let $lane = get_lane(slug(this.$route?.params?.slug, true));
+  let $lane = get_lane(
+    slug.call(this, this.$route?.params?.slug, true)
+  );
 
   return salvage_lane._id && $lane._id ?
     salvage_lane.slug == $lane.salvage_plan?.slug :
@@ -295,7 +339,9 @@ const chosen_salvage_plan = function (salvage_lane) {
 };
 
 const submit_form = function () {
-  let $lane = get_lane(slug(this.$route?.params?.slug, true));
+  let $lane = get_lane(
+    slug.call(this, this.$route?.params?.slug, true)
+  );
   if (!$lane._id && !$lane.name) return false;
 
   if (
@@ -305,18 +351,20 @@ const submit_form = function () {
     $lane.type
   ) {
 
-    $lane.slug = slug($lane, false);
+    $lane.slug = slug.call(this, $lane, false);
     H.Session.set('lane', $lane);
     H.Session.set('validating_fields', true);
 
-    return update_harbor();
+    return update_harbor.bind(this)();
   }
 
   return $lane;
 };
 
 const change_followup_lane = function (event) {
-  let $lane = get_lane(slug(this.$route?.params?.slug, true));
+  let $lane = get_lane(
+    slug.call(this, this.$route?.params?.slug, true)
+  );
   let $followup_lane = Lanes.findOne({ slug: event?.target?.value });
 
   if (
@@ -332,8 +380,12 @@ const change_followup_lane = function (event) {
 };
 
 const change_salvage_plan = function (event) {
-  let $lane = get_lane(slug(this.$route?.params?.slug, true));
-  let $salvage_plan_lane = Lanes.findOne({ slug: event?.target?.value });
+  let $lane = get_lane(
+    slug.call(this, this.$route?.params?.slug, true)
+  );
+  let $salvage_plan_lane = Lanes.findOne({
+    slug: event?.target?.value,
+  });
 
   if (
     $lane.name &&
@@ -349,7 +401,9 @@ const change_salvage_plan = function (event) {
 };
 
 const change_captains = function (event) {
-  let $lane = get_lane(slug(this.$route?.params?.slug, true));
+  let $lane = get_lane(
+    slug.call(this, this.$route?.params?.slug, true)
+  );
   let captains = $lane && $lane.captains ? $lane.captains : [];
   let user = event?.target?.value;
 
@@ -365,7 +419,7 @@ const change_captains = function (event) {
   }
 
   /* istanbul ignore else */
-  if ($lane && Lanes.findOne($lane._id)) {
+  if ($lane && (Lanes.findOne($lane._id))) {
     $lane.captains = captains;
     update_lane($lane);
   }
@@ -373,7 +427,7 @@ const change_captains = function (event) {
 
 const back_to_lanes = function () {
   H.Session.set('lane', null);
-  return this.$router.push('/lanes');
+  return this.$router?.push('/lanes');
 };
 
 const choose_harbor_type = function (event) {
@@ -388,7 +442,7 @@ const choose_harbor_type = function (event) {
 };
 
 const get_lane_name = function () {
-  var name = this.$route.params.slug;
+  var name = this.$route?.params?.slug;
   var $lane = get_lane(name);
   H.Session.set('lane', $lane);
   return ($lane.name == 'New' || !$lane.name) ? '' : $lane.name;

@@ -1,19 +1,62 @@
 import { Users } from '../../api/users';
+import '../config/namespace.server';
 
 const SITE_NAME = 'Harbormaster';
 const FROM = 'Harbormaster <noreply@harbormaster>';
 
-const set_harbormaster = (login) => {
-  let user_id = login?.user?.emails[0]?.address || H.user().emails[0].address;
-  let harbormaster = Users.find().fetch().length ? false : true;
-  let user = Users.findOne(user_id);
-  harbormaster = user ? user?.harbormaster : harbormaster;
-  user_id = user ? user._id : user_id;
+// Restore pre-Meteor 3.x behavior: log emails to console without MAIL_URL
+// This allows local development without requiring a mail server
+export const ensureEmailAvailable = () => {
+  if (!H.Email || typeof H.Email.send !== 'function') {
+    throw new Error(
+      'H.Email is not available on the server ' +
+      '(namespace.server.js not loaded?)',
+    );
+  }
+};
 
-  Users.upsert(user_id, { harbormaster });
+ensureEmailAvailable();
+const originalSend = H.Email.send;
+H.Email.send = function (options) {
+  /* istanbul ignore else */
+  if (!process.env.MAIL_URL) {
+    console.log('\n====== Email would have been sent ======');
+    console.log('From:', options.from);
+    console.log('To:', options.to);
+    console.log('Subject:', options.subject);
+    if (options.html) {
+      console.log('HTML:', options.html);
+    }
+    else {
+      console.log('Text:', options.text);
+    }
+    console.log('========================================\n');
+    return; // Simulate successful send
+  }
+  originalSend.call(this, options);
+};
+
+const set_harbormaster = async (login) => {
+  let user_id = login?.user?.emails[0]?.address ?
+    login.user.emails[0].address :
+    (await H.users.findOneAsync()).emails[0].address
+    ;
+  const isFirstUser = await Users.find().countAsync() === 0;
+  let user = await Users.findOneAsync(user_id);
+
+  let harbormaster = user?.harbormaster !== undefined ?
+    user.harbormaster :
+    isFirstUser
+    ;
+  await Users.upsertAsync(user_id, { $set: { harbormaster } });
 };
 
 Accounts.onLogin(set_harbormaster);
+
+// Configure URLs for password reset (without hash, for history mode routing)
+Accounts.urls.resetPassword = (token) => {
+  return Meteor.absoluteUrl(`reset-password/${token}`);
+};
 
 Accounts.emailTemplates.siteName = SITE_NAME;
 Accounts.emailTemplates.from = FROM;

@@ -3,7 +3,7 @@
     <h1 class="text-7xl my-5">Welcome to Harbormaster!</h1>
     <h2 class="text-5xl my-5 px-2">Please log in.</h2>
     <form @submit.prevent class="login-form">
-      <div v-if="!this.reset && !reset_token()">
+      <div v-if="!this.reset && !reset_token">
         <label class="px-2 text-4xl">Email:
           <input class="my-2" v-model=email type=email required placeholder=you@example.com>
         </label>
@@ -13,7 +13,7 @@
         <button @click.prevent="password_login" class="rounded-rm block my-5 sign-in">Sign In</button>
         <button @click.prevent="password_reset" class="rounded-rm block my-5 forgot-password">Forgot Password</button>
       </div>
-      <div v-else-if="!reset_token()">
+      <div v-else-if="!reset_token">
         <h3 class="text-5xl my-2 px-2 instructions">Check your email for password reset instructions.</h3>
         <button @click.prevent="password_reset" class="rounded-rm block my-5 forgot-password">Forgot Password</button>
       </div>
@@ -29,8 +29,13 @@
 </template>
 
 <script>
-import { Accounts } from 'meteor/accounts-base';
 import H from '../../../startup/config/namespace';
+import {
+  password_login,
+  password_reset,
+  set_new_password,
+  reset_token,
+} from './lib';
 
 Accounts.onResetPasswordLink(function (token, done) {
   H.Session.set('password_reset_token', token);
@@ -45,40 +50,22 @@ export default {
     }
   },
 
+  meteor: {
+    reset_token,
+  },
+
+  mounted() {
+    // Handle password reset token from route params (for history mode routing)
+    const token = this.$route?.params?.token;
+    if (token) {
+      H.Session.set('password_reset_token', token);
+    }
+  },
+
   methods: {
-    password_login() {
-      const { email, password } = this;
-      H.loginWithPassword(email, password, err => {
-        if (err?.error == 403) {
-          const invalid_msg = 'Invalid credentials.';
-          console.error(invalid_msg);
-          H.alert(invalid_msg);
-        }
-        else if (err) throw err;
-      });
-    },
-
-    password_reset() {
-      const { email } = this;
-      const no_email_alert = 'An email must be provided for a password reset';
-      if (!email) return H.alert(no_email_alert);
-      this.reset = true;
-      H.call('Users#reset_password', email, err => { if (err) throw err });
-    },
-
-    reset_token() {
-      return H.Session.get('password_reset_token');
-    },
-
-    set_new_password() {
-      Accounts.resetPassword(
-        H.Session.get('password_reset_token'),
-        this.password,
-        err => { if (err) throw err },
-      );
-      H.Session.set('password_reset_token', undefined);
-      this.reset = false;
-    },
+    password_login,
+    password_reset,
+    set_new_password,
   }
 }
 </script>

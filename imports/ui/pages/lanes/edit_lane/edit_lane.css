@@ -161,6 +161,11 @@ legend {
   color: #333;
 }
 
+.save.working {
+  border-color: #333;
+  color: white;
+}
+
 #edit-lane-page .back-to-lanes:after {
   display: none;
 }

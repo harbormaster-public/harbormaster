@@ -1,4 +1,4 @@
-import { Harbors } from '..';
+import { Harbors, HARBORS_COLLECTION_NAME } from '..';
 import { Lanes } from '../../lanes';
 import {
   update_harbor,
@@ -10,21 +10,48 @@ import {
   add_harbor_to_depot,
 } from './methods';
 
-Meteor.publish('Harbors', function (view, slug) {
-  let harbors;
+Meteor.publish(HARBORS_COLLECTION_NAME, function (view, slug) {
+  // Synchronous publications must not return Promises. If we need async lookups
+  // (e.g. lane-by-slug), we publish via observeChanges instead of returning a
+  // cursor directly.
+  if (view !== '/ship') return Harbors.find();
 
-  switch (view) {
-    case '/ship':
-      const lane = Lanes.findOne({ slug });
-      harbors = Harbors.find({ _id: lane?.type });
-      break;
-    default:
-    case '/harbors':
-      harbors = Harbors.find();
-      break;
-  }
+  const sub = this;
+  void (async () => {
+    try {
+      const lane = await Lanes.findOneAsync({ slug });
+      if (!lane?.type) {
+        sub.ready();
+        return;
+      }
 
-  return harbors;
+      // We can't `await` and then `return` a cursor from a publication handler,
+      // so we publish manually via observeChanges.
+      const cursor = Harbors.find({ _id: lane.type });
+      const handle = cursor.observeChanges({
+        added: (id, fields) => {
+          sub.added(HARBORS_COLLECTION_NAME, id, fields);
+        },
+        changed: (id, fields) => {
+          sub.changed(HARBORS_COLLECTION_NAME, id, fields);
+        },
+        removed: (id) => {
+          sub.removed(HARBORS_COLLECTION_NAME, id);
+        },
+      });
+      sub.onStop(() => {
+        if (handle && typeof handle.stop === 'function') handle.stop();
+      });
+      sub.ready();
+    }
+    catch (e) {
+      sub.error(e);
+    }
+  })();
+
+  // Publication handlers must return a cursor (sync) or nothing. We publish
+  // asynchronously via observeChanges above.
+  return undefined;
 });
 
 Meteor.methods({

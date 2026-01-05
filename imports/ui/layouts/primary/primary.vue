@@ -33,8 +33,11 @@
         {{set_constraints}}
       </div>
     </div>
-    <div v-else>
-      <div v-blaze="'spinner'"></div>
+    <div v-else class="flex items-center justify-center min-h-screen">
+      <div class="text-center">
+        <div class="spinner"></div>
+        <p class="text-4xl mt-4">Loading Harbormaster...</p>
+      </div>
     </div>
   </div>
 </template>
@@ -45,10 +48,7 @@ import Navigation from '../../components/navigation';
 import NewHarbormaster from '../../components/new_harbormaster';
 import Welcome from '../../components/welcome';
 
-import 'tailwindcss/dist/base.css';
-import 'tailwindcss/dist/components.css';
-import 'tailwindcss/dist/utilities.css';
-import 'tailwindcss/dist/tailwind.css';
+import '../../tailwind.css';
 
 import _ from 'lodash';
 
@@ -70,9 +70,9 @@ export default {
     },
     no_users,
     logged_in,
-    no_harbormasters,
     set_constraints,
     is_loaded,
+    no_harbormasters,
   },
 
   data () {
@@ -125,6 +125,21 @@ export default {
 </script>
 
 <style>
+.spinner {
+  border: 10px solid #666;
+  border-top: 10px solid #ffae00;
+  border-radius: 50%;
+  width: 100px;
+  height: 100px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 #primary {
   background-color: #333;
 }

@@ -5,6 +5,7 @@
   background: #333;
   border-width: 0;
   height: 40px;
+  top: 15px;
 }
 
 #download-yaml:before {
@@ -57,15 +58,18 @@
 }
 
 .link textPath {
-  alignment-baseline: middle;
+  dominant-baseline: middle;
 }
 
 .node circle {
   cursor: all-scroll;
 }
 
-#charter-page .node text {
+#charter-page .node text,
+#charter-page .node a text,
+.node text {
   cursor: pointer;
+  fill: #fff !important;
 }
 
 .node text:hover {

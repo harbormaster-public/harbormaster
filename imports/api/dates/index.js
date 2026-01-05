@@ -1,7 +1,7 @@
 
-function start_date () {
+const start_date = function () {
   let date = new Date();
-  let start_date = date.getFullYear() + '-' +
+  let startDateString = date.getFullYear() + '-' +
     date.getMonth() + '-' +
     date.getDate() + '-' +
     date.getHours() + '-' +
@@ -9,9 +9,9 @@ function start_date () {
     date.getSeconds()
   ;
 
-  return start_date;
-}
+  return startDateString;
+};
 
 export {
   start_date,
-}
+};

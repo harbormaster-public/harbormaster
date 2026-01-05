@@ -1,9 +1,10 @@
 
-class ShipmentCollection extends Mongo.Collection { }
+class ShipmentCollection extends Mongo.Collection {}
 
-const Shipments = new ShipmentCollection('Shipments');
+export const SHIPMENTS_COLLECTION_NAME = 'Shipments';
+const Shipments = new ShipmentCollection(SHIPMENTS_COLLECTION_NAME);
 
-class LatestShipmentCollection extends Mongo.Collection { }
+class LatestShipmentCollection extends Mongo.Collection {}
 
 const LatestShipment = new LatestShipmentCollection('LatestShipment');
 

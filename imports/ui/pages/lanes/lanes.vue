@@ -52,6 +52,7 @@
           <td class="last-shipped-column" width=125>
             <router-link v-if="latest_shipment(lane)"
               :to="`/lanes/${lane.slug}/ship/${latest_shipment(lane)}`">{{last_shipped(lane)}}</router-link>
+            <span v-else>N/A</span>
           </td>
           <td class="total-shipments-column">{{lane.shipment_count || '0'}}</td>
           <td class="salvage-runs-column">{{lane.salvage_runs || '0'}}</td>
@@ -106,9 +107,6 @@ export default {
     $subscribe: {
       Lanes: ['/lanes'],
       Harbors: ['/lanes'],
-    },
-    lanes () {
-      return Lanes.find({});
     },
     empty,
     lanes,

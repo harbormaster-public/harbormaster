@@ -1,8 +1,9 @@
 #!/bin/bash
+set -e
 
 DATE=`date`
 DOCS=`sed -n '/## Build Status/q;p' README.md`
-COVERAGE_UPDATED=$'\n\n## Build Status\n\nLAST UPDATED: '$DATE$'\n'
+COVERAGE_UPDATED=$'\n\n## Build Status\n\n```\nLAST UPDATED: '$DATE$'\n'
 COVERAGE_SUMMARY=`cat .coverage/summary.txt`
 
 NEW_README=$DOCS$COVERAGE_UPDATED$COVERAGE_SUMMARY
@@ -18,6 +19,7 @@ elif [ "$BUILD" = 1 ]; then
 else
   echo "Updating README with coverage status."
   echo "$NEW_README" > README.md
+  echo '```' >> README.md
 fi
 
 git add README.md

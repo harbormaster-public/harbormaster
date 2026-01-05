@@ -10,21 +10,11 @@
 </template>
 
 <script>
-import { Users } from '../../../api/users';
+import { on_click } from './lib';
 
 export default {
   methods: {
-    on_click() {
-      var user_id = H.user().emails[0].address;
-      var user = Users.findOne(user_id);
-
-      user.harbormaster = true;
-
-      H.call('Users#update', user_id, user, (err, res) => {
-        if (err) throw err;
-        console.log(`User ${user_id} updated: ${res}`);
-      });
-    }
+    on_click,
   }
 }
 </script>

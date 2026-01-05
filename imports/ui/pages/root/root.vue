@@ -24,9 +24,7 @@
       <figure id="all-charters">
         <figcaption>All Charters <span v-if="!$subReady.Lanes">(loading...)</span></figcaption>
         <svg></svg>
-        <div v-if="$subReady.Lanes&& build_graph().length">
-          {{svg_graph()}}
-        </div>
+        <div v-if="$subReady.Lanes && graph_nodes && graph_nodes.length">{{svg_graph}}</div>
       </figure>
     </div>
     
@@ -48,6 +46,7 @@ import {
   svg_graph,
   collect_graph_lists,
   build_graph,
+  node_list,
 } from './lib';
 
 export default {
@@ -64,11 +63,18 @@ export default {
     total_captains,
     total_harbormasters,
     moniker,
-    email () { return H.user().emails[0].address; },
+    email () {
+      const user = H.user && H.user();
+      return user?.emails?.[0]?.address || '';
+    },
+    svg_graph,
+    graph_nodes () {
+      build_graph();
+      return node_list.get();
+    },
   },
 
   methods: {
-    svg_graph,
     collect_graph_lists,
     build_graph,
     is_harbormaster,
@@ -78,14 +84,12 @@ export default {
   mounted () {
     Meteor.call('Shipments#get_total', (err, res) => {
       if (err) throw err;
-
       total_shipments.set(res);
-      if (H.$('svg').length && !H.$('svg').html().length) this.svg_graph();
     });
   },
 
   unmounted () {
-    H.simulation.stop();
+    if (H.simulation) H.simulation.stop();
   },
 
 }

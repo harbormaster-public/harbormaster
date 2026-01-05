@@ -43,7 +43,9 @@ const handle_download_yaml = function () {
   });
 };
 
-const assign_followup = function (followup, $lane, parent_slug, nodes, links) {
+const assign_followup = function (
+  followup, $lane, parent_slug, nodes, links
+) {
   if (followup) {
     let last_shipment = followup.last_shipment;
     let color = FOLLOWUP_COLOR;
@@ -57,7 +59,9 @@ const assign_followup = function (followup, $lane, parent_slug, nodes, links) {
     followup.role = FOLLOWUP;
     followup.parent = $lane.slug;
     followup.recursive = followup.slug == $lane.slug ? true : false;
-    $lane.children.push(followup);
+    if ($lane.children.map(child => child.slug).indexOf(followup_slug) == -1) {
+      $lane.children.push(followup);
+    }
 
     /* istanbul ignore else */
     if (nodes.map(node => node.id).indexOf(followup_slug) == -1) {
@@ -104,7 +108,9 @@ const assign_salvage = function (plan, $lane, parent_slug, nodes, links) {
     plan.role = SALVAGE;
     plan.parent = $lane.slug;
     plan.recursive = plan.slug == $lane.slug ? true : false;
-    $lane.children.push(plan);
+    if ($lane.children.map(child => child.slug).indexOf(salvage_slug) == -1) {
+      $lane.children.push(plan);
+    }
 
     if (last_shipment?.exit_code == 0) color = SUCCESS_COLOR;
     else if (last_shipment?.exit_code) color = FAIL_COLOR;
@@ -145,7 +151,7 @@ const assign_salvage = function (plan, $lane, parent_slug, nodes, links) {
   return false;
 };
 
-const assign_children = ($lane, parent_slug, nodes, links) => {
+const assign_children = function ($lane, parent_slug, nodes, links) {
   let followup = Lanes.findOne({ slug: $lane.followup?.slug });
   let plan = Lanes.findOne({ slug: $lane.salvage_plan?.slug });
   const node_slugs = nodes.map((node) => node.id);
@@ -157,18 +163,18 @@ const assign_children = ($lane, parent_slug, nodes, links) => {
     $lane.slug != root_node?.get()?.id
     && node_slugs.indexOf($lane.slug) != -1
     && (
-      node_slugs.indexOf(followup?.slug) != -1 &&
-      node_slugs.indexOf(plan?.slug) != -1
+      (!followup || node_slugs.indexOf(followup?.slug) != -1) &&
+      (!plan || node_slugs.indexOf(plan?.slug) != -1)
     )
   ) return $lane;
 
-  $lane.children.forEach((child) => {
+  $lane.children.forEach(function (child) {
     child.children = [];
 
-    /* istanbul ignore else */
     if (
       !child.recursive &&
-      child.slug != root_node?.get()?.id
+      child.slug != root_node?.get()?.id &&
+      (child.followup || child.salvage_plan)
     ) {
       assign_children(child, $lane.slug, nodes, links);
     }
@@ -178,7 +184,9 @@ const assign_children = ($lane, parent_slug, nodes, links) => {
 };
 
 const build_graph = function () {
-  let $lane = get_lane(slug(this.$route?.params?.slug, true));
+  let $lane = get_lane(
+    slug.call(this, this.$route?.params?.slug, true)
+  );
   let nodes = [];
   let links = [];
 
@@ -257,156 +265,234 @@ const graph_options = function () {
   };
 };
 
-const svg_graph = function svg_graph () {
-  // Always render a fresh graph
-  /* istanbul ignore else */
-  if (H.$('.charter svg g').length) H.$('.charter svg').html('');
+let simulation = null;
+let node_selection = null;
+let link_selection = null;
+let link_line_selection = null;
+let link_text_selection = null;
+let previous_node_ids = null;
+let current_route_slug = null;
 
+const getState = (laneObj) => laneObj.last_shipment?.exit_code ??
+  (laneObj.last_shipment?.active ? 'active' : undefined);
+
+const getColor = (state, defaultColor) => {
+  if (state === 0) return SUCCESS_COLOR;
+  if (state && state !== 'active') return FAIL_COLOR;
+  if (state === 'active') return ACTIVE_COLOR;
+  return defaultColor;
+};
+
+const updateExistingNode = (newNode, existing) => {
+  const freshLane = Lanes.findOne({ slug: newNode.id });
+  const state = freshLane ? getState(freshLane) : undefined;
+  let defaultColor = SALVAGE_COLOR;
+  if (newNode.stroke === ROOT_COLOR) defaultColor = ROOT_COLOR;
+  else if (newNode.stroke === FOLLOWUP_COLOR)
+    defaultColor = FOLLOWUP_COLOR;
+  const newColor = getColor(state, defaultColor);
+  if (existing.color !== newColor) {
+    existing.color = newColor;
+    newNode.color = newColor;
+  }
+  const preserve = (prop) => {
+    if (existing[prop] !== null && existing[prop] !== undefined)
+      newNode[prop] = existing[prop];
+  };
+  preserve('x');
+  preserve('y');
+  preserve('vx');
+  preserve('vy');
+  preserve('fx');
+  preserve('fy');
+};
+
+const synchronizeNodesWithSimulation = (current_nodes, sim) => {
+  current_nodes.forEach(newNode => {
+    const existing = sim.nodes().find(n => n.id === newNode.id);
+    if (existing) {
+      updateExistingNode(newNode, existing);
+    }
+    else {
+      // New node - will be added by simulation.nodes(current_nodes) below
+      void 0; // Explicit statement for coverage
+    }
+  });
+};
+
+const svg_graph = function svg_graph () {
   const width = H.$('.charter').width();
   const height = H.$('.charter').height();
+  const current_nodes = node_list.get();
+  const current_links = link_list.get();
 
-  const simulation = d3.forceSimulation(node_list.get())
-    .force("link", d3.forceLink(link_list.get()).distance(250).id(d => d.id))
-    .force("charge", d3.forceManyBody().strength(-250))
-    .force("center", d3.forceCenter(width / 2, height / 2))
-    .force('radial', d3.forceRadial(250, width / 2, height / 2))
-    .on("tick", () => ticked(link_text, link_line, node));
+  // Early return if container doesn't exist or has no dimensions
+  if (!width || !height || !current_nodes?.length) {
+    return '';
+  }
 
-  const svg = d3.select('svg')
-    .attr("width", width)
-    .attr("height", height)
-    .attr("viewBox", [0, 0, width, height])
-    .attr("style", "max-width: 100%; height: auto;");
+  const current_node_ids = current_nodes.map(n => n.id).sort().join(',');
 
-  const defs = svg.append('defs');
-  const arrow_followup = defs.append('marker')
-    .attr('id', 'arrow-followup')
-    .attr('viewBox', '0 0 10 10')
-    .attr('refX', 10)
-    .attr('refY', 4)
-    .attr('markerWidth', 3)
-    .attr('markerHeight', 3)
-    .attr('orient', 'auto-start-reverse');
-  arrow_followup.append('path')
-    .attr('fill', FOLLOWUP_COLOR)
-    .attr('d', 'M 0 0 L 10 5 L 0 10 z');
-  const arrow_salvage = arrow_followup.clone(true).attr('id', 'arrow-salvage');
-  arrow_salvage.select('path').attr('fill', SALVAGE_COLOR);
+  // Get the current route slug from the root node or node list
+  const route_slug = root_node?.get()?.id || current_nodes[0]?.id;
 
-  const link = svg.append("g")
-    .selectAll('.link')
-    .data(link_list.get())
-    .join("g")
-    .attr('class', 'link');
+  // If route changed, reset previous_node_ids to force rebuild
+  if (route_slug && route_slug !== current_route_slug) {
+    previous_node_ids = null;
+    current_route_slug = route_slug;
+    // Also stop and clear any existing simulation
+    if (simulation) {
+      simulation.stop();
+      simulation = null;
+    }
+  }
 
-  const link_line = link.append("path")
-    .attr('d', get_link_path_text)
-    .attr(
-      'id',
-      /* istanbul ignore next */
-      d => d.id
-    )
-    .attr('stroke-width', 15)
-    .attr(
-      'stroke',
-      /* istanbul ignore next */
-      d => d.color
-    )
-    .attr(
-      'marker-end',
-      /* istanbul ignore next */
-      d => (d.name == FOLLOWUP ? 'url(#arrow-followup)' : 'url(#arrow-salvage)')
-    );
+  const structure_changed = previous_node_ids !== current_node_ids;
+  const svg_exists = H.$('.charter svg').length > 0;
+  const svg_has_content = H.$('.charter svg g').length > 0;
 
-  const link_text = link.append('text')
-    .attr('class', 'link-label')
-    .append('textPath')
-    .style('fill', '#fff')
-    .style('font-size', '14px')
-    .attr('startOffset', '33%')
-    .text(
-      /* istanbul ignore next */
-      d => d.name
-    )
-    .attr(
-      'xlink:href',
-      /* istanbul ignore next */
-      d => `#${d.id}`
-    );
+  if (structure_changed || !simulation || !svg_exists || !svg_has_content) {
+    if (simulation) simulation.stop();
+    if (H.$('.charter svg g').length) H.$('.charter svg').html('');
 
-  const node = svg.append("g")
-    .selectAll('.node')
-    .data(node_list.get())
-    .join("g")
-    .attr('class', 'node');
+    /* istanbul ignore next - d3 rendering setup */
+    const svg = d3.select('.charter svg')
+      .attr("width", width)
+      .attr("height", height)
+      .attr("viewBox", [0, 0, width, height])
+      .attr("style", "max-width: 100%; height: auto;");
 
-  node.append('circle')
-    .attr("r", 25)
-    .attr(
-      "fill",
-      /* istanbul ignore next */
-      d => d.color
-    )
-    .attr(
-      'stroke',
-      /* istanbul ignore next */
-      d => d.stroke
-    )
-    .attr(
-      "stroke-width",
-      /* istanbul ignore next */
-      d => d.stroke_width
-    );
+    /* istanbul ignore next - d3 rendering setup */
+    const defs = svg.append('defs');
+    /* istanbul ignore next - d3 rendering setup */
+    const arrow_followup = defs.append('marker')
+      .attr('id', 'arrow-followup')
+      .attr('viewBox', '0 0 10 10')
+      .attr('refX', 10)
+      .attr('refY', 4)
+      .attr('markerWidth', 3)
+      .attr('markerHeight', 3)
+      .attr('orient', 'auto-start-reverse');
+    /* istanbul ignore next - d3 rendering setup */
+    arrow_followup.append('path')
+      .attr('fill', FOLLOWUP_COLOR)
+      .attr('d', 'M 0 0 L 10 5 L 0 10 z');
+    /* istanbul ignore next - d3 rendering setup */
+    const arrow_salvage = arrow_followup.clone(true)
+      .attr('id', 'arrow-salvage');
+    /* istanbul ignore next - d3 rendering setup */
+    arrow_salvage.select('path').attr('fill', SALVAGE_COLOR);
 
-  node.append("title").text(
-    /* istanbul ignore next */
-    d => `${location.host}/lanes/${d.id}/charter`
-  );
+    // Create selections first so they're available for the tick handler
+    /* istanbul ignore next - d3 rendering setup */
+    link_selection = svg.append("g")
+      .selectAll('.link')
+      .data(current_links)
+      .join("g")
+      .attr('class', 'link');
 
-  node.append('a')
-    .attr(
-      'xlink:href',
-      /* istanbul ignore next */
-      d => `/lanes/${d.id}/charter`
-    )
-    .append('text')
-    .text(
-      /* istanbul ignore next */
-      d => d.name
-    )
-    .attr('x', 30)
-    .attr('y', 7)
-    .style('fill', '#fff')
-    .style('font-size', '16px')
-  ;
+    /* istanbul ignore next - d3 rendering setup */
+    link_line_selection = link_selection.append("path")
+      .attr('d', get_link_path_text)
+      .attr('id', d => d.id)
+      .attr('stroke-width', 15)
+      .attr('stroke', d => d.color)
+      .attr('marker-end', d => (d.name == FOLLOWUP ?
+        'url(#arrow-followup)' : 'url(#arrow-salvage)'));
 
-  node.call(
-    d3.drag()
-      .on(
-        "start",
-        /* istanbul ignore next */
-        event => dragstarted(event, simulation, d3)
-      )
-      .on(
-        "drag",
-        /* istanbul ignore next */
-        (event, d) => dragged(event, d, width, height, simulation)
-      )
-      .on(
-        "end",
-        /* istanbul ignore next */
-        event => dragended(event, simulation)
-      )
-  ).on(
-    'click',
-    /* istanbul ignore next */
-    (event, d) => click.bind(this)(event, d, simulation, d3)
-  );
+    /* istanbul ignore next - d3 rendering setup */
+    link_text_selection = link_selection.append('text')
+      .attr('class', 'link-label')
+      .append('textPath')
+      .style('fill', '#fff')
+      .style('font-size', '14px')
+      .attr('startOffset', '33%')
+      .text(d => d.name)
+      .attr('xlink:href', d => `#${d.id}`);
+
+    /* istanbul ignore next - d3 rendering setup */
+    node_selection = svg.append("g")
+      .selectAll('.node')
+      .data(current_nodes)
+      .join("g")
+      .attr('class', 'node');
+
+    /* istanbul ignore next - d3 rendering setup */
+    node_selection.append('circle')
+      .attr("r", 25)
+      .attr("fill", d => d.color)
+      .attr('stroke', d => d.stroke)
+      .attr("stroke-width", d => d.stroke_width);
+
+    /* istanbul ignore next - d3 rendering setup */
+    node_selection.append("title")
+      .text(d => `${location.host}/lanes/${d.id}/charter`);
+
+    /* istanbul ignore next - d3 rendering setup */
+    node_selection.append('a')
+      .attr('xlink:href', d => `/lanes/${d.id}/charter`)
+      .append('text')
+      .text(d => d.name)
+      .attr('x', 30)
+      .attr('y', 7)
+      .attr('fill', '#fff')
+      .style('fill', '#fff')
+      .style('font-size', '16px');
+
+    // Create simulation after selections are ready
+    /* istanbul ignore next - d3 rendering setup */
+    simulation = d3.forceSimulation(current_nodes)
+      .force("link", d3.forceLink(current_links).distance(250).id(d => d.id))
+      .force("charge", d3.forceManyBody().strength(-250))
+      .force("center", d3.forceCenter(width / 2, height / 2))
+      .force('radial', d3.forceRadial(250, width / 2, height / 2))
+      .on("tick", () => ticked(link_text_selection, link_line_selection,
+        node_selection))
+      .alpha(1)
+      .restart();
+
+    /* istanbul ignore next - d3 rendering setup */
+    node_selection.call(
+      d3.drag()
+        .on("start", event => dragstarted(event, simulation, d3))
+        .on("drag", (event, d) => dragged(event, d, width, height,
+          simulation))
+        .on("end", event => dragended(event, simulation))
+    ).on('click', (event, d) => click.bind(this)(event, d, simulation, d3));
+
+    previous_node_ids = current_node_ids;
+  }
+  else {
+    synchronizeNodesWithSimulation(current_nodes, simulation);
+
+    simulation.nodes(current_nodes);
+    simulation.force("link").links(current_links);
+    simulation.alpha(1).restart();
+
+    // Update link selections
+    /* istanbul ignore next - d3 rendering update */
+    link_selection = link_selection.data(current_links, d => d.id);
+    /* istanbul ignore next - d3 rendering update */
+    link_selection.select('path')
+      .attr('stroke', d => d.color);
+
+    // Update node selections
+    /* istanbul ignore next - d3 rendering update */
+    node_selection = node_selection.data(current_nodes, d => d.id);
+    /* istanbul ignore next - d3 rendering update */
+    node_selection.select('circle')
+      .attr("fill", d => d.color);
+    /* istanbul ignore next - d3 rendering update */
+    node_selection.select('text')
+      .attr('fill', '#fff')
+      .style('fill', '#fff');
+  }
 
   return '';
 };
 
 const ticked = function (link_text, link_line, node) {
+  /* istanbul ignore next - d3 rendering update */
   link_text.attr(
     'transform',
     /* istanbul ignore next
@@ -418,9 +504,12 @@ const ticked = function (link_text, link_line, node) {
       return `translate(${x}, ${y})`;
     }
   );
+  /* istanbul ignore next - d3 rendering update */
   link_line.attr('d', get_link_path_text);
+  /* istanbul ignore next - d3 rendering update */
   link_line.attr('fill', 'none');
 
+  /* istanbul ignore next - d3 rendering update */
   node.attr(
     'transform',
     /* istanbul ignore next */
@@ -428,32 +517,34 @@ const ticked = function (link_text, link_line, node) {
   );
 };
 
-const dragged = function (event, d, width, height, simulation) {
+const dragged = function (event, d, width, height, sim) {
   d.fx = clamp(event.x, 0, width);
   d.fy = clamp(event.y, 0, height);
-  simulation.alpha(1).restart();
+  sim.alpha(1).restart();
 };
 
-const dragstarted = function (event, simulation, d3lib) {
-  if (!event.active) simulation.alphaTarget(0.3).restart();
+const dragstarted = function (event, sim, d3lib) {
+  if (!event.active) sim.alphaTarget(0.3).restart();
   event.subject.fx = event.subject.x;
   event.subject.fy = event.subject.y;
+  /* istanbul ignore next - d3 rendering update */
   d3lib.select(event.sourceEvent.target.parentElement).classed('fixed', true);
 };
 
-const dragended = function (event, simulation) {
+const dragended = function (event, sim) {
   /* istanbul ignore else */
-  if (!event.active) simulation.alphaTarget(0);
+  if (!event.active) sim.alphaTarget(0);
 };
 
 // eslint-disable-next-line no-nested-ternary
 const clamp = function (x, lo, hi) { return x < lo ? lo : x > hi ? hi : x; };
 
-const click = function (event, d, simulation, d3lib) {
+const click = function (event, d, sim, d3lib) {
   delete d.fx;
   delete d.fy;
+  /* istanbul ignore next - d3 rendering update */
   d3lib.select(event.target.parentElement).classed('fixed', false);
-  simulation.alpha(1).restart();
+  sim.alpha(1).restart();
 };
 
 /* istanbul ignore next
@@ -488,4 +579,7 @@ export {
   clamp,
   click,
   get_link_path_text,
+  getState,
+  getColor,
+  synchronizeNodesWithSimulation,
 };

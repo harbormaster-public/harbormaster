@@ -12,6 +12,9 @@ _n._
 - [Design](#design)
   - [Terms](#terms)
   - [Architecture](#architecture)
+  - [Architecture Diagram](#architecture-diagram)
+  - [Sequence Diagram](#sequence-diagram)
+  - [Systems Diagram](#systems-diagram)
 - [Installation](#installation)
   - [Shell](#shell)
   - [Docker](#docker)
@@ -66,6 +69,207 @@ Harbormaster is written using Meteor, which implies NodeJS, MongoDB, and a few a
 When Harbormaster is started it looks within the `~/.harbormaster/harbors` folder for any `.js` files, and loads any it finds in that directory into its runtime.  These files are the entrypoints for any given Harbor, and can execute any arbitrary command required by a Harbor, such as installing dependencies, loading modules, or even modifying Harbormaster's runtime itself.  Harbormaster also watches this directory and will exit any time a file within it changes; restarting it will load the latest version of whichever files exist within this directory.
 
 While Harbormaster doesn't care how any given entrypoint files are added to the `~/.harbormaster/harbors` file, some methods (such as symlinks with docker containers) will not work.  Generally Harbormaster defers to the environment in which it is run to determine whether or not a given means of managing these harbor files will be successful or not.
+
+### Architecture Diagram
+
+```mermaid
+flowchart TB
+  %% Architecture in Harbormaster terms (vertical, low-crossing).
+
+  %% Actors / roles (terms)
+  user["User"]
+  captain["Captain<br/>(can Ply to specific Lanes)"]
+  harbormaster["Harbormaster<br/>(admin)"]
+  hookCaller["Hook caller<br/>(external system)"]
+
+  %% Interfaces (terms)
+  dashboard["Dashboard<br/>(Ship / manage / observe)"]
+  hook["Hook<br/>POST /lanes/:slug/ship<br/>?user_id&token"]
+
+  %% Authorization (terms)
+  access["Authorization<br/>Ply (captains) / harbormaster<br/>token-gated Hooks (lane.tokens)"]
+
+  %% Core workflow (terms)
+  charter["Charter<br/>(workflow of Lanes)"]
+  lane["Lane<br/>(step)"]
+  followup["Followup<br/>(next Lane on success)"]
+  salvage["Salvage Plan<br/>(Lane on failure)"]
+  harbor["Harbor<br/>(loaded from ~/.harbormaster/harbors/*.js)"]
+
+  %% Execution/state (terms)
+  manifest["Manifest<br/>(passed Lane→Lane)"]
+  shipment["Shipment<br/>(record of work + exit_code)"]
+
+  %% Persistence
+  mongo[("MongoDB<br/>Users / Lanes / Harbors / Shipments")]
+
+  %% Work targets (invoked by Harbors)
+  remote["Remote systems / services<br/>(SSH, APIs, etc)"]
+
+  %% Vertical flows (kept linear)
+  user -->|uses| dashboard -->|ships / manages| access
+  hookCaller -->|calls| hook -->|token + user_id| access
+  user -->|role| captain
+  user -->|role| harbormaster
+
+  access -->|authorize| charter -->|contains| lane -->|executes| harbor
+  lane -->|on success| followup
+  lane -->|on failure| salvage
+  harbor -->|reads/writes| manifest -->|recorded as| shipment
+  harbor -->|invokes| remote
+
+  %% Persistence (down-only edges to reduce crossings)
+  access -->|lookup users / plying / tokens| mongo
+  charter -->|stored| mongo
+  lane -->|stored| mongo
+  manifest -->|stored| mongo
+  shipment -->|logged| mongo
+
+  %% Styling
+  classDef actor fill:#FAFAFA,stroke:#616161,color:#212121;
+  classDef iface fill:#E3F2FD,stroke:#1565C0,color:#0D47A1;
+  classDef core fill:#F3E5F5,stroke:#6A1B9A,color:#4A148C;
+  classDef state fill:#FFF3E0,stroke:#EF6C00,color:#E65100;
+  classDef data fill:#E8F5E9,stroke:#2E7D32,color:#1B5E20;
+
+  class user,captain,harbormaster,hookCaller actor;
+  class dashboard,hook iface;
+  class access,charter,lane,followup,salvage,harbor core;
+  class manifest,shipment,remote state;
+  class mongo data;
+```
+
+### Sequence Diagram
+
+```mermaid
+sequenceDiagram
+  autonumber
+
+  actor U as User
+  actor C as Captain
+  actor Hm as Harbormaster
+  actor X as Hook caller (external system)
+
+  participant D as Dashboard
+  participant S as Harbormaster
+  participant DB as MongoDB
+  participant L as Lane
+  participant Hb as Harbor
+  participant R as Remote system/service
+
+  alt Ship via Dashboard (Captain/Harbormaster)
+    U->>D: Sign in
+    D->>S: Authenticate (session)
+    C->>D: Click "Ship" for a Lane
+    D->>S: Start Shipment (for Lane)
+    S->>DB: Read Lane + saved Manifest
+    S->>DB: Insert Shipment(start)
+    S->>L: Execute Lane
+    L->>Hb: Run Harbor.work(lane, manifest)
+    Hb->>R: Perform work (optional)
+    Hb-->>L: Update Manifest + exit_code
+    S->>DB: Update Shipment(end, exit_code, manifest)
+    S-->>D: Shipment started / results update
+  else Ship via Hook (token-gated)
+    X->>S: POST Hook /lanes/:slug/ship?user_id&token
+    S->>DB: Load Lane + lane.tokens
+    S->>S: Validate token grants Ply to Lane
+    S->>DB: Read saved Manifest (Lane/Harbor)
+    S->>DB: Insert Shipment(start)
+    S->>L: Execute Lane
+    L->>Hb: Run Harbor.work(lane, manifest)
+    Hb->>R: Perform work (optional)
+    Hb-->>L: Update Manifest + exit_code
+    S->>DB: Update Shipment(end, exit_code, manifest)
+    S-->>X: 200 JSON (manifest) / 401 Unauthorized
+  end
+```
+
+### Systems Diagram
+
+```mermaid
+flowchart TB
+  %% Technology/system view (vertical, minimal crossings)
+
+  browser["Web Browser"]
+
+
+  subgraph server["Server"]
+    direction TB
+    meteor["Meteor runtime"]
+    webapp["WebApp / Connect handlers<br/>(HTTP routes, Hooks)"]
+    node["Node.js"]
+    ddp["DDP (pub/sub + method calls)"]
+    accounts["meteor/accounts-base<br/>(auth)"]
+    harborLoader["Harbor loader<br/>(~/.harbormaster/harbors/*.js)"]
+
+    meteor -->|serves HTTP| webapp
+    meteor -->|runs on| node
+    meteor -->|auth| accounts
+    meteor -->|loads| harborLoader
+    meteor -->|DDP transport| ddp
+  end
+
+  subgraph client["Client"]
+    direction TB
+    vite["Vite (bundler/dev server)"]
+    vue["Vue 3 UI"]
+    router["vue-router"]
+    tracker["vue-meteor-tracker<br/>(reactive DDP data)"]
+    vite -->|bundles| vue
+    vue -->|routes| router
+    router -->|binds data| tracker
+  end
+
+  subgraph persistence["Persistence"]
+    direction TB
+    mongo[("MongoDB")]
+  end
+
+  subgraph external["External integrations"]
+    direction TB
+    hookCaller["Hook caller<br/>(CI/CD, external system)"]
+    smtp["SMTP server<br/>(MAIL_URL)"]
+    remote["Remote systems / services<br/>(SSH, APIs, etc)"]
+  end
+
+  subgraph testing["Testing"]
+    direction TB
+    mocha["meteortesting:mocha"]
+    cypress["Cypress (E2E)"]
+  end
+
+  %% Primary runtime path (kept linear)
+  browser -->|loads app| vite
+  ddp -->|read/write| mongo
+  ddp <-->|subscribe / react| tracker
+  webapp -->|CRUD| mongo
+  accounts -->|users + sessions| mongo
+  harborLoader -->|executes work| remote
+  harborLoader -->|executes work| mongo
+
+  %% Hooks + email (branches)
+  hookCaller -->|HTTP POST /lanes/:slug/ship| webapp
+  meteor -->|send mail| smtp
+
+  %% Tests exercise the running app
+  mocha -->|unit/integration| meteor
+  cypress -->|E2E drives| browser
+
+  %% Styling (match existing palette)
+  classDef actor fill:#FAFAFA,stroke:#616161,color:#212121;
+  classDef clientNode fill:#E3F2FD,stroke:#1565C0,color:#0D47A1;
+  classDef appNode fill:#F3E5F5,stroke:#6A1B9A,color:#4A148C;
+  classDef dataNode fill:#E8F5E9,stroke:#2E7D32,color:#1B5E20;
+  classDef externalNode fill:#FFF3E0,stroke:#EF6C00,color:#E65100;
+
+  class browser actor;
+  class vite,vue,router,tracker clientNode;
+  class meteor,node,webapp,ddp,accounts,harborLoader appNode;
+  class mongo dataNode;
+  class hookCaller,smtp,remote externalNode;
+  class mocha,cypress externalNode;
+```
 
 ## Installation
 
@@ -225,14 +429,13 @@ GPL 3.0, see `LICENSE` file.
 
 ## Build Status
 
-LAST UPDATED: Tue Mar 19 17:17:38 PDT 2024
+```
+LAST UPDATED: Sun Jan  4 08:57:59 PM PST 2026
+All files
+Statements:    100% (2844/2844)
+Branches  :    100% (499/499)
+Functions :    100% (222/222)
+Lines     :    100% (2844/2844)
+```
 
-=============================== Coverage summary ===============================
-
-- Statements   : 100% ( 1449/1449 )
-- Branches     : 100% ( 756/756 )
-- Functions    : 100% ( 219/219 )
-- Lines        : 100% ( 1337/1337 )
-
-================================================================================
 
