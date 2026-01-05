@@ -1,4 +1,3 @@
-import { Template } from 'meteor/templating';
 import { Lanes } from '../../api/lanes';
 
 // Polyfill for IE
@@ -21,7 +20,7 @@ import { Lanes } from '../../api/lanes';
 })([Element.prototype, CharacterData.prototype, DocumentType.prototype]);
 
 export const manifest_index = (index) => {
-  pretty_index = index + 1;
+  let pretty_index = index + 1;
   if (pretty_index == 1) {
     return '1st';
   }
@@ -36,14 +35,21 @@ export const manifest_index = (index) => {
 };
 
 export const current_lane = () => {
-  let name = FlowRouter.getParam('name');
+  // Vue Router 4 exposes `router.currentRoute` as a Ref (use `.value`).
+  // Our routes typically use `:slug`, but a few older callers may still
+  // provide `:name`. Support either.
+  const route = H.Router?.currentRoute?.value || H.Router?.currentRoute;
+  const params = route?.params || {};
+  const slugOrName = params.slug || params.name;
+  if (!slugOrName) return undefined;
 
-  let lane = Lanes.findOne({ name: name });
-
-  return lane;
+  return Lanes.findOne({
+    $or: [
+      { slug: slugOrName },
+      { name: slugOrName },
+      { _id: slugOrName },
+    ],
+  });
 };
-
-Template.registerHelper('manifest_index', manifest_index);
-Template.registerHelper('current_lane', current_lane);
 
 

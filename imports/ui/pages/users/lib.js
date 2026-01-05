@@ -2,28 +2,29 @@ import { Users } from '../../../api/users';
 import { Lanes } from '../../../api/lanes';
 
 const is_harbormaster = function (user) {
-  if (!user) user = Users.findOne(H.user()._id);
+  if (!user) {
+    const userId = H.user()?.emails[0]?.address;
+    user = Users.findOne(userId);
+  }
   if (user?.harbormaster) { return 'Yes'; }
-
   return 'No';
 };
 
 const captain_lanes = function (user) {
-  let pliable_lanes = Lanes.find({
+  const lanesCursor = Lanes.find({
     $or: [
       { captains: { $in: [user._id] } },
       { tokens: { $exists: true } },
     ],
-  }).fetch();
+  });
+  const pliable_lanes = lanesCursor.fetch();
   let lane_names = [];
 
   if (user.harbormaster) { return 'All'; }
   _.each(pliable_lanes, function (lane) {
     /* istanbul ignore else */
     if (
-      // user webhook assigned
       (lane.tokens && Object.values(lane.tokens).includes(user._id)) ||
-      // user is assigned as captain
       !lane.tokens
     ) {
       lane_names.push(lane.name);

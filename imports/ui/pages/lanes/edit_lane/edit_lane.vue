@@ -68,7 +68,7 @@
             <section id=rendered-input v-html="render_harbor">
             </section>
             <div v-if="validating_fields">
-              <h3 class="text-xl my-2 text-center">Working...</h3>
+              <h3 class="text-xl my-2 p-2 text-center save working block">Working...</h3>
             </div>
             <div v-else>
               <button id=harbor-save-button :class="'save p-2 rounded-sm my-2 block'+can_save">Save</button>
@@ -217,8 +217,8 @@ export default {
     add_followup_lane() { return H.Session.set('choose_followup', true) },
     add_salvage_plan() { return H.Session.set('choose_salvage_plan', true) },
     new_lane() { H.Session.set('lane', {}) },
-    duplicate_lane() {
-      const lane = get_lane(this.$route.params.slug);
+    async duplicate_lane() {
+      const lane = await get_lane(this.$route.params.slug);
       const warn = `Duplicate this lane, and then edit the new lane?`
       const router = this.$router;
       if (!confirm(warn)) return;

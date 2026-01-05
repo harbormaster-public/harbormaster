@@ -2,20 +2,22 @@
   <div class="shipping-log">
     <h2 class="text-2xl my-2">Shipping Log: showing {{skip + 1}}-{{skip +
     shipping_log_amount_shown}}
-    of {{lane.shipment_count}} shipments by date
+    of {{lane.shipment_count || 0}} shipments by date
     </h2>
-    <button
+    <div v-if="lane.shipment_count > shipping_log_amount_shown">
+      <button
       id="paginator-prev"
       class="rounded-sm inline-block ml-2 px-2 shipping-log-paginator paginator-prev"
       @click="handle_paginator"
       :disabled="!can_paginate_prev"
-    >Prev</button>
-    <button
+      >Prev</button>
+      <button
       id="paginator-next"
       class="rounded-sm inline-block pl-2 pr-6 shipping-log-paginator paginator-next"
       @click="handle_paginator"
       :disabled="!can_paginate_next"
-    >Next</button>
+      >Next</button>
+    </div>
     <span 
       class="loading-shipments" 
       v-if="!is_ready()">Loading...</span>
@@ -46,57 +48,45 @@ import {
   lane,
   pretty_date,
   duration,
+  is_ready,
 } from './lib';
-import {Shipments} from '../../../api/shipments';
-import {history, get_lane} from '../../pages/lanes/lib/util';
-
-const options = {
-   sort: { actual: -1 },
-   limit: H.AMOUNT_SHOWN,
-   skip: this.skip,
-};
+import { get_lane } from '../../pages/lanes/lib/util';
 
 export default {
+  props: {
+    active: {
+      type: Boolean,
+      default: false,
+    },
+  },
   meteor: {
     $subscribe: {
       Lanes: function () { return ['/log', this.$route.params.slug] },
+      Shipments: function () {
+        return [
+          { slug: this.$route.params.slug },
+          {
+            sort: { actual: -1 },
+            limit: H.AMOUNT_SHOWN,
+            skip: this.skip,
+          },
+        ];
+      },
     },
     lane,
     shipment_history,
   },
 
-  mounted () {
-    this.$data.shipment_sub = this.$subscribe('Shipments',
-      { slug: this.$route.params.slug },
-      {
-        sort: { actual: -1 },
-        limit: H.AMOUNT_SHOWN,
-        skip: this.skip,
-      }
-    );
-  },
-
   methods: {
-    is_ready () {
-      /* istanbul ignore next */
-      if (!H.isTest) {
-        console.log(`Shipments sub ready? ${this.$subReady.Shipments}`);
-        console.log(`Lanes sub ready? ${this.$subReady.Lanes}`);
-      }
-      return (
-        this.$subReady.Shipments &&
-        this.$subReady.Lanes
-      );
-    },
-    handle_paginator (evt) {
-      this.$data.shipment_sub.stop();
+    is_ready,
+    async handle_paginator (evt) {
       switch (evt.target.id) {
         case 'paginator-next':
           this.$data.skip += H.AMOUNT_SHOWN;
           const shown = this.$data.shipping_log_amount_shown;
-          const $lane = get_lane(this.$route.params.slug);
+          const $lane = await get_lane(this.$route.params.slug);
           if ((this.$data.skip + shown) >= $lane.shipment_count) {
-            this.$data.skip = $lane.shipment_count - shown; 
+            this.$data.skip = $lane.shipment_count - shown;
             console.log(`Oldest shipment reached, showing ${
                 this.$data.skip
               }-${$lane.shipment_count}`
@@ -114,19 +104,11 @@ export default {
           this.$data.can_paginate_next = true;
           break;
       }
-      this.$data.shipment_sub = this.$subscribe('Shipments',
-        { slug: this.$route.params.slug },
-        {
-          sort: { actual: -1 },
-           limit: H.AMOUNT_SHOWN,
-          skip: this.skip,
-        }
-      );
     },
     has_work_output,
     pretty_date,
     duration,
-    
+
   },
 
   data () {
@@ -135,7 +117,6 @@ export default {
       shipping_log_amount_shown: H.AMOUNT_SHOWN,
       can_paginate_next: true,
       can_paginate_prev: false,
-      shipment_sub: null,
     };
   },
 }
@@ -238,6 +219,10 @@ export default {
 .shipment-link:before {
   position: absolute;
   left: -25px;
+}
+
+.shipping-log {
+  margin: 20px 0;
 }
 
 @media all 

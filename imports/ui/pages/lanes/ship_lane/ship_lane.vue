@@ -137,7 +137,7 @@
       </h3>
     </div>
     
-    <shipping-log></shipping-log>
+    <shipping-log :active="active"></shipping-log>
   </div>
 </template>
 
@@ -187,7 +187,23 @@ export default {
     lane,
     work_preview,
     active,
+    working () {
+      const $lane = lane(this.$route.params.slug);
+      const working_lanes = H.Session.get('working_lanes') || {};
+      return !!working_lanes[$lane?._id];
+    },
     exit_code,
+    can_ship () {
+      const $lane = lane(this.$route.params.slug);
+      const harbor = Harbors.findOne($lane?.type);
+      const has_manifest = !!(
+        harbor &&
+        harbor.lanes &&
+        harbor.lanes[$lane?._id] &&
+        harbor.lanes[$lane._id].manifest
+      );
+      return !has_manifest;
+    },
     installed () {
       const $lane = lane(this.$route.params.slug);
       const harbor = Harbors.findOne($lane.type);

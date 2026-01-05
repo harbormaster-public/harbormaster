@@ -1,7 +1,7 @@
 import chai from 'chai';
 import { manifest_index } from './global_helpers.js';
 
-const {expect} = chai;
+const { expect } = chai;
 
 describe('Global Helpers', function () {
   describe('#manifest_index', function () {
@@ -23,7 +23,7 @@ describe('Global Helpers', function () {
 
     it('should properly handle any given index after the third', function () {
       let random_integer = Math.round(
-        Math.random() * (100000000000000000 - 4) + 4
+        Math.random() * (100000000000000000 - 4) + 4,
       );
 
       let expected_integer = random_integer + 1;
@@ -31,7 +31,7 @@ describe('Global Helpers', function () {
       expect(manifest_index(random_integer))
         .to
         .equal((expected_integer++) + 'th')
-        ;
+      ;
     });
   });
 });

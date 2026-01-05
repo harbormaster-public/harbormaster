@@ -23,6 +23,8 @@
 </template>
 
 <script>
+import { Tracker } from 'meteor/tracker';
+import { Lanes } from '../../../../api/lanes';
 import {
   build_graph,
   node_list,
@@ -54,6 +56,56 @@ export default {
     },
     lane,
     svg_graph,
+  },
+
+  data() {
+    return {
+      previous_lane_states: {},
+    };
+  },
+
+  mounted() {
+    const getState = (lane) => lane.last_shipment?.exit_code ?? (
+      lane.last_shipment?.active ? 
+      'active' : 
+      undefined
+    );
+
+    Lanes.find().fetch().forEach(lane => {
+      if (lane.name && lane.slug) {
+        this.previous_lane_states[lane.slug] = {
+          state: getState(lane),
+          initialized: true,
+        };
+      }
+    });
+
+    this.tracker = Tracker.autorun(() => {
+      Lanes.find().fetch().forEach(lane => {
+        if (!lane.name || !lane.slug) return;
+
+        const current = getState(lane);
+        const prev = this.previous_lane_states[lane.slug];
+
+        if (prev?.initialized && prev.state !== current) {
+          console.log('Lane changed:', lane.name, 'exit_code:', current);
+        }
+
+        if (prev) {
+          prev.state = current;
+        }
+        else {
+          this.previous_lane_states[lane.slug] = {
+            state: current,
+            initialized: true,
+          };
+        }
+      });
+    });
+  },
+
+  beforeUnmount() {
+    this.tracker?.stop();
   },
 
   methods: {

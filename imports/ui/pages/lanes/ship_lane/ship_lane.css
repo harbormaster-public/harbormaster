@@ -3,21 +3,7 @@ pre {
   overflow-x: auto;
 }
 
-.work-output.exit-code.active,
-.exit-code {
-  background: rgba(255, 150, 0, 0.75);
-  border-color: rgba(255, 150, 0, 0.75);
-}
-
-.exit-code.code- {
-  background: #333;
-}
-
-.exit-code.code-0 {
-  background: #4a9;
-  border-color: #4a9;
-}
-
+.exit-code[class*="code-"],
 .exit-code.code-10,
 .exit-code.code-9,
 .exit-code.code-8,
@@ -31,6 +17,23 @@ pre {
   background-color: #d41159;
   border-color: #d41159;
   color: #fff;
+}
+
+.work-output.exit-code.active,
+.exit-code {
+  background: rgba(255, 150, 0, 0.75);
+  border-color: rgba(255, 150, 0, 0.75);
+}
+
+.exit-code.code-0 {
+  background: #4a9;
+  border-color: #4a9;
+}
+
+
+.exit-code.code- {
+  background: #333;
+  border-color: #fa0;
 }
 
 .prompt {
@@ -178,7 +181,6 @@ pre {
 }
 
 @media all and (min-device-width: 280px) and (max-device-width: 800px) {
-
   .container .reset-all-active,
   .container .start-shipment,
   .container .reset-shipment,

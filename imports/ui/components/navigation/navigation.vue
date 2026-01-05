@@ -30,13 +30,15 @@
 </template>
 
 <script>
+import {
+  handle_click_logout,
+  handle_click_lanes,
+} from './lib';
+
 export default {
   methods: {
-    handle_click_logout () { Accounts.logout(err => { if (err) throw err }) },
-    handle_click_lanes () {
-      H.Session.set('choose_followup', false);
-      H.Session.set('choose_salvage_plan', false);
-    },
+    handle_click_logout,
+    handle_click_lanes,
   }
 }
 </script>

@@ -1,0 +1,6 @@
+# Cypress (keep out of Meteor auto-loader/bundler)
+tests/cypress/**
+cypress.config.js
+.e2e-mongo-url
+
+

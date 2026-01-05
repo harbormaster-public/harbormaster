@@ -1,9 +1,9 @@
-import Vue from 'vue';
-import VueRouter from 'vue-router';
-import VueMeteor from 'vue-meteor-tracker';
+import { createApp } from 'vue';
+import { createRouter, createWebHistory } from 'vue-router';
+import { VueMeteor } from 'vue-meteor-tracker';
 
 import layout from '../../ui/layouts/primary';
-import '../../ui/components/welcome';
+import Welcome from '../../ui/components/welcome';
 import '../../ui/components/new_harbormaster';
 import RootPage from '../../ui/pages/root';
 import LanesPage from '../../ui/pages/lanes';
@@ -31,9 +31,10 @@ const routes = [
     name: "edit_lane",
     component: EditLanePage,
   },
+  // Missing lane slug: treat `/lanes/ship` as invalid and send users to list.
   {
-    path: '/lanes//ship',
-    redirect: '/lanes',
+    path: "/lanes/ship",
+    redirect: "/lanes",
   },
   {
     path: "/harbors",
@@ -66,25 +67,43 @@ const routes = [
     component: ProfilePage,
   },
   {
-    path: '/#/reset-password/:token',
+    path: '/reset-password/:token',
     name: 'reset_password',
-    component: RootPage,
+    component: Welcome,
   },
 ];
 
-Vue.use(VueRouter);
-
-const router = new VueRouter({
-  mode: 'history',
+const router = createRouter({
+  history: createWebHistory(),
   routes,
 });
+
+// Normalize malformed URLs that can show up in the wild and in E2E tests.
+// This runs even when a URL doesn't match any route record yet, which makes it
+// the right place to collapse duplicate slashes (e.g. `/lanes//ship`).
+router.beforeEach((to) => {
+  const fullPath = to.fullPath || to.path || '';
+
+  // Collapse duplicate slashes in-path (preserve query/hash via fullPath).
+  const normalized = fullPath.replace(/\/{2,}/g, '/');
+  if (normalized !== fullPath) {
+    return { path: normalized, replace: true };
+  }
+
+  return true;
+});
+
 router.afterEach((to) => {
   document.title = `H${to.path}`;
 });
 
 Meteor.startup(() => {
-  Vue.use(VueMeteor);
-  new Vue({ router, render: (h) => h(layout) }).$mount('#app');
+  // expose router on global H namespace for helper access
+  H.Router = router;
+  const app = createApp(layout);
+  app.use(router);
+  app.use(VueMeteor);
+  app.mount('#app');
 });
 
 export default router;

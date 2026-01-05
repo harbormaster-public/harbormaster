@@ -36,7 +36,7 @@
                 <input 
                   :data-lane-id="lane._id"
                   class="can-ply-lane" 
-                  :disabled="can_change_plying(lane)"
+                  :disabled="is_changing_plying_disabled(lane)"
                   type=checkbox 
                   :checked="can_ply(lane)"
                   @change="handle_change_can_ply"
@@ -48,7 +48,7 @@
                 <input 
                   :data-lane-id="lane._id"
                   class="from-webhook" 
-                  :disabled="can_change_webhook()"
+                  :disabled="!can_change_webhook()"
                   type=checkbox 
                   :checked="webhook_allowed(lane)"
                   :value="webhook_token(lane)"
@@ -77,7 +77,7 @@ import {
   not_harbormaster,
   is_captain,
   can_ply,
-  can_change_plying,
+  is_changing_plying_disabled,
   can_change_webhook,
   webhook_allowed,
   webhook_token,
@@ -110,7 +110,7 @@ export default {
     not_harbormaster,
     is_captain,
     can_ply,
-    can_change_plying,
+    is_changing_plying_disabled,
     can_change_webhook,
     webhook_allowed,
     webhook_token,

@@ -19,7 +19,7 @@ const is_loaded = function () {
 
 const no_users = function () {
   /* istanbul ignore else */
-  if (! Users.find().fetch().length) { return true; }
+  if (!Users.find().count()) { return true; }
   return false;
 };
 
@@ -28,15 +28,18 @@ const logged_in = function () {
 };
 
 const no_harbormasters = function () {
-  const harbormasters = Users.find({ harbormaster: true }).fetch();
-
-  return ! harbormasters.length ? true : false;
+  const users = Users.find({ harbormaster: true }).fetch();
+  return users.length === 0;
 };
 
 const set_constraints = function () {
   const parsed = {};
-  const { name } = this.$route;
-  Harbors.find().forEach(harbor => {
+  const route =
+    (this && this !== globalThis && this.$route) ||
+    H.Router?.currentRoute?.value ||
+    H.Router?.currentRoute;
+  const name = route && route.name;
+  Harbors.find().fetch().forEach(harbor => {
     /* istanbul ignore else */
     if (harbor.constraints) {
       for (const [scope, list] of Object.entries(harbor.constraints)) {

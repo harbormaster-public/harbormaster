@@ -8,7 +8,7 @@ const exists_sync = fs.existsSync;
 const readdir_sync = fs.readdirSync;
 
 describe('Userland', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     fs.statSync = () => ({
       isDirectory: () => false,
       isFile: () => true,
@@ -16,7 +16,7 @@ describe('Userland', () => {
     fs.existsSync = () => { };
     fs.readdirSync = () => { };
   });
-  afterEach(() => {
+  afterEach(async () => {
     fs.statSync = stat_sync;
     fs.readFileSync = read_file_sync;
     fs.existsSync = exists_sync;

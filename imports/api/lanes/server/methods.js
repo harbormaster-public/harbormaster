@@ -5,7 +5,7 @@ import {
   LatestShipment,
 } from '../../shipments';
 import { Harbors } from '../../harbors';
-import uuid from 'uuid';
+import { v4 as uuidv4 } from 'uuid';
 import _ from 'lodash';
 import YAML from 'yaml';
 
@@ -16,50 +16,81 @@ const trim_manifest = (manifest) => {
   return trimmed;
 };
 
-const collect_latest_shipments = function () {
+const collect_latest_shipments = async function () {
   /* istanbul ignore next */
   if (!H.isTest) console.log('Collecting latest shipments...');
 
-  Lanes.find().forEach((lane) => {
+  const lanes = await Lanes.find({}).fetchAsync();
+  for (const lane of lanes) {
   /* istanbul ignore next */
     if (!H.isTest) console.log(`Finding latest shipment for ${lane.name}...`);
 
     /* istanbul ignore else */
     if (!lane.last_shipment) {
-      let shipment = Shipments.findOne(
+      let shipment = await Shipments.findOneAsync(
         { lane: lane._id },
-        { sort: { actual: -1 } }
+        { sort: { actual: -1 } },
       ) || { actual: 'Never', start: '' };
       lane.last_shipment = shipment;
-      Lanes.update(lane._id, { $set: { last_shipment: lane.last_shipment } });
-      LatestShipment.upsert(lane._id, { shipment });
+      await Lanes.updateAsync(
+        { _id: lane._id },
+        { $set: { last_shipment: lane.last_shipment } },
+      );
+      await LatestShipment.upsertAsync(
+        { _id: lane._id },
+        { $set: { shipment } },
+      );
     }
-  });
+  }
 
   /* istanbul ignore next */
   if (!H.isTest) console.log('Done collecting latest shipments.');
 };
 
-const get_increment = function (lane, increment = 2) {
+const get_increment = async function (lane, increment = 2) {
+  if (!lane || !lane.slug) return increment;
   const increment_regex = /(.*?)(\d+)$/;
-  let dupe_slug = `${lane.slug}-${increment}`;
   const slug_match = lane.slug.match(increment_regex);
-  if (slug_match?.length) {
-    increment = parseInt(slug_match[2], 10);
-    increment += 1;
-    dupe_slug = `${slug_match[1]}${increment}`;
-  }
+  // If the base lane slug already ends with digits, we want duplicates like:
+  // - test-23 -> test-24
+  // and on recursive calls we MUST honor the provided `increment` rather than
+  // re-parsing from lane.slug (which would reset the sequence).
+  const baseSlug = slug_match ? slug_match[1] : lane.slug;
+  const initialFromSlug = slug_match ? (parseInt(slug_match[2], 10) + 1) : null;
+  const effectiveIncrement = (slug_match && increment === 2) ?
+    initialFromSlug :
+    increment;
+
+  let dupe_slug = slug_match ?
+    `${baseSlug}${effectiveIncrement}` :
+    `${lane.slug}-${effectiveIncrement}`;
   /* istanbul ignore next */
   if (!H.isTest) console.log(`Checking for exsting lane: ${dupe_slug}`);
-  let existing_dupe = Lanes.findOne({ slug: dupe_slug });
+  let existing_dupe = await Lanes.findOneAsync({ slug: dupe_slug });
   if (existing_dupe) {
     /* istanbul ignore next */
     if (!H.isTest) console.log(`Lane ${dupe_slug} already exists.`);
-    return get_increment(existing_dupe, increment);
+    const existing_match = existing_dupe.slug.match(increment_regex);
+    /* istanbul ignore else */
+    if (existing_match) {
+      const existing_num = parseInt(existing_match[2], 10);
+      const next_increment = existing_num + 1;
+      const next_slug = `${existing_match[1]}${next_increment}`;
+      const next_exists = await Lanes.findOneAsync({ slug: next_slug });
+      if (next_exists) {
+        return await get_increment(existing_dupe, next_increment);
+      }
+      return next_increment;
+    }
+    // If existing dupe doesn't match increment pattern,
+    // increment from the current value
+    return await get_increment(existing_dupe, effectiveIncrement + 1);
   }
   /* istanbul ignore next */
-  if (!H.isTest) console.log(`No duplicate found for ${dupe_slug}, using it.`);
-  return increment;
+  if (!H.isTest) {
+    console.log(`No duplicate found for ${dupe_slug}, using it.`);
+  }
+  return Number(effectiveIncrement);
 };
 
 const publish_lanes = function publish_lanes (view, slug) {
@@ -69,10 +100,13 @@ const publish_lanes = function publish_lanes (view, slug) {
       published = Lanes.find({}, { fields: {
         _id: 1,
         name: 1,
+        slug: 1,
         'last_shipment.exit_code': 1,
         'last_shipment.active': 1,
         'followup._id': 1,
+        'followup.slug': 1,
         'salvage_plan._id': 1,
+        'salvage_plan.slug': 1,
       } });
       break;
     case '/lanes':
@@ -185,14 +219,12 @@ const publish_lanes = function publish_lanes (view, slug) {
   return published;
 };
 
-const get_total = async () => {
-  // return Lanes.find().count();  vvv supposed to be faster
-  return await Lanes.estimatedDocumentCount();
-};
+const get_total = async () => await (Lanes.find()).countAsync();
 
-const update_webhook_token = function (lane_id, user_id, remove) {
-  let lane = Lanes.findOne(lane_id);
-  let token = uuid.v4().replace(/-/g, '_');
+const update_webhook_token = async function (lane_id, user_id, remove) {
+  let lane = await Lanes.findOneAsync(lane_id);
+  if (!lane) throw new Error(`Lane not found: ${lane_id}`);
+  let token = uuidv4().replace(/-/g, '_');
 
   if (lane.tokens && remove) {
     let tokens = _.invert(lane.tokens);
@@ -202,7 +234,7 @@ const update_webhook_token = function (lane_id, user_id, remove) {
 
   if (!remove) lane.tokens = { [token]: user_id };
 
-  return Lanes.update(lane_id, { $set: { tokens: lane.tokens } });
+  return await Lanes.updateAsync(lane_id, { $set: { tokens: lane.tokens } });
 };
 
 const start_shipment = async function (id, manifest, shipment_start_date) {
@@ -212,17 +244,19 @@ const start_shipment = async function (id, manifest, shipment_start_date) {
     !shipment_start_date
   ) {
     throw new TypeError(
-      'Improper arguments for "Lanes#start_shipment" method!\n' +
-      'The first argument must be a String; the _id of the lane.\n' +
-      'The second argument, if present, must be an object;' +
-      'parameters to pass to the Harbor.\n' +
-      'The third argument must be the shipment start date.'
+      `Improper arguments for "Lanes#start_shipment" method!
+      The first argument must be a String; the _id of the lane.
+      The second argument, if present, must be an object;
+      parameters to pass to the Harbor.
+      The third argument must be the shipment start date.
+      Received: ${id}, ${manifest}, ${shipment_start_date}`,
     );
   }
 
-  let lane = Lanes.findOne(id);
+  let lane = await Lanes.findOneAsync({ _id: id });
+  if (!lane) throw new Error(`Lane not found: ${id}`);
   let new_manifest;
-  let shipment_id = Shipments.insert({
+  let shipment_id = await Shipments.insertAsync({
     start: shipment_start_date,
     actual: new Date(),
     lane: lane._id,
@@ -231,15 +265,17 @@ const start_shipment = async function (id, manifest, shipment_start_date) {
     stderr: {},
     active: true,
   });
-  LatestShipment.upsert(
-    lane._id,
-    { $set: { shipment: Shipments.findOne(shipment_id) } }
+  await LatestShipment.upsertAsync(
+    { _id: lane._id },
+    { $set: { shipment: await Shipments.findOneAsync(shipment_id) } },
   );
-
   lane.shipment_count = lane.shipment_count >= 0 ? lane.shipment_count + 1 : 1;
   manifest.shipment_start_date = shipment_start_date;
   manifest.shipment_id = shipment_id;
-  Lanes.update(lane._id, { $set: { shipment_count: lane.shipment_count } });
+  await Lanes.updateAsync(
+    { _id: lane._id },
+    { $set: { shipment_count: lane.shipment_count } },
+  );
 
   /* istanbul ignore next */
   if (!H.isTest) console.log('Starting shipment for lane:', lane.name);
@@ -256,14 +292,14 @@ const start_shipment = async function (id, manifest, shipment_start_date) {
       'Shipment failed with error:\n',
       err + '\n',
       'for lane:\n',
-      lane.name
+      lane.name,
     );
     manifest.error = err;
     new_manifest = manifest;
   }
   finally {
 
-    let shipment = Shipments.findOne(shipment_id);
+    let shipment = await Shipments.findOneAsync(shipment_id);
     if (new_manifest && new_manifest.error) {
       let exit_code = 1;
       let key = new Date();
@@ -271,22 +307,33 @@ const start_shipment = async function (id, manifest, shipment_start_date) {
 
       shipment.stderr[key] = result;
 
-      Shipments.update(shipment_id, shipment);
+      await Shipments.updateAsync({ _id: shipment_id }, { $set: shipment });
       lane.last_shipment = shipment;
-      Lanes.update(lane._id, { $set: { last_shipment: lane.last_shipment } });
-      LatestShipment.upsert(shipment.lane, { shipment });
+      await Lanes.updateAsync(
+        { _id: lane._id },
+        { $set: { last_shipment: lane.last_shipment } },
+      );
+      await LatestShipment.upsertAsync(
+        { _id: shipment.lane },
+        { $set: { shipment } },
+      );
 
       return await H.call(
         'Lanes#end_shipment',
         lane,
         exit_code,
-        new_manifest
+        new_manifest,
       );
     }
 
     lane.last_shipment = shipment;
-    Lanes.update(lane._id, { $set: { last_shipment: lane.last_shipment } });
-    LatestShipment.upsert(shipment.lane, { shipment });
+    await Lanes.updateAsync(
+      { _id: lane._id },
+      { $set: { last_shipment: lane.last_shipment } },
+    );
+    await LatestShipment.upsertAsync(
+      { _id: shipment.lane }, { $set: { shipment } },
+    );
 
     return new_manifest;
   }
@@ -304,7 +351,7 @@ const end_shipment = async function (lane, exit_code, manifest) {
       'The second argument must be the exit code of the finished work; ' +
       'An Integer or String representing one.\n' +
       'The third argument, if present, must be an object;' +
-      'The (modified) manifest object originally passed to the Harbor.'
+      'The (modified) manifest object originally passed to the Harbor.',
     );
   }
 
@@ -321,7 +368,7 @@ const end_shipment = async function (lane, exit_code, manifest) {
   manifest.lane_name = lane.name;
   manifest.lane_slug = lane.slug;
 
-  Shipments.update(shipment_id, {
+  await Shipments.updateAsync({ _id: shipment_id }, {
     $set: {
       finished: finished,
       exit_code: exit_code,
@@ -329,20 +376,22 @@ const end_shipment = async function (lane, exit_code, manifest) {
       active: false,
     },
   });
-  shipment = Shipments.findOne(shipment_id);
+  shipment = await Shipments.findOneAsync({ _id: shipment_id });
   lane.last_shipment = shipment;
   lane.last_shipment.finished = finished;
   lane.last_shipment.exit_code = exit_code;
   lane.last_shipment.manifest = manifest;
   lane.last_shipment.active = false;
-  Lanes.update(lane._id, {
+  await Lanes.updateAsync({ _id: lane._id }, {
     $set: {
       last_shipment: lane.last_shipment,
       salvage_runs: lane.salvage_runs,
     },
   });
 
-  LatestShipment.upsert(shipment.lane, { shipment });
+  await LatestShipment.upsertAsync(
+    { _id: shipment.lane }, { $set: { shipment } },
+  );
   manifest.stdout = shipment.stdout;
   manifest.stderr = shipment.stderr;
 
@@ -353,86 +402,136 @@ const end_shipment = async function (lane, exit_code, manifest) {
     'with shipment:',
     shipment_id,
     'and exit code:',
-    exit_code
+    exit_code,
   );
 
   if (exit_code != 0 && lane.salvage_plan) {
-    let salvage_lane = Lanes.findOne({ slug: lane.salvage_plan.slug });
-    let salvage_manifest = Harbors.findOne(salvage_lane.type)
-      .lanes[lane.salvage_plan._id]
-      .manifest
-      ;
+    if (
+      typeof lane.salvage_plan !== 'object' ||
+      (!lane.salvage_plan?._id && !lane.salvage_plan?.slug)
+    ) {
+      throw new Error(
+        `Invalid salvage_plan reference: ${JSON.stringify(lane.salvage_plan)}`,
+      );
+    }
+
+    const salvageQuery = lane.salvage_plan._id ?
+      { _id: lane.salvage_plan._id } :
+      { slug: lane.salvage_plan.slug };
+
+    let salvage_lane = await Lanes.findOneAsync(salvageQuery);
+    if (!salvage_lane) {
+      throw new Error(
+        `Salvage plan lane not found: ${JSON.stringify(lane.salvage_plan)}`,
+      );
+    }
+    const salvage_harbor = await Harbors.findOneAsync(salvage_lane.type);
+    if (
+      !salvage_harbor ||
+      !salvage_harbor.lanes ||
+      !salvage_harbor.lanes[salvage_lane._id] ||
+      !salvage_harbor.lanes[salvage_lane._id].manifest
+    ) {
+      throw new Error('Harbor or lane manifest not found');
+    }
+    let salvage_manifest = salvage_harbor.lanes[salvage_lane._id].manifest;
     salvage_manifest.prior_manifest = trim_manifest(manifest);
 
     /* istanbul ignore next */
     if (!H.isTest) console.log(
-      `Starting shipment for "${lane.salvage_plan.name
-      }" as salvage run of "${lane.name}"`
+      `Starting shipment for "${salvage_lane.name || lane.salvage_plan.name ||
+        lane.salvage_plan.slug || lane.salvage_plan._id}" as salvage run of "${
+        lane.name}"`,
     );
-
     return await H.call(
       'Lanes#start_shipment',
-      lane.salvage_plan._id,
+      salvage_lane._id,
       salvage_manifest,
-      next_shipment_start_date
+      next_shipment_start_date,
     );
   }
-
   if (exit_code == 0 && lane.followup) {
-    let followup_lane = Lanes.findOne({ slug: lane.followup.slug });
-    let followup_manifest = Harbors.findOne(followup_lane.type)
-      .lanes[lane.followup._id]
-      .manifest
-      ;
+    if (
+      typeof lane.followup !== 'object' ||
+      (!lane.followup?._id && !lane.followup?.slug)
+    ) {
+      throw new Error(
+        `Invalid followup reference: ${JSON.stringify(lane.followup)}`,
+      );
+    }
+
+    const followupQuery = lane.followup._id ?
+      { _id: lane.followup._id } :
+      { slug: lane.followup.slug };
+    let followup_lane = await Lanes.findOneAsync(followupQuery);
+    if (!followup_lane) {
+      throw new Error(
+        `Followup lane not found: ${JSON.stringify(lane.followup)}`,
+      );
+    }
+    const followup_harbor = await Harbors.findOneAsync(followup_lane.type);
+    if (
+      !followup_harbor ||
+      !followup_harbor.lanes ||
+      !followup_harbor.lanes[followup_lane._id] ||
+      !followup_harbor.lanes[followup_lane._id].manifest
+    ) {
+      throw new Error('Harbor or lane manifest not found');
+    }
+    let followup_manifest = followup_harbor.lanes[followup_lane._id].manifest;
     followup_manifest.prior_manifest = trim_manifest(manifest);
 
     /* istanbul ignore next */
     if (!H.isTest) console.log(
-      `Starting shipment for "${lane.followup.name
-      }" as followup of "${lane.name}"`
+      `Starting shipment for "${followup_lane.name || lane.followup.name ||
+      lane.followup.slug || lane.followup._id}" as followup of "${lane.name}"`,
     );
-
     return await H.call(
       'Lanes#start_shipment',
-      lane.followup._id,
+      followup_lane._id,
       followup_manifest,
-      next_shipment_start_date
+      next_shipment_start_date,
     );
   }
 
   return manifest;
 };
 
-const reset_shipment = function (slug, date) {
-  let lane = Lanes.findOne({ slug });
-  let shipment = Shipments.findOne({ start: date, lane: lane._id });
-  if (!shipment) shipment = Shipments.findOne(
+const reset_shipment = async function (slug, date) {
+  let lane = await Lanes.findOneAsync({ slug });
+  if (!lane) throw new Error(`Lane not found: ${slug}`);
+  let shipment = await Shipments.findOneAsync({ start: date, lane: lane._id });
+  if (!shipment) shipment = await Shipments.findOneAsync(
     { lane: lane._id },
     { sort: { actual: -1 } },
   );
 
-  Shipments.update(shipment._id, {
+  await Shipments.updateAsync({ _id: shipment._id }, {
     $set: {
       active: false,
       exit_code: 1,
     },
   });
 
-  LatestShipment.upsert(
-    lane._id,
-    { $set: { shipment: Shipments.findOne(shipment._id) } }
+  await LatestShipment.upsertAsync(
+    { _id: lane._id },
+    { $set: { shipment: await Shipments.findOneAsync({ _id: shipment._id }) } },
   );
 
-  lane.last_shipment = Shipments.findOne(shipment._id);
-  Lanes.update(lane._id, { $set: { last_shipment: lane.last_shipment } });
+  lane.last_shipment = await Shipments.findOneAsync({ _id: shipment._id });
+  await Lanes.updateAsync(
+    { _id: lane._id },
+    { $set: { last_shipment: lane.last_shipment } },
+  );
 
   return lane;
 };
 
-const reset_all_active_shipments = function (name) {
-  let lane = Lanes.findOne({ $or: [{ name }, { slug: name }] });
+const reset_all_active_shipments = async function (name) {
+  let lane = await Lanes.findOneAsync({ $or: [{ name }, { slug: name }] });
+  if (!lane) throw new Error(`Lane not found: ${name}`);
 
-  Shipments.update(
+  await Shipments.updateAsync(
     { lane: lane._id, active: true },
     {
       $set: {
@@ -440,47 +539,88 @@ const reset_all_active_shipments = function (name) {
         exit_code: 1,
       },
     },
-    { multi: true }
+    { multi: true },
   );
 
-  lane.last_shipment = Shipments.findOne(
+  lane.last_shipment = await Shipments.findOneAsync(
     { lane: lane._id },
     { sort: { actual: -1 } },
   );
-  LatestShipment.upsert(lane._id, { shipment: lane.last_shipment });
-  Lanes.update(lane._id, { $set: { last_shipment: lane.last_shipment } });
+  await LatestShipment.upsertAsync(
+    { _id: lane._id },
+    { $set: { shipment: lane.last_shipment } },
+  );
+  await Lanes.updateAsync(
+    { _id: lane._id },
+    { $set: { last_shipment: lane.last_shipment } },
+  );
 
   return lane;
 };
 
-const update_slug = (lane) => {
-  Lanes.update({ _id: lane._id }, { $set: { slug: lane.slug } });
-
+const update_slug = async (lane) => {
+  if (!lane || !lane._id) return false;
+  await Lanes.updateAsync({ _id: lane._id }, { $set: { slug: lane.slug } });
   return true;
 };
 
-const delete_lane = function (lane) {
-  Lanes.remove({ _id: lane._id });
-  const harbor = Harbors.findOne(lane.type);
-  delete harbor.lanes[lane._id];
-  Harbors.update(harbor._id, harbor);
+const delete_lane = async function (lane) {
+  if (!lane || !lane._id) throw new Error('Invalid lane');
+  await Lanes.removeAsync({ _id: lane._id });
+  /* istanbul ignore else */
+  if (lane.type) {
+    const harbor = await Harbors.findOneAsync(lane.type);
+    /* istanbul ignore else */
+    if (harbor && harbor.lanes) {
+      delete harbor.lanes[lane._id];
+      await Harbors.updateAsync(harbor._id, { $set: { lanes: harbor.lanes } });
+    }
+  }
   /* istanbul ignore next */
   if (!H.isTest) console.log(`Deleted lane: ${lane.name}`);
-  return H.call('Lanes#get_total');
+  return await get_total();
 };
 
-const upsert = function (lane = {}) {
-  const { _id } = lane;
+const upsert = async function (lane = {}) {
+  const { _id, slug, name } = lane;
 
-  if (_id && Lanes.findOne(_id)) Lanes.update({ _id }, lane);
-  else Lanes.insert(lane);
+  // IMPORTANT:
+  // Never query with undefined/empty values (e.g. { slug: undefined } matches
+  // documents where slug is missing), which can cause accidental overwrites.
+  const $or = [];
+  if (_id) $or.push({ _id });
+  if (typeof slug === 'string' && slug.length) $or.push({ slug });
+  if (typeof name === 'string' && name.length) $or.push({ name });
 
-  return Lanes.findOne(_id);
+  // If we have no identity fields, this must be a brand new lane. Insert it.
+  if (!$or.length) {
+    const insertedId = await Lanes.insertAsync(lane);
+    return await Lanes.findOneAsync(insertedId);
+  }
+
+  const query = { $or };
+  // Use a modifier update to avoid replacing the whole document and dropping
+  // fields not present in `lane`.
+  const $set = Object.fromEntries(
+    Object.entries(lane)
+      .filter(([key, value]) => key !== '_id' && value !== undefined),
+  );
+  const modifier = { $set };
+  if (_id) {
+    modifier.$setOnInsert = { _id };
+  }
+
+  await Lanes.upsertAsync(query, modifier);
+  return await Lanes.findOneAsync(query);
 };
 
-const duplicate = (lane) => {
-  const increment = get_increment(lane);
-  const harbor = Harbors.findOne(lane.type);
+const duplicate = async (lane) => {
+  if (!lane || !lane._id || !lane.type) throw new Error('Invalid lane');
+  const increment = await get_increment(lane);
+  const harbor = await Harbors.findOneAsync(lane.type);
+  if (!harbor || !harbor.lanes || !harbor.lanes[lane._id]) {
+    throw new Error(`Harbor or lane manifest not found`);
+  }
   const manifest = harbor.lanes[lane._id].manifest;
   const replacement_regex = /\d+$/g;
 
@@ -493,45 +633,59 @@ const duplicate = (lane) => {
   lane.salvage_runs = 0;
   lane.name = `${lane.name.replace(replacement_regex, '')}${increment}`;
   lane.slug = `${lane.slug.replace(replacement_regex, '')}${increment}`;
-  const new_lane_id = Lanes.insert(lane);
+  const new_lane_id = await Lanes.insertAsync(lane);
   harbor.lanes[new_lane_id] = { manifest };
-  Harbors.update(harbor._id, harbor);
+  await Harbors.updateAsync(harbor._id, { $set: { lanes: harbor.lanes } });
   /* istanbul ignore next */
   if (!H.isTest) console.log(`New lane created: ${lane.name}`);
   return `/lanes/${lane.slug}/edit`;
 };
 
-const download_charter_yaml = (slug) => {
-  const charter = {};
-  const add_downstreams = (lane) => {
+const download_charter_yaml = async (slug) => {
+  const charter = new Map();
+  const add_downstreams = async (lane) => {
     let followup;
     let salvage_plan;
-    const harbor = Harbors.findOne(lane.type);
-    charter[lane.slug] = {
+    const harbor = await Harbors.findOneAsync(lane.type);
+    if (
+      !harbor ||
+      !harbor.lanes ||
+      !harbor.lanes[lane._id] ||
+      !harbor.lanes[lane._id].manifest
+    ) {
+      throw new Error('Harbor or lane manifest not found');
+    }
+    charter.set(lane.slug, {
       name: lane.name,
       type: lane.type,
-      tokens: lane.tokens,
-      captains: lane.captains,
+      tokens: lane.tokens || {},
+      captains: lane.captains || [],
       followup: lane.followup?.slug,
       salvage_plan: lane.salvage_plan?.slug,
       manifest: harbor.lanes[lane._id].manifest,
-    };
-    if (lane.followup && !charter[lane.followup.slug]) {
-      followup = Lanes.findOne({ slug: lane.followup.slug });
+    });
+    // Process followup first to ensure correct order
+    if (lane.followup && !charter.has(lane.followup.slug)) {
+      followup = await Lanes.findOneAsync({ slug: lane.followup.slug });
       /* istanbul ignore else */
-      if (followup) add_downstreams(followup);
+      if (followup) {
+        await add_downstreams(followup);
+      }
       /* istanbul ignore next */
       if (!followup && !H.isTest) console.error(
-        `Unable to find lane by slug: ${lane.followup.slug}`
+        `Unable to find lane by slug: ${lane.followup.slug}`,
       );
     }
-    if (lane.salvage_plan && !charter[lane.salvage_plan.slug]) {
-      salvage_plan = Lanes.findOne({ slug: lane.salvage_plan.slug });
+    // Process salvage_plan after followup to ensure correct order
+    if (lane.salvage_plan && !charter.has(lane.salvage_plan.slug)) {
+      salvage_plan = await Lanes.findOneAsync({ slug: lane.salvage_plan.slug });
       /* istanbul ignore else */
-      if (salvage_plan) add_downstreams(salvage_plan);
+      if (salvage_plan) {
+        await add_downstreams(salvage_plan);
+      }
       /* istanbul ignore next */
-      if (!followup && !H.isTest) console.error(
-        `Unable to find lane by slug ${lane.salvage_plan.slug}`
+      if (!salvage_plan && !H.isTest) console.error(
+        `Unable to find lane by slug ${lane.salvage_plan.slug}`,
       );
     }
   };
@@ -547,20 +701,20 @@ const download_charter_yaml = (slug) => {
     tokens: 1,
     captains: 1,
   };
-  const $lane = Lanes.findOne({ slug }, { fields });
+  const $lane = await Lanes.findOneAsync({ slug }, { fields });
 
-  if (slug && $lane) { add_downstreams($lane); }
+  if (slug && $lane) { await add_downstreams($lane); }
   else {
-    Lanes.find({}, { fields }).fetch().forEach((lane) => {
-      add_downstreams(lane);
-    });
+    const lanes = await Lanes.find({}, { fields }).fetchAsync();
+    for (const lane of lanes) { await add_downstreams(lane); }
   }
 
-  const lane_yaml = YAML.stringify(charter);
+  const charterObj = Object.fromEntries(charter);
+  const lane_yaml = YAML.stringify(charterObj, { sortKeys: false });
   return lane_yaml;
 };
 
-const import_yaml = (filename, yaml) => {
+const import_yaml = async (filename, yaml) => {
   const charter = YAML.parse(yaml);
   /* istanbul ignore next */
   if (!H.isTest) console.log(`Importing YAML from: ${filename}`);
@@ -568,27 +722,41 @@ const import_yaml = (filename, yaml) => {
   const missing = [];
   const created = [];
 
-  _.forOwn(charter, (values, slug) => {
-    if (Lanes.findOne({ slug })) found.push(slug);
-    else if (!Harbors.findOne(charter[slug].type)) missing.push(slug);
+  for (const [slug, values] of Object.entries(charter)) {
+    if (await Lanes.findOneAsync({ slug })) found.push(slug);
+    else if (!(await Harbors.findOneAsync(values.type))) missing.push(slug);
     else {
       const new_lane = {
         slug,
         type: values.type,
         name: values.name,
       };
-      if (values.followup) new_lane.followup = { slug: values.followup };
-      if (values.salvage_plan) {
-        new_lane.salvage_plan = { slug: values.salvage_plan };
+      if (values.followup) {
+        const followupLane = await Lanes.findOneAsync(
+          { slug: values.followup },
+          { fields: { _id: 1, slug: 1 } },
+        );
+        new_lane.followup = followupLane
+          ? { _id: followupLane._id, slug: followupLane.slug }
+          : { _id: values.followup, slug: values.followup };
       }
-      const lane_id = Lanes.insert(new_lane);
-      const harbor = Harbors.findOne(values.type);
+      if (values.salvage_plan) {
+        const salvageLane = await Lanes.findOneAsync(
+          { slug: values.salvage_plan },
+          { fields: { _id: 1, slug: 1 } },
+        );
+        new_lane.salvage_plan = salvageLane
+          ? { _id: salvageLane._id, slug: salvageLane.slug }
+          : { _id: values.salvage_plan, slug: values.salvage_plan };
+      }
+      const lane_id = await Lanes.insertAsync(new_lane);
+      const harbor = await Harbors.findOneAsync(values.type);
       harbor.lanes = (harbor.lanes || {});
       harbor.lanes[lane_id] = { manifest: values.manifest };
-      Harbors.update(harbor._id, harbor);
+      await Harbors.updateAsync(harbor._id, { $set: { lanes: harbor.lanes } });
       created.push(slug);
     }
-  });
+  }
 
   return { found, missing, created };
 };

@@ -11,9 +11,27 @@ import {
   add_script,
 } from './lib';
 import { Harbors } from '../../../api/harbors';
-import { resetDatabase } from 'cleaner';
+import { resetDatabase } from '../../../test-helpers/reset-database';
+import { Users } from '../../../api/users';
+import {
+  setupInMemoryCollection,
+} from '../../../test-helpers/setup-collection-stubs';
 
 describe('Primary Layout', () => {
+  let usersStub;
+  let harborsStub;
+
+  beforeEach(async () => {
+    await resetDatabase();
+    usersStub = setupInMemoryCollection(Users);
+    harborsStub = setupInMemoryCollection(Harbors);
+  });
+
+  afterEach(async () => {
+    await resetDatabase();
+    if (usersStub) usersStub.restore();
+    if (harborsStub) harborsStub.restore();
+  });
   describe('#is_loaded', () => {
     const logging_in_method = H.loggingIn;
     const test_logging_in_method = () => false;
@@ -28,64 +46,94 @@ describe('Primary Layout', () => {
 
   describe('#no_users', () => {
     it('returns true if there are no Users found', () => {
-      resetDatabase(null);
       expect(no_users()).to.eq(true);
     });
+
     it('returns false if there are Users', () => {
-      Factory.create('user');
+      usersStub.insert({ _id: 'test' });
       expect(no_users()).to.eq(false);
-      resetDatabase(null);
     });
   });
 
   describe('#logged_in', () => {
     it('returns the user data object', () => {
-      const user_method = H.user;
-      const test_user_method = () => ({});
-      H.user = test_user_method;
       expect(typeof logged_in()).to.eq('object');
-      H.user = user_method;
     });
   });
 
   describe('#no_harbormasters', () => {
-    it('returns true if there are no harbormasters', () => {
-      expect(no_harbormasters()).to.eq(true);
+    it('returns true if there are no harbormasters', async () => {
+      expect(await no_harbormasters()).to.eq(true);
     });
-    it('returns false otherwise', () => {
-      Factory.create('user', { harbormaster: true });
-      expect(no_harbormasters()).to.eq(false);
-      resetDatabase(null);
+
+    it('returns false otherwise', async () => {
+      usersStub.insert({ _id: 'test', harbormaster: true });
+      expect(await no_harbormasters()).to.eq(false);
     });
   });
 
   describe('#set_constraints', () => {
-    const harbors_find_method = Harbors.find;
-    const test_harbors_find_method = () => ([
-      {
+    beforeEach(() => {
+      harborsStub.insert({
         constraints: {
           global: ['foo'],
           test: [{ id: 'bar', rel: 'bar' }],
         },
-      },
-      {
+      });
+      harborsStub.insert({
         constraints: {
           global: ['baz'],
           test: [{ id: 'qux', src: 'qux' }],
         },
-      },
-    ]);
-
-    before(() => Harbors.find = test_harbors_find_method);
-    after(() => Harbors.find = harbors_find_method);
+      });
+    });
 
     it('tracks the constraints set by a harbor', () => {
       for (const list of Object.values(Constraints.get())) {
         expect(list.length).to.eq(0);
       }
-      this.$route = { name: 'test' };
-      set_constraints();
+      set_constraints.call({ $route: { name: 'test' } });
       expect(Constraints.get().global.length).to.eq(2);
+    });
+
+    it('adds rel and script tags for route-scoped constraints', () => {
+      const origHeadAppend = H.window.document.head.appendChild;
+      const origBodyAppend = H.window.document.body.appendChild;
+      let headCalls = 0;
+      let bodyCalls = 0;
+      H.window.document.head.appendChild = () => { headCalls += 1; };
+      H.window.document.body.appendChild = () => { bodyCalls += 1; };
+      try {
+        set_constraints.call({ $route: { name: 'test' } });
+        expect(headCalls).to.be.greaterThan(0);
+        expect(bodyCalls).to.be.greaterThan(0);
+      }
+      finally {
+        H.window.document.head.appendChild = origHeadAppend;
+        H.window.document.body.appendChild = origBodyAppend;
+      }
+    });
+
+    it('adds tags when using H.Router.currentRoute as route source', () => {
+      const origHeadAppend = H.window.document.head.appendChild;
+      const origBodyAppend = H.window.document.body.appendChild;
+      const originalRoute = (H.Router || {}).currentRoute;
+      let headCalls = 0;
+      let bodyCalls = 0;
+      H.window.document.head.appendChild = () => { headCalls += 1; };
+      H.window.document.body.appendChild = () => { bodyCalls += 1; };
+      H.Router = H.Router || {};
+      try {
+        H.Router.currentRoute = { name: 'test' };
+        set_constraints();
+        expect(headCalls).to.be.greaterThan(0);
+        expect(bodyCalls).to.be.greaterThan(0);
+      }
+      finally {
+        H.window.document.head.appendChild = origHeadAppend;
+        H.window.document.body.appendChild = origBodyAppend;
+        if (H.Router) H.Router.currentRoute = originalRoute;
+      }
     });
   });
 

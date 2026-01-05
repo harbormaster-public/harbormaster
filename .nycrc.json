@@ -1,0 +1,7 @@
+{
+  "exclude": [
+    "imports/test-helpers/**/*",
+    "**/*.test.js"
+  ]
+}
+

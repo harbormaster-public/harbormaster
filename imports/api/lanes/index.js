@@ -1,4 +1,3 @@
-
 class LaneCollection extends Mongo.Collection { }
 
 export { LaneCollection };

@@ -3,14 +3,18 @@
     <div v-if="fresh">
       <h1 class="text-7xl my-5">Welcome to Harbormaster!</h1>
       <h2 class="text-5xl my-5 px-2">You're the first user to sign in.</h2>
-      <h3 class="text-4xl my-5 px-2">Harbormaster will send you a link to set your password.</h3>
+      <h3 class="text-4xl my-5 px-2">Create your account to get started.</h3>
       <form class="my-5 px-4" v-on:submit.prevent="on_submit()" id="new-instance">
         <label class="text-4xl">Email:
           <input v-model="invite_email" type=email required class="email-user-invite my-2" placeholder="user@example.com">
         </label>
-        <button class="initial-sign-in rounded-sm block my-4">Okay!</button>
+        <label class="text-4xl">Password:
+          <input v-model="invite_password" type=password required class="password-user-invite my-2" placeholder="Choose a password">
+        </label>
+        <button class="initial-sign-in rounded-sm block my-4">Create Account</button>
       </form>
     </div>
+
     <div v-else>
       <h1 class="text-5xl my-2">Invite A User</h1>
       <div v-if="is_harbormaster">
@@ -50,7 +54,8 @@ export default {
 
   data () {
     return {
-      invite_email
+      invite_email,
+      invite_password: '',
     }
   },
 
@@ -108,7 +113,8 @@ export default {
   background: #fff;
 }
 
-.email-user-invite {
+.email-user-invite,
+.password-user-invite {
   width: 100%;
 }
 
