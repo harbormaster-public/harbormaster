@@ -37,13 +37,31 @@
             <button
               v-if="can_ply(lane)"
               @click="handle_opts_click"
-              class="lane-options">⋮</button>
+              class="lane-options">+</button>
             <span v-if="can_ply(lane)" class="admin">
               <router-link :to="`/lanes/${lane.slug}/charter`" class="charter">Charter</router-link>
               <router-link :to="`/lanes/${lane.slug}/ship`" class="ship-lane">Ship</router-link>
               <router-link :to="`/lanes/${lane.slug}/edit`" class="edit-lane">Edit</router-link>
               <button @click="delete_lane($event, lane)" class="delete-lane">Delete</button>
               <button @click="duplicate_lane($event, lane)" class="duplicate-lane">Duplicate</button>
+              <button
+                class="ship-now-lane quick-button"
+                title="Start a Shipment to this Lane"
+                :disabled="ship_now_working(lane)"
+                @click="start_shipment_now($event, lane)"
+              >→</button>
+              <button
+                class="reset-lane quick-button"
+                title="Reset the latest shipment for this lane"
+                 :disabled="reset_working(lane) || !lane?.last_shipment?.active || !latest_shipment(lane)"
+                @click="reset_shipment_now($event, lane)"
+              >↺</button>
+              <button
+                class="reset-all-lane quick-button"
+                title="Reset all active shipments for this lane"
+                 :disabled="reset_all_working(lane) || !lane?.last_shipment?.active"
+                @click="reset_all_active_now($event, lane)"
+              >⊗</button>
             </span>
             <span class="name">{{lane.name}}</span>
           </td>
@@ -90,9 +108,15 @@ import {
   latest_shipment,
   salvage_plan_name,
   total_captains,
+  ship_now_working,
+  reset_working,
+  reset_all_working,
   lane_ids,
   empty,
   lanes,
+  start_shipment_now,
+  reset_shipment_now,
+  reset_all_active_now,
   handle_import_yaml,
   handle_download_yaml,
 } from './lib';
@@ -115,6 +139,7 @@ export default {
   methods: {
     current_state,
     handle_opts_click (event) {
+      const row = event.target?.closest?.('tr');
       if (event.target.getAttribute('class').match(/active/)) {
         event.target.nextElementSibling.setAttribute(
           'class',
@@ -124,7 +149,8 @@ export default {
             .getAttribute('class')
             .replace(' active', ''),
         );
-        event.target.innerHTML = '⋮';
+        row?.classList?.remove('admin-active');
+        event.target.innerHTML = '+';
         return event.target.setAttribute(
           'class',
           event.target.getAttribute('class').replace(' active', ''),
@@ -138,7 +164,8 @@ export default {
           .nextElementSibling
           .getAttribute('class') + ' active',
       );
-      event.target.innerHTML = '🖈';
+      row?.classList?.add('admin-active');
+      event.target.innerHTML = '-';
       return event.target.setAttribute(
         'class',
         event.target.getAttribute('class') + ' active',
@@ -157,6 +184,12 @@ export default {
     latest_shipment,
     salvage_plan_name,
     total_captains,
+    ship_now_working,
+    start_shipment_now,
+    reset_working,
+    reset_all_working,
+    reset_shipment_now,
+    reset_all_active_now,
     handle_import_yaml,
     handle_download_yaml,
   },
