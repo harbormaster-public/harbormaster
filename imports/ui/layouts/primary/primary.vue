@@ -15,10 +15,10 @@
             </nav>
             <div id=router-view class="container mx-auto min-h-screen p-2">
               <router-view></router-view>
-              <footer v-if="$subReady.Users" class="p-2">
+              <footer v-if="$subReady.Users" class="px-2 py-1">
                 <div class="mx-auto container">
+                  <div id="user-status">Logged in: {{email()}}, as {{role()}}.</div>
                   <span id="version-text" class="my-10">v{{get_version()}}.  </span>
-                  <span id="user-status">Logged in: {{email()}}, as {{role()}}.</span>
                   <span id="time-text">{{timestamp}}</span>
                 </div>
               </footer>
@@ -160,6 +160,7 @@ export default {
   height: 50px;
   background: #333;
   border-top: 10px solid white;
+  font-size: .75em;
 }
 
 #time-text {
@@ -206,7 +207,7 @@ html body a:hover {
   }
 
   #router-view footer {
-    height: 100px;
+    height: 125px;
   }
 
   footer .mx-auto {

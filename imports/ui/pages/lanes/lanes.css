@@ -1,19 +1,41 @@
 #import-yaml {
   position: absolute;
-  top: 15px;
+  top: 0px;
   right: 10px;
   z-index: 1;
   background: #333;
   border-width: 0;
-  height: 40px;
+  height: 30px;
+  font-size: .75em;
+}
+
+#download-yaml {
+  position: absolute;
+  top: 34px;
+  right: 10px;
+  z-index: 1;
+  background: #333;
+  border-width: 0;
+  height: 30px;
+  font-size: .75em;
 }
 
 #import-yaml:before {
   content: '';
   top: 0;
-  left: -35px;
+  left: -28px;
   height: 100%;
-  border: 20px solid #333;
+  border: 15px solid #333;
+  border-left-color: transparent;
+  position: absolute;
+}
+
+#download-yaml:before {
+  content: '';
+  top: 0;
+  left: -28px;
+  height: 100%;
+  border: 15px solid #333;
   border-left-color: transparent;
   position: absolute;
 }
@@ -22,7 +44,16 @@
   background: #0af;
 }
 
+#download-yaml:hover {
+  background: #0af;
+}
+
 #import-yaml:hover:before {
+  border-color: #0af;
+  border-left-color: transparent;
+}
+
+#download-yaml:hover:before {
   border-color: #0af;
   border-left-color: transparent;
 }
@@ -31,7 +62,16 @@
   background: #fa0;
 }
 
+#download-yaml:active {
+  background: #fa0;
+}
+
 #import-yaml:active:before {
+  border-color: #fa0;
+  border-left-color: transparent;
+}
+
+#download-yaml:active:before {
   border-color: #fa0;
   border-left-color: transparent;
 }
@@ -41,7 +81,17 @@
   cursor: not-allowed;
 }
 
+#download-yaml:disabled {
+  background: #444;
+  cursor: not-allowed;
+}
+
 #import-yaml:disabled:before {
+  border-color: #444;
+  border-left-color: transparent;
+}
+
+#download-yaml:disabled:before {
   border-color: #444;
   border-left-color: transparent;
 }
@@ -127,7 +177,7 @@ table tbody tr:nth-child(odd) {
 .lanes-table .admin {
   font-size: 10px;
   position: absolute;
-  width: 200%;
+  width: 400%;
   min-width: 360px;
   height: 25px;
   margin-top: -25px;
@@ -144,47 +194,235 @@ table tbody tr:nth-child(odd) {
 
 .lanes-table .admin a,
 .lanes-table .admin button {
-  color: #fff;
+  color: #fff !important;
   border: 1px solid white;
   border-radius: 2px 2px 0 0;
   padding: 5px 2px;
   min-width: 45px;
   width: 12.5%;
   height: 25px;
+  box-sizing: border-box;
   border-bottom-color: transparent;
   background: #666;
   float: left;
   line-height: inherit;
   font-size: 1em;
+  /* Override global anchor styling from primary layout */
+  border-bottom: none !important;
+  text-decoration: none !important;
+}
+
+/* Ensure admin link colors don't change to browser default (visited = purple/blue, etc). */
+.lanes-table .admin a:link,
+.lanes-table .admin a:visited {
+  color: #fff !important;
+  border-bottom: none !important;
+}
+
+/* Override global rule `a:not(.shipment-link) span { color: #0af; }` for admin labels */
+.lanes-table .admin .admin-label {
+  color: inherit !important;
+}
+
+/* Ensure all admin icons always track the control text color */
+.lanes-table .admin a svg,
+.lanes-table .admin a svg *,
+.lanes-table .admin button svg,
+.lanes-table .admin button svg * {
+  color: inherit !important;
+  stroke: currentColor !important;
+}
+
+.lanes-table .admin a.charter {
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.lanes-table .admin a.edit-lane {
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.lanes-table .admin a.ship-lane {
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.lanes-table .admin a.charter .charter-icon {
+  display: block;
+  flex: 0 0 auto;
+  color: inherit;
+  stroke: currentColor;
+}
+
+.lanes-table .admin a.ship-lane .ship-icon {
+  display: block;
+  flex: 0 0 auto;
+  color: inherit;
+  stroke: currentColor;
+}
+
+.lanes-table .admin a.edit-lane .edit-icon {
+  display: block;
+  flex: 0 0 auto;
+  color: inherit;
+  stroke: currentColor;
+}
+
+.lanes-table .admin a.charter .charter-icon,
+.lanes-table .admin a.charter .charter-icon * {
+  stroke: currentColor;
+}
+
+.lanes-table .admin a.edit-lane .edit-icon,
+.lanes-table .admin a.edit-lane .edit-icon * {
+  stroke: currentColor;
+}
+
+.lanes-table .admin a.ship-lane .ship-icon,
+.lanes-table .admin a.ship-lane .ship-icon * {
+  stroke: currentColor;
+}
+
+.lanes-table .admin button.delete-lane {
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.lanes-table .admin button.duplicate-lane {
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.lanes-table .admin button.delete-lane .delete-icon {
+  display: block;
+  flex: 0 0 auto;
+  color: inherit;
+  stroke: currentColor;
+}
+
+.lanes-table .admin button.duplicate-lane .duplicate-icon {
+  display: block;
+  flex: 0 0 auto;
+  color: inherit;
+  stroke: currentColor;
+}
+
+.lanes-table .admin button.delete-lane .delete-icon,
+.lanes-table .admin button.delete-lane .delete-icon * {
+  stroke: currentColor;
+}
+
+.lanes-table .admin button.duplicate-lane .duplicate-icon,
+.lanes-table .admin button.duplicate-lane .duplicate-icon * {
+  stroke: currentColor;
 }
 
 .lanes-table .admin .quick-button {
-  font-size: 18px;
-  line-height: 0;
+  font-size: 1em;
+  line-height: 1.5em;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
-.lanes-table .admin button:disabled {
-  background: #444;
-  border-color: #555;
-  color: #999;
+.lanes-table .admin button.ship-now-lane {
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.lanes-table .admin button.ship-now-lane .go-now-icon {
+  display: block;
+  flex: 0 0 auto;
+  color: inherit;
+  stroke: currentColor;
+}
+
+.lanes-table .admin button.ship-now-lane .go-now-icon,
+.lanes-table .admin button.ship-now-lane .go-now-icon * {
+  stroke: currentColor;
+}
+
+.lanes-table .admin button.reset-lane,
+.lanes-table .admin button.reset-all-lane {
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.lanes-table .admin button.reset-lane .reset-last-icon,
+.lanes-table .admin button.reset-all-lane .reset-all-icon {
+  display: block;
+  flex: 0 0 auto;
+  color: inherit;
+  stroke: currentColor;
+}
+
+.lanes-table .admin button.reset-lane .reset-last-icon,
+.lanes-table .admin button.reset-lane .reset-last-icon *,
+.lanes-table .admin button.reset-all-lane .reset-all-icon,
+.lanes-table .admin button.reset-all-lane .reset-all-icon * {
+  stroke: currentColor;
+}
+
+.lanes-table .admin button:disabled,
+.lanes-table .admin button:disabled:hover {
+  background: #444 !important;
+  border-color: #555 !important;
+  color: #999 !important;
   cursor: not-allowed;
 }
 
-.lanes-table .admin button:disabled:hover {
-  background: #444;
-  border-color: #555;
-  color: #999;
+.lanes-table .admin button:disabled svg,
+.lanes-table .admin button:disabled svg * {
+  color: inherit;
+  stroke: currentColor;
+  background-color: inherit !important;
+}
+
+/* Ensure disabled+hover still keeps icons matched to disabled text/background (overrides hover !important rules) */
+.lanes-table .admin button:disabled:hover svg,
+.lanes-table .admin button:disabled:hover svg * {
+  color: inherit !important;
+  stroke: currentColor !important;
+  background-color: inherit !important;
 }
 
 .lanes-table .admin a:hover,
 .lanes-table .admin button:hover {
   border-color: #ffae00;
-  color: #ffae00;
+  color: #ffae00 !important;
   border-bottom-color: transparent;
 }
 
-tr:nth-child(odd) .admin * {
+/* On odd rows, tint the admin controls themselves (not their inner SVG content). */
+tr:nth-child(odd) .admin a,
+tr:nth-child(odd) .admin button {
   background-color: #4f4f4f;
+}
+
+/* Keep disabled buttons visually disabled even on odd rows. */
+tr:nth-child(odd) .admin button:disabled,
+tr:nth-child(odd) .admin button:disabled:hover {
+  background: #444;
 }
 
 .lanes-table tbody tr.admin-active {
@@ -206,6 +444,7 @@ tr:first-child th:first-child {
 .lane-options {
   font-size: 15px;
   color: #fff;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   position: absolute;
   left: 0;
   top: 0;
@@ -314,6 +553,11 @@ a#new-lane:after {
 
 @media all and (max-width: 1023px) {
 
+  /* On smaller screens, show icons only (hide admin button labels) */
+  .lanes-table .admin .admin-label {
+    display: none;
+  }
+
   .followup-column,
   .salvage-plan-column,
   .salvage-runs-column,
@@ -323,19 +567,61 @@ a#new-lane:after {
   }
 }
 
+/* Some environments report exactly 1024px as the "small" breakpoint; keep icons-only there too. */
+@media all and (max-width: 1024px) {
+  .lanes-table .admin .admin-label {
+    display: none;
+  }
+
+  /* Override desktop admin sizing so the bar can shrink-wrap its buttons */
+  .lanes-table .admin {
+    width: auto;
+    min-width: 0;
+  }
+
+  /* Keep the admin bar visually bounded even when buttons shrink-wrap */
+  .lanes-table .admin.active {
+    width: fit-content;
+    min-width: 0;
+    display: inline-flex;
+    align-items: stretch;
+    border: 1px solid #fff;
+    border-bottom-color: transparent;
+    background: transparent;
+  }
+
+  /* With labels hidden, let each admin control shrink-wrap its icon */
+  .lanes-table .admin a,
+  .lanes-table .admin button {
+    width: auto;
+    min-width: 0;
+    padding: 0 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    float: none;
+  }
+}
+
 @media all and (min-device-width: 280px) and (max-device-width: 800px) {
+
+  /* Leave room under the "Lanes" header for the two YAML buttons in the top-right */
+  #lanes-page h1 {
+    margin-bottom: 80px;
+    padding-right: 200px;
+  }
 
   .lanes-table .admin.active {
     margin-top: 0;
     top: 0;
     left: 70px;
-    height: 100%;
+    height: auto;
     z-index: 1;
-    background: #0af;
+    background: transparent;
     box-shadow: 0 0 5px 5px #ffae00;
     border-left-color: transparent;
-    font-size: 35px;
-    width: 800px;
+    font-size: 50px;
+    width: fit-content;
   }
 
   #lanes-page .admin a,
@@ -344,13 +630,52 @@ a#new-lane:after {
     display: inline-flex;
     justify-content: center;
     align-items: center;
-    height: 100%;
+    height: auto;
     margin: 0;
+    padding: 10px 12px;
+    float: none;
   }
 
   #lanes-page .admin .edit-lane {
     padding: 0;
     margin: 0;
+  }
+
+  /* Make admin icons match the touch-friendly sizing */
+  #lanes-page .admin svg {
+    width: 48px;
+    height: 48px;
+  }
+
+  /* Keep YAML buttons together in the top-right, but shrink them so they fit (and don't overlap) */
+  #lanes-page #import-yaml,
+  #lanes-page #download-yaml {
+    position: absolute;
+    right: 10px;
+    z-index: 2;
+    height: 50px;
+    font-size: 2em;
+    padding: 0 8px;
+    border-width: 0;
+  }
+
+  #lanes-page #import-yaml:before,
+  #lanes-page #download-yaml:before {
+    left: -49px;
+    border-width: 25px;
+  }
+
+  #lanes-page #import-yaml {
+    top: 0;
+  }
+
+  #lanes-page #download-yaml {
+    top: 60px;
+  }
+
+  /* Ensure content doesn't sit under the fixed footer */
+  #lanes-page {
+    margin-bottom: 220px;
   }
 
   #ship-lane-page h1,
@@ -496,16 +821,6 @@ a#new-lane:after {
     margin: 50px 0 0;
   }
 
-  #router-view #download-yaml,
-  #router-view #import-yaml {
-    height: 80px;
-    font-size: 40px;
-  }
-
-  #router-view #download-yaml:before,
-  #router-view #import-yaml:before {
-    left: -75px;
-    border-width: 40px;
-  }
+  /* YAML button sizing handled by #lanes-page overrides above */
 
 }
