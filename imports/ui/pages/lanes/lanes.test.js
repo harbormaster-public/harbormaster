@@ -20,6 +20,12 @@ import {
   latest_shipment,
   salvage_plan_name,
   total_captains,
+  ship_now_working,
+  reset_working,
+  reset_all_working,
+  start_shipment_now,
+  reset_shipment_now,
+  reset_all_active_now,
   empty,
   lanes,
   handle_import_yaml,
@@ -30,6 +36,7 @@ import {
 import { expect } from 'chai';
 import { Lanes } from '../../../api/lanes';
 import { Users } from '../../../api/users';
+import { Harbors } from '../../../api/harbors';
 import {
   setupInMemoryCollection,
 } from '../../../test-helpers/setup-collection-stubs';
@@ -41,6 +48,7 @@ describe('Lanes Page', function () {
   let shipmentsStub;
   let usersStub;
   let latestShipmentStub;
+  let harborsStub;
 
   beforeEach(async () => {
     await resetDatabase();
@@ -48,6 +56,7 @@ describe('Lanes Page', function () {
     shipmentsStub = setupInMemoryCollection(Shipments);
     usersStub = setupInMemoryCollection(Users);
     latestShipmentStub = setupInMemoryCollection(LatestShipment);
+    harborsStub = setupInMemoryCollection(Harbors);
   });
 
   afterEach(async () => {
@@ -57,6 +66,7 @@ describe('Lanes Page', function () {
     if (shipmentsStub) shipmentsStub.restore();
     if (usersStub) usersStub.restore();
     if (latestShipmentStub) latestShipmentStub.restore();
+    if (harborsStub) harborsStub.restore();
   });
   describe('#empty', function () {
 
@@ -713,6 +723,289 @@ describe('Lanes Page', function () {
     });
     it('returns the number of captains assigned to a lane', () => {
       expect(total_captains({ captains: ['foo', 'bar'] })).to.eq(2);
+    });
+  });
+
+  describe('Quick actions (Ship Now / Reset / Reset All)', function () {
+    it('reports working state from Session (ship/reset/reset-all)', () => {
+      const lane = { _id: 'lane1' };
+      H.Session.set('working_lanes', { lane1: true });
+      H.Session.set('resetting_lanes', { lane1: true });
+      H.Session.set('resetting_all_lanes', { lane1: true });
+
+      expect(ship_now_working(lane)).to.eq(true);
+      expect(reset_working(lane)).to.eq(true);
+      expect(reset_all_working(lane)).to.eq(true);
+
+      expect(ship_now_working({ _id: 'other' })).to.eq(false);
+      expect(reset_working({ _id: 'other' })).to.eq(false);
+      expect(reset_all_working({ _id: 'other' })).to.eq(false);
+
+      // Cover optional chaining lane?._id branch (no lane provided).
+      expect(ship_now_working()).to.eq(false);
+      expect(reset_working()).to.eq(false);
+      expect(reset_all_working()).to.eq(false);
+    });
+
+    describe('#start_shipment_now', function () {
+      it('returns early when lane is missing required identifiers', () => {
+        let called = 0;
+        H.call = () => { called += 1; };
+        start_shipment_now({ preventDefault () {} }, {});
+        expect(called).to.eq(0);
+        H.call = call_method;
+      });
+
+      it('alerts and returns when lane already has an active shipment', () => {
+        const alertOrig = H.alert;
+        let alerted = '';
+        try {
+          H.alert = (msg) => { alerted = String(msg); };
+          let called = 0;
+          H.call = () => { called += 1; };
+          start_shipment_now(
+            { preventDefault () {} },
+            { _id: 'lane1', slug: 'lane1', last_shipment: { active: true, start: 'd' } },
+          );
+          expect(alerted).to.include('already has an active shipment');
+          expect(called).to.eq(0);
+        }
+        finally {
+          H.alert = alertOrig;
+          H.call = call_method;
+        }
+      });
+
+      it('alerts and returns when harbor manifest is missing', () => {
+        const alertOrig = H.alert;
+        let alerted = '';
+        try {
+          H.alert = (msg) => { alerted = String(msg); };
+          let called = 0;
+          H.call = () => { called += 1; };
+          // No harbor inserted -> manifest missing.
+          start_shipment_now(
+            { preventDefault () {} },
+            { _id: 'lane1', slug: 'lane1', type: 'harbor1', last_shipment: { active: false } },
+          );
+          expect(alerted).to.include('not ready');
+          expect(called).to.eq(0);
+        }
+        finally {
+          H.alert = alertOrig;
+          H.call = call_method;
+        }
+      });
+
+      it('starts a shipment and clears working state on success', () => {
+        let prevented = 0;
+        const lane = { _id: 'lane1', slug: 'lane1', type: 'harbor1', last_shipment: { active: false } };
+        harborsStub.insert({ _id: 'harbor1', lanes: { lane1: { manifest: {} } } });
+
+        H.Session.set('working_lanes', undefined);
+        H.call = (method, id, manifest, dateString, cb) => {
+          expect(method).to.eq('Lanes#start_shipment');
+          expect(id).to.eq('lane1');
+          expect(typeof manifest).to.eq('object');
+          expect(typeof dateString).to.eq('string');
+          expect(H.Session.get('working_lanes').lane1).to.eq(true);
+          cb(null, { ok: true });
+        };
+
+        start_shipment_now({ preventDefault () { prevented += 1; } }, lane);
+        expect(prevented).to.eq(1);
+        expect(H.Session.get('working_lanes').lane1).to.eq(false);
+        H.call = call_method;
+      });
+
+      it('clears working state even if Session value is cleared before callback', () => {
+        const lane = { _id: 'lane1', slug: 'lane1', type: 'harbor1', last_shipment: { active: false } };
+        harborsStub.insert({ _id: 'harbor1', lanes: { lane1: { manifest: {} } } });
+
+        H.call = (method, id, manifest, dateString, cb) => {
+          expect(H.Session.get('working_lanes').lane1).to.eq(true);
+          // Simulate an external reset/clear before callback executes.
+          H.Session.set('working_lanes', null);
+          cb(null, { ok: true });
+        };
+
+        start_shipment_now({ preventDefault () {} }, lane);
+        expect(H.Session.get('working_lanes').lane1).to.eq(false);
+        H.call = call_method;
+      });
+
+      it('throws on callback error and still clears working state', () => {
+        const lane = { _id: 'lane1', slug: 'lane1', type: 'harbor1', last_shipment: { active: false } };
+        harborsStub.insert({ _id: 'harbor1', lanes: { lane1: { manifest: {} } } });
+        H.call = (method, id, manifest, dateString, cb) => cb(new Error('boom'));
+
+        expect(() => start_shipment_now({ preventDefault () {} }, lane)).to.throw('boom');
+        expect(H.Session.get('working_lanes').lane1).to.eq(false);
+        H.call = call_method;
+      });
+    });
+
+    describe('#reset_shipment_now', function () {
+      it('returns early for invalid lane', () => {
+        let called = 0;
+        H.call = () => { called += 1; };
+        reset_shipment_now({ preventDefault () {} }, {});
+        expect(called).to.eq(0);
+        H.call = call_method;
+      });
+
+      it('returns early when lane is missing a slug (covers guard branch)', () => {
+        let called = 0;
+        H.call = () => { called += 1; };
+        reset_shipment_now({ preventDefault () {} }, { _id: 'lane1' });
+        expect(called).to.eq(0);
+        H.call = call_method;
+      });
+
+      it('alerts and returns when no shipment exists', () => {
+        const alertOrig = H.alert;
+        let alerted = '';
+        try {
+          H.alert = (msg) => { alerted = String(msg); };
+          let called = 0;
+          H.call = () => { called += 1; };
+          reset_shipment_now(
+            { preventDefault () {} },
+            { _id: 'lane1', slug: 'lane1', last_shipment: { active: false } },
+          );
+          expect(alerted).to.include('No shipments found');
+          expect(called).to.eq(0);
+        }
+        finally {
+          H.alert = alertOrig;
+          H.call = call_method;
+        }
+      });
+
+      it('resets latest shipment and clears working state', () => {
+        const lane = { _id: 'lane1', slug: 'lane1', last_shipment: { active: true, start: 'd' } };
+        // Ensure we cover the "Session already has a map" branch.
+        H.Session.set('resetting_lanes', { other: true });
+        H.call = (method, slug, date, cb) => {
+          expect(method).to.eq('Lanes#reset_shipment');
+          expect(slug).to.eq('lane1');
+          expect(date).to.eq('d');
+          expect(H.Session.get('resetting_lanes').other).to.eq(true);
+          expect(H.Session.get('resetting_lanes').lane1).to.eq(true);
+          cb(null, { ok: true });
+        };
+
+        reset_shipment_now({ preventDefault () {} }, lane);
+        expect(H.Session.get('resetting_lanes').lane1).to.eq(false);
+        H.call = call_method;
+      });
+
+      it('handles a null Session value (covers `|| {}` fallback branch)', () => {
+        const lane = { _id: 'lane1', slug: 'lane1', last_shipment: { active: true, start: 'd' } };
+        H.Session.set('resetting_lanes', null);
+        H.call = (method, slug, date, cb) => {
+          expect(method).to.eq('Lanes#reset_shipment');
+          expect(H.Session.get('resetting_lanes')).to.be.an('object');
+          expect(H.Session.get('resetting_lanes')).to.not.eq(null);
+          expect(H.Session.get('resetting_lanes').lane1).to.eq(true);
+          cb(null, { ok: true });
+        };
+        reset_shipment_now({ preventDefault () {} }, lane);
+        expect(H.Session.get('resetting_lanes').lane1).to.eq(false);
+        H.call = call_method;
+      });
+
+      it('clears reset state even if Session value is cleared before callback', () => {
+        const lane = { _id: 'lane1', slug: 'lane1', last_shipment: { active: true, start: 'd' } };
+        H.call = (method, slug, date, cb) => {
+          expect(H.Session.get('resetting_lanes').lane1).to.eq(true);
+          H.Session.set('resetting_lanes', null);
+          cb(null, { ok: true });
+        };
+        reset_shipment_now({ preventDefault () {} }, lane);
+        expect(H.Session.get('resetting_lanes').lane1).to.eq(false);
+        H.call = call_method;
+      });
+
+      it('throws on callback error and still clears working state', () => {
+        const lane = { _id: 'lane1', slug: 'lane1', last_shipment: { active: true, start: 'd' } };
+        H.call = (method, slug, date, cb) => cb(new Error('boom'));
+
+        expect(() => reset_shipment_now({ preventDefault () {} }, lane)).to.throw('boom');
+        expect(H.Session.get('resetting_lanes').lane1).to.eq(false);
+        H.call = call_method;
+      });
+    });
+
+    describe('#reset_all_active_now', function () {
+      it('returns early for invalid lane', () => {
+        let called = 0;
+        H.call = () => { called += 1; };
+        reset_all_active_now({ preventDefault () {} }, {});
+        expect(called).to.eq(0);
+        H.call = call_method;
+      });
+
+      it('returns early when lane is missing a slug (covers guard branch)', () => {
+        let called = 0;
+        H.call = () => { called += 1; };
+        reset_all_active_now({ preventDefault () {} }, { _id: 'lane1' });
+        expect(called).to.eq(0);
+        H.call = call_method;
+      });
+
+      it('resets all active shipments and clears working state', () => {
+        const lane = { _id: 'lane1', slug: 'lane1', last_shipment: { active: true } };
+        // Ensure we cover the "Session already has a map" branch.
+        H.Session.set('resetting_all_lanes', { other: true });
+        H.call = (method, slug, cb) => {
+          expect(method).to.eq('Lanes#reset_all_active_shipments');
+          expect(slug).to.eq('lane1');
+          expect(H.Session.get('resetting_all_lanes').other).to.eq(true);
+          expect(H.Session.get('resetting_all_lanes').lane1).to.eq(true);
+          cb(null, { ok: true });
+        };
+
+        reset_all_active_now({ preventDefault () {} }, lane);
+        expect(H.Session.get('resetting_all_lanes').lane1).to.eq(false);
+        H.call = call_method;
+      });
+
+      it('handles a null Session value (covers `|| {}` fallback branch)', () => {
+        const lane = { _id: 'lane1', slug: 'lane1', last_shipment: { active: true } };
+        H.Session.set('resetting_all_lanes', null);
+        H.call = (method, slug, cb) => {
+          expect(method).to.eq('Lanes#reset_all_active_shipments');
+          expect(H.Session.get('resetting_all_lanes')).to.be.an('object');
+          expect(H.Session.get('resetting_all_lanes')).to.not.eq(null);
+          expect(H.Session.get('resetting_all_lanes').lane1).to.eq(true);
+          cb(null, { ok: true });
+        };
+        reset_all_active_now({ preventDefault () {} }, lane);
+        expect(H.Session.get('resetting_all_lanes').lane1).to.eq(false);
+        H.call = call_method;
+      });
+
+      it('clears reset-all state even if Session value is cleared before callback', () => {
+        const lane = { _id: 'lane1', slug: 'lane1', last_shipment: { active: true } };
+        H.call = (method, slug, cb) => {
+          expect(H.Session.get('resetting_all_lanes').lane1).to.eq(true);
+          H.Session.set('resetting_all_lanes', null);
+          cb(null, { ok: true });
+        };
+        reset_all_active_now({ preventDefault () {} }, lane);
+        expect(H.Session.get('resetting_all_lanes').lane1).to.eq(false);
+        H.call = call_method;
+      });
+
+      it('throws on callback error and still clears working state', () => {
+        const lane = { _id: 'lane1', slug: 'lane1', last_shipment: { active: true } };
+        H.call = (method, slug, cb) => cb(new Error('boom'));
+
+        expect(() => reset_all_active_now({ preventDefault () {} }, lane)).to.throw('boom');
+        expect(H.Session.get('resetting_all_lanes').lane1).to.eq(false);
+        H.call = call_method;
+      });
     });
   });
 

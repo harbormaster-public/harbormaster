@@ -1,6 +1,7 @@
 import { Lanes } from '../../../api/lanes';
 import { Users } from '../../../api/users';
 import { Shipments } from '../../../api/shipments';
+import { Harbors } from '../../../api/harbors';
 
 let lane_ids = new ReactiveVar([]);
 
@@ -313,6 +314,111 @@ const total_captains = function (lane) {
   return lane.captains.length;
 };
 
+const ship_now_working = function (lane) {
+  const working_lanes = H.Session.get('working_lanes') || {};
+  return !!working_lanes[lane?._id];
+};
+
+const reset_working = function (lane) {
+  const resetting_lanes = H.Session.get('resetting_lanes') || {};
+  return !!resetting_lanes[lane?._id];
+};
+
+const reset_all_working = function (lane) {
+  const resetting_all_lanes = H.Session.get('resetting_all_lanes') || {};
+  return !!resetting_all_lanes[lane?._id];
+};
+
+const start_shipment_now = function (event, lane) {
+  event?.preventDefault?.();
+
+  if (!lane?._id || !lane?.slug) return;
+
+  // If there's already an active shipment, just jump to it.
+  if (lane?.last_shipment?.active && lane?.last_shipment?.start) {
+    // Stay on the lanes page; just inform the user.
+    H.alert('This lane already has an active shipment.');
+    return;
+  }
+
+  const harbor = Harbors.findOne(lane.type);
+  const manifest = harbor?.lanes?.[lane._id]?.manifest;
+  if (!manifest) {
+    H.alert(
+      `This Harbor is not ready, or this lane is not fully configured yet.\n` +
+      `Please edit the lane and complete its configuration before shipping.`,
+    );
+    return;
+  }
+
+  let working_lanes = H.Session.get('working_lanes') || {};
+  working_lanes[lane._id] = true;
+  H.Session.set('working_lanes', working_lanes);
+
+  const shipment_start_date = H.start_date();
+  H.call(
+    'Lanes#start_shipment',
+    lane._id,
+    manifest,
+    shipment_start_date,
+    (err) => {
+      working_lanes = H.Session.get('working_lanes') || {};
+      working_lanes[lane._id] = false;
+      H.Session.set('working_lanes', working_lanes);
+
+      if (err) throw err;
+      // Stay on the lanes page (no redirect).
+    },
+  );
+};
+
+const reset_shipment_now = function (event, lane) {
+  event?.preventDefault?.();
+  if (!lane?._id || !lane?.slug) return;
+
+  const date = lane?.last_shipment?.start;
+  if (!date) {
+    H.alert('No shipments found for this lane.');
+    return;
+  }
+
+  let resetting_lanes = H.Session.get('resetting_lanes') || {};
+  resetting_lanes[lane._id] = true;
+  H.Session.set('resetting_lanes', resetting_lanes);
+
+  H.call(
+    'Lanes#reset_shipment',
+    lane.slug,
+    date,
+    (err) => {
+      resetting_lanes = H.Session.get('resetting_lanes') || {};
+      resetting_lanes[lane._id] = false;
+      H.Session.set('resetting_lanes', resetting_lanes);
+      if (err) throw err;
+    },
+  );
+};
+
+const reset_all_active_now = function (event, lane) {
+  event?.preventDefault?.();
+  if (!lane?._id || !lane?.slug) return;
+
+  let resetting_all_lanes = H.Session.get('resetting_all_lanes') || {};
+  resetting_all_lanes[lane._id] = true;
+  H.Session.set('resetting_all_lanes', resetting_all_lanes);
+
+  H.call(
+    'Lanes#reset_all_active_shipments',
+    lane.slug,
+    (err) => {
+      resetting_all_lanes = H.Session.get('resetting_all_lanes') || {};
+      resetting_all_lanes[lane._id] = false;
+      H.Session.set('resetting_all_lanes', resetting_all_lanes);
+      if (err) throw err;
+    },
+  );
+};
+
 const handle_file_upload_change = async function (files, evt) {
   const yaml = await files[0].text();
   const filename = files[0].name;
@@ -412,6 +518,12 @@ export {
   latest_shipment,
   salvage_plan_name,
   total_captains,
+  ship_now_working,
+  reset_working,
+  reset_all_working,
+  start_shipment_now,
+  reset_shipment_now,
+  reset_all_active_now,
   lane_ids,
   empty,
   lanes,

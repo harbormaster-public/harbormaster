@@ -1,37 +1,38 @@
-#download-yaml {
+#charter-page #download-yaml {
   position: absolute;
   right: 10px;
   z-index: 1;
   background: #333;
   border-width: 0;
-  height: 40px;
-  top: 15px;
+  height: 30px;
+  top: 35px;
+  font-size: .75em;
 }
 
-#download-yaml:before {
+#charter-page #download-yaml:before {
   content: '';
   top: 0;
-  left: -35px;
+  left: -28px;
   height: 100%;
-  border: 20px solid #333;
+  border: 15px solid #333;
   border-left-color: transparent;
   position: absolute;
 }
 
-#download-yaml:hover {
+#charter-page #download-yaml:hover {
   background: #0af;
 }
 
-#download-yaml:hover:before {
+#charter-page #download-yaml:hover:before {
   border-color: #0af;
   border-left-color: transparent;
 }
 
-#download-yaml:active {
+#charter-page #download-yaml:active {
   background: #fa0;
 }
 
-#download-yaml:active:before {
+#charter-page #download-yaml:active:before {
   border-color: #fa0;
   border-left-color: transparent;
 }
