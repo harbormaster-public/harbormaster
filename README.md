@@ -427,15 +427,14 @@ Contributions welcome.  See the `CONTRIBUTING` file present in this repo for gui
 ## License
 GPL 3.0, see `LICENSE` file.
 
+
 ## Build Status
 
 ```
-LAST UPDATED: Sun Jan  4 08:57:59 PM PST 2026
+LAST UPDATED: Fri Jan  9 08:38:01 PM PST 2026
 All files
-Statements:    100% (2844/2844)
-Branches  :    100% (499/499)
-Functions :    100% (222/222)
-Lines     :    100% (2844/2844)
+Statements:    100% (2919/2919)
+Branches  :    100% (513/513)
+Functions :    100% (228/228)
+Lines     :    100% (2919/2919)
 ```
-
-
