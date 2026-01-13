@@ -1,6 +1,6 @@
 {
   "name": "harbormaster-public",
-  "version": "1.36.1",
+  "version": "1.37.0",
   "scripts": {
     "lint": "bash scripts/lint-working-tree.sh",
     "lint:diff": "bash scripts/lint-changed.sh",
