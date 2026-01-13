@@ -35,6 +35,15 @@ export NODE_OPTIONS="${NODE_OPTIONS:-} --no-warnings=ExperimentalWarning"
 
 cd "${ROOT_DIR}"
 
+# Pick a free port if the default is in use.
+# (We can have a dev server or parallel test run active.)
+is_port_open() {
+  (echo >/dev/tcp/127.0.0.1/"$1") >/dev/null 2>&1
+}
+while is_port_open "${TEST_PORT}"; do
+  TEST_PORT="$((TEST_PORT + 1))"
+done
+
 # Run Meteor server tests once, emitting V8 coverage JSON into $NODE_V8_COVERAGE.
 meteor test \
   --port="${TEST_PORT}" \
@@ -81,11 +90,6 @@ node scripts/istanbul-report.js \
   "${NYC_TMP_DIR}/out.json" \
   "${REPORT_DIR}" \
   "${COVERAGE_DIR}/summary.txt" \
-  "${COVERAGE_DIR}/summary.json" \
-  >/dev/null
-
-# Print the summary again at the end so local runs always end with it.
-echo ""
-cat "${COVERAGE_DIR}/summary.txt"
+  "${COVERAGE_DIR}/summary.json"
 
 

@@ -21,6 +21,15 @@ const usageAndExit = function (code) {
   process.exit(code);
 };
 
+const box = function (lines) {
+  const safe = (lines || []).map((l) => String(l));
+  const width = safe.reduce((m, l) => Math.max(m, l.length), 0);
+  const top = `+${'-'.repeat(width + 2)}+`;
+  const bot = `+${'-'.repeat(width + 2)}+`;
+  const body = safe.map((l) => `| ${l.padEnd(width)} |`).join('\n');
+  return `${top}\n${body}\n${bot}\n`;
+};
+
 const fmtLine = function (label, metric) {
   // metric: { total, covered, skipped, pct }
   const pct = Number.isFinite(metric.pct) ? metric.pct : 0;
@@ -88,14 +97,14 @@ const main = function () {
 
   // Write a stable, simple text summary (and also print it).
   const summary = coverageMap.getCoverageSummary().toJSON();
-  const text = [
+  const lines = [
     'All files',
     fmtLine('Statements', summary.statements),
     fmtLine('Branches', summary.branches),
     fmtLine('Functions', summary.functions),
     fmtLine('Lines', summary.lines),
-    '',
-  ].join('\n');
+  ];
+  const text = box(lines);
 
   fs.writeFileSync(summaryTxtFile, text, 'utf8');
   process.stdout.write(text);
@@ -123,6 +132,34 @@ const main = function () {
   }
 
   if (failures.length) {
+    const uncoveredFile = path.join(
+      path.dirname(summaryTxtFile),
+      'uncovered.json',
+    );
+    if (fs.existsSync(uncoveredFile)) {
+      try {
+        const uncovered = JSON.parse(fs.readFileSync(uncoveredFile, 'utf8'));
+        const entries = (uncovered || []).slice(0, 25);
+        if (entries.length) {
+          const out = [];
+          out.push('Uncovered (top 25):');
+          for (const e of entries) {
+            const fileLabel = path.relative(process.cwd(), e.file || '');
+            const linesOnly = (e.statements || []).map((s) => s.line);
+            const uniq = Array.from(new Set(linesOnly)).sort((a, b) => a - b);
+            out.push(`${fileLabel}: ${uniq.join(', ')}`);
+          }
+          process.stderr.write(`\n${box(out)}`);
+        }
+      }
+      catch (err) {
+        const msg = err && err.stack ? err.stack : String(err);
+        process.stderr.write(
+          `\n${box(['Failed to render uncovered list:', msg])}`,
+        );
+      }
+    }
+
     console.error(`Coverage thresholds not met: ${failures.join(', ')}`);
     process.exit(1);
   }

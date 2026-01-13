@@ -431,10 +431,12 @@ GPL 3.0, see `LICENSE` file.
 ## Build Status
 
 ```
-LAST UPDATED: Fri Jan  9 08:38:01 PM PST 2026
-All files
-Statements:    100% (2919/2919)
-Branches  :    100% (513/513)
-Functions :    100% (228/228)
-Lines     :    100% (2919/2919)
+LAST UPDATED: Mon Jan 12 10:48:56 AM PST 2026
++---------------------------------+
+| All files                       |
+| Statements:    100% (3026/3026) |
+| Branches  :    100% (528/528)   |
+| Functions :    100% (232/232)   |
+| Lines     :    100% (3026/3026) |
++---------------------------------+
 ```

@@ -1,6 +1,6 @@
 import { Harbors } from '../../api/harbors';
+import { Lanes } from '../../api/lanes';
 import { Shipments } from '../../api/shipments';
-import { get_lane } from '../../ui/pages/lanes/lib/util';
 
 import bodyParser from 'body-parser';
 
@@ -35,6 +35,48 @@ export const cors_middleware = function (req, res, next) {
 /* istanbul ignore next */
 WebApp.rawConnectHandlers.use(cors_middleware);
 
+export const get_lane_async = async (string) => {
+  const found = await Lanes.findOneAsync({
+    $or: [
+      { name: string },
+      { slug: string },
+      { _id: string },
+    ],
+  });
+  return found || {};
+};
+
+// Handle GET /api (OpenAPI + minimal UI)
+export const api_middleware = (req, res, next) => {
+  if (req.method !== 'GET' && req.method !== 'HEAD') return next();
+
+  const parsed = require('url').parse(req.url, true);
+  const pathname = parsed?.pathname || '';
+
+  switch (pathname) {
+    case '/api/openapi.json':
+      return route_api_openapi_json(req, res);
+    case '/api/lanes.json':
+      return route_api_lanes_json(req, res);
+    case '/api':
+      break;
+    default:
+      return next();
+  }
+
+  const accept = String(req?.headers?.accept || '');
+  const format = String(parsed?.query?.format || '');
+  const wants_html = format === 'html' || (
+    format !== 'json' && accept.includes('text/html')
+  );
+
+  if (wants_html) return route_api_index_html(req, res);
+  return route_api_openapi_json(req, res);
+};
+
+/* istanbul ignore next */
+WebApp.connectHandlers.use(api_middleware);
+
 // Handle POST /lanes/:slug/ship using Connect handlers instead of Picker
 export const ship_rpc_middleware = (req, res, next) => {
   if (req.method !== 'POST') return next();
@@ -49,6 +91,148 @@ export const ship_rpc_middleware = (req, res, next) => {
 /* istanbul ignore next */
 WebApp.connectHandlers.use(ship_rpc_middleware);
 
+// Some clients (e.g. email link handlers) can only do GET.
+// Re-enable GET /lanes/:slug/ship?user_id=...&token=... to start shipping.
+export const ship_rpc_get_middleware = (req, res, next) => {
+  if (req.method !== 'GET') return next();
+
+  const match = req.url.match(/^\/lanes\/([^\/]+)\/ship(?:\/?|\?.*)$/);
+  if (!match) return next();
+
+  // Browsers should load the ship-lane page (HTML), not receive JSON.
+  const accept = String(req?.headers?.accept || '');
+  if (accept.includes('text/html')) return next();
+
+  const query = require('url').parse(req.url, true).query;
+  if (!query?.user_id || !query?.token) return next();
+
+  const slug = match[1];
+  return route_lane_ship_rpc({ slug }, req, res);
+};
+
+/* istanbul ignore next */
+WebApp.connectHandlers.use(ship_rpc_get_middleware);
+
+export const get_lanes_with_webhooks = async () => {
+  const fields = { name: 1, slug: 1, tokens: 1 };
+  const lanes = await Lanes.find({}, { fields }).fetchAsync();
+  return (lanes || []).filter((lane) => {
+    if (!lane.tokens) return false;
+    return Object.keys(lane.tokens).length > 0;
+  });
+};
+
+export const route_api_lanes_json = async function (req, res) {
+  set_cors_headers(res);
+  res.statusCode = 200;
+  res.setHeader("Content-Type", "application/json");
+  res.setHeader("Cache-Control", "no-store");
+
+  const lanes = await get_lanes_with_webhooks();
+  const results = lanes.map((lane) => ({
+    name: lane.name,
+    slug: lane.slug,
+    token_count: Object.keys(lane.tokens).length,
+  }));
+
+  return res.end(JSON.stringify(results));
+};
+
+export const route_api_openapi_json = async function (req, res) {
+  set_cors_headers(res);
+  res.statusCode = 200;
+  res.setHeader("Content-Type", "application/json");
+  res.setHeader("Cache-Control", "no-store");
+
+  const lanes = await get_lanes_with_webhooks();
+  const has_webhooks = lanes.length > 0;
+  const description = has_webhooks
+    ? 'Webhook/RPC endpoints exposed by Harbormaster.'
+    : 'No API endpoints have been exposed (no webhook tokens configured).';
+
+  const responses = {
+    200: {
+      description: 'Shipment started successfully.',
+      content: {
+        'application/json': {
+          schema: {},
+        },
+      },
+    },
+    303: { description: 'Shipment already active (redirect).' },
+    401: { description: 'Request not allowed.' },
+  };
+
+  const requestBody = {
+    required: false,
+    content: {
+      'application/json': {
+        schema: {
+          type: 'object',
+          additionalProperties: true,
+        },
+        example: {},
+      },
+    },
+  };
+
+  const paths = {};
+  if (has_webhooks) {
+    for (const lane of lanes) {
+      const slug = lane.slug;
+      const operationId = `ship_lane_${lane.slug}`;
+      paths[`/lanes/${slug}/ship`] = {
+        post: {
+          operationId,
+          summary: `Ship lane: ${lane.name}`,
+          tags: ['Lanes'],
+          parameters: [
+            {
+              name: 'user_id',
+              in: 'query',
+              required: true,
+              schema: { type: 'string' },
+            },
+            {
+              name: 'token',
+              in: 'query',
+              required: true,
+              schema: { type: 'string' },
+            },
+          ],
+          requestBody,
+          responses,
+        },
+      };
+    }
+  }
+
+  const spec = {
+    openapi: '3.0.3',
+    info: {
+      title: 'Harbormaster API',
+      version: H.VERSION,
+      description,
+    },
+    tags: [
+      { name: 'Lanes', description: 'Webhook/RPC lane endpoints.' },
+    ],
+    paths,
+  };
+
+  return res.end(JSON.stringify(spec));
+};
+
+export const route_api_index_html = async function (req, res) {
+  res.statusCode = 200;
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.setHeader("Cache-Control", "no-store");
+
+  // Served from /private/api/index.html
+  const html = await Assets.getTextAsync('api/index.html');
+  return res.end(html);
+};
+
 export const route_lane_ship_rpc = async function (route_params, req, res) {
 
   let results;
@@ -58,7 +242,7 @@ export const route_lane_ship_rpc = async function (route_params, req, res) {
   let user_id = query?.user_id ? query.user_id : false;
   let token = query?.token ? query.token : false;
 
-  let lane = await get_lane(lane_name);
+  let lane = await get_lane_async(lane_name);
   if (!lane._id) return respond_not_allowed(res);
 
   let harbor = await Harbors.findOneAsync(lane.type);
