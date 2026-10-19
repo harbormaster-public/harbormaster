@@ -680,7 +680,9 @@ describe('Lanes', function () {
 
       const testLane = await Lanes.findOneAsync({ _id: 'test' });
       await Lanes.updateAsync({ _id: 'test' }, { $set: { ...testLane } });
-      await Shipments.insertAsync({ _id: 'test', lane: 'test' });
+      await Shipments.insertAsync({
+        _id: 'test', lane: 'test', active: true,
+      });
 
       await Harbors.insertAsync(H.harbors.test);
     });
@@ -926,19 +928,21 @@ describe('Lanes', function () {
         expect(err.message).to.eq('Harbor or lane manifest not found');
       }
     });
-    it('increments salvage runs for a non-zero exit code', async () => {
-      await end_shipment(await Lanes.findOneAsync({ _id: 'test' }), 1, {
-        shipment_id: 'test', salvage_runs: undefined,
-      });
+    it('allows only one concurrent completion', async () => {
+      const lanes = await Promise.all([
+        Lanes.findOneAsync({ _id: 'test' }),
+        Lanes.findOneAsync({ _id: 'test' }),
+      ]);
+
+      await Promise.all(lanes.map(lane => end_shipment(lane, 1, {
+        shipment_id: 'test',
+      })));
+
       expect((await Lanes.findOneAsync({ _id: 'test' })).salvage_runs)
         .to.eq(1);
-      await end_shipment(
-        await Lanes.findOneAsync({ _id: 'test' }),
-        1,
-        { shipment_id: 'test' },
-      );
-      expect((await Lanes.findOneAsync({ _id: 'test' })).salvage_runs)
-        .to.eq(2);
+      expect(
+        await Shipments.find({ lane: 'test_salvage_plan' }).countAsync(),
+      ).to.eq(1);
     });
     it(
       'updates a shipment record with results and sets it inactive',

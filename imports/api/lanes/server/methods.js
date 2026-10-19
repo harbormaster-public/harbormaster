@@ -355,10 +355,6 @@ const end_shipment = async function (lane, exit_code, manifest) {
     );
   }
 
-  if (exit_code && exit_code != '0') {
-    lane.salvage_runs = lane.salvage_runs >= 0 ? lane.salvage_runs + 1 : 1;
-  }
-
   let shipment;
   let shipment_id = manifest.shipment_id;
   let finished = new Date();
@@ -368,7 +364,10 @@ const end_shipment = async function (lane, exit_code, manifest) {
   manifest.lane_name = lane.name;
   manifest.lane_slug = lane.slug;
 
-  await Shipments.updateAsync({ _id: shipment_id }, {
+  const completed = await Shipments.updateAsync({
+    _id: shipment_id,
+    active: true,
+  }, {
     $set: {
       finished: finished,
       exit_code: exit_code,
@@ -376,6 +375,12 @@ const end_shipment = async function (lane, exit_code, manifest) {
       active: false,
     },
   });
+  if (!completed) return manifest;
+
+  if (exit_code && exit_code != '0') {
+    lane.salvage_runs = lane.salvage_runs >= 0 ? lane.salvage_runs + 1 : 1;
+  }
+
   shipment = await Shipments.findOneAsync({ _id: shipment_id });
   lane.last_shipment = shipment;
   lane.last_shipment.finished = finished;
