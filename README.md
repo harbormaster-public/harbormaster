@@ -355,9 +355,13 @@ Triggers a call to the `work` method exposed by the Harbor associated with the L
 
 #### #end_shipment
 ```
-H.end_shipment(lane_id, exit_code, manifest);
+H.end_shipment(lane, exit_code, manifest);
 ```
-Ends a Shipment for a Lane matching the `lane_id` string when its `work` is done.  Expects a number, `exit_code`, representing the success or failure of the work, with `0` as success and anything else as failure.  Accepts any updated `manifest` object representing state to be tracked.  Typically called at the end of a Harbor's `work` method.
+Ends an active Shipment for the given Lane object when its `work` is done.  Expects a number, `exit_code`, representing the success or failure of the work, with `0` as success and anything else as failure.  Accepts any updated `manifest` object representing state to be tracked.  Typically called at the end of a Harbor's `work` method.
+
+Only the caller that atomically changes the shipment from active to inactive updates lane history and starts follow-up or salvage work. Calls for missing or inactive shipments return the supplied manifest without repeating those actions.
+
+Completion and starting the next shipment are separate database operations. A server stopping between them can leave the next shipment unstarted; this collision check does not provide a transaction across both operations.
 
 #### #start_date
 ```
@@ -431,12 +435,14 @@ GPL 3.0, see `LICENSE` file.
 ## Build Status
 
 ```
-LAST UPDATED: Mon Jan 12 07:52:39 PM PST 2026
+LAST UPDATED: Tue Oct 20 12:22:05 PM PDT 2026
 +---------------------------------+
 | All files                       |
-| Statements:    100% (3026/3026) |
-| Branches  :    100% (528/528)   |
+| Statements:    100% (3030/3030) |
+| Branches  :    100% (530/530)   |
 | Functions :    100% (232/232)   |
-| Lines     :    100% (3026/3026) |
+| Lines     :    100% (3030/3030) |
 +---------------------------------+
 ```
+
+LATEST BUILD: Tue Oct 20 12:22:29 PDT 2026
