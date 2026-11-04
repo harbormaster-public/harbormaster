@@ -246,6 +246,24 @@ const run_shipment = async (shipment_id) => claim_shipment(
     let new_manifest = shipment.dispatch.has_result ?
       _.cloneDeep(shipment.manifest) : undefined;
     if (!shipment.dispatch.returned) {
+      if (shipment.dispatch.started && harbor.replay_safe !== true) {
+        const error = 'Work outcome is unknown; reconcile before retrying.';
+        const held = await Shipments.updateAsync({
+          ...selector, active: true,
+        }, { $set: {
+          'dispatch.pending': false, 'dispatch.error': error,
+          [`stderr.${new Date()}`]: error,
+        } });
+        if (held) {
+          console.error(`Shipment ${shipment_id}: ${error}`);
+          await update_shipment_history(lane._id);
+        }
+        return undefined;
+      }
+      const started = await Shipments.updateAsync({
+        ...selector, active: true,
+      }, { $set: { 'dispatch.started': new Date() } });
+      if (!started) return undefined;
       /* istanbul ignore next */
       if (!H.isTest) console.log('Starting shipment for lane:', lane.name);
       try {
@@ -335,11 +353,21 @@ const start_shipment = async function (
   return await run_shipment(shipment_id);
 };
 
-const next_shipment = async (lane, exit_code) => {
+const next_shipment = (lane, exit_code) => {
   const failed = exit_code != 0;
   const kind = failed ? 'salvage_plan' : 'followup';
   const reference = lane[kind];
   if (!reference) return undefined;
+  return {
+    reference: typeof reference == 'object' ?
+      _.pick(reference, ['_id', 'slug']) : reference,
+    shipment_id: uuidv4(), start: H.start_date(),
+  };
+};
+
+const resolve_next_shipment = async (next, failed) => {
+  const reference = next.reference;
+  const kind = failed ? 'salvage_plan' : 'followup';
   if (typeof reference != 'object' || (!reference._id && !reference.slug)) {
     throw new Error(`Invalid ${kind} reference: ${JSON.stringify(reference)}`);
   }
@@ -359,8 +387,8 @@ const next_shipment = async (lane, exit_code) => {
   trim_manifest(next_manifest);
   return {
     lane: target._id,
-    shipment_id: uuidv4(),
-    start: H.start_date(),
+    shipment_id: next.shipment_id,
+    start: next.start,
     manifest: next_manifest,
   };
 };
@@ -368,28 +396,43 @@ const next_shipment = async (lane, exit_code) => {
 const finish_shipment = async (shipment_id) => claim_shipment(
   shipment_id, 'completion', async (shipment, selector) => {
     await update_shipment_totals(shipment.lane, shipment.completion.failed);
-    const next = shipment.completion.next;
+    await update_shipment_history(shipment.lane);
+    let next = shipment.completion.next;
     const parent_manifest = {
       ..._.cloneDeep(shipment.manifest),
       stdout: shipment.stdout, stderr: shipment.stderr,
     };
     let result = parent_manifest;
-    if (next) {
-      /* istanbul ignore next */
-      if (!H.isTest) console.log(
-        'Starting shipment for', next.lane, 'as',
-        shipment.completion.failed ? 'salvage run of' : 'followup of',
-        shipment.manifest.lane_name,
-      );
-      const next_manifest = _.cloneDeep(next.manifest);
-      next_manifest.prior_manifest = trim_manifest(parent_manifest);
-      result = await H.call('Lanes#start_shipment', next.lane,
-        next_manifest, next.start, next.shipment_id);
+    try {
+      if (next) {
+        if (!next.manifest) {
+          next = await resolve_next_shipment(next, shipment.completion.failed);
+          const saved = await Shipments.updateAsync(selector, { $set: {
+            'completion.next': next,
+          }, $unset: { 'completion.error': '' } });
+          if (!saved) return undefined;
+        }
+        /* istanbul ignore next */
+        if (!H.isTest) console.log(
+          'Starting shipment for', next.lane, 'as',
+          shipment.completion.failed ? 'salvage run of' : 'followup of',
+          shipment.manifest.lane_name,
+        );
+        const next_manifest = _.cloneDeep(next.manifest);
+        next_manifest.prior_manifest = trim_manifest(parent_manifest);
+        result = await H.call('Lanes#start_shipment', next.lane,
+          next_manifest, next.start, next.shipment_id);
+      }
+      const completion = { failed: shipment.completion.failed };
+      await Shipments.updateAsync(selector, { $set: { completion } });
+      return { result };
     }
-    const completion = { failed: shipment.completion.failed };
-    await update_shipment_history(shipment.lane);
-    await Shipments.updateAsync(selector, { $set: { completion } });
-    return { result };
+    catch (error) {
+      await Shipments.updateAsync({
+        ...selector, 'completion.pending': true,
+      }, { $set: { 'completion.error': error.toString() } });
+      throw error;
+    }
   },
 );
 
@@ -425,7 +468,7 @@ const end_shipment = async function (
     manifest.lane_id = current_lane._id;
     manifest.lane_name = current_lane.name;
     manifest.lane_slug = current_lane.slug;
-    const next = await next_shipment(current_lane, exit_code);
+    const next = next_shipment(current_lane, exit_code);
     const completion = { pending: true, failed: exit_code != 0 };
     if (next) completion.next = next;
     const completed = await Shipments.updateAsync({
@@ -444,21 +487,28 @@ const end_shipment = async function (
   return finished ? finished.result : manifest;
 };
 
+const recovery_tasks = new Map();
+
 const recover_shipments = async () => {
+  const tasks = [];
   for (const stage of ['completion', 'dispatch']) {
     const shipments = await Shipments.find({
       [`${stage}.pending`]: true,
     }, { fields: { _id: 1 } }).fetchAsync();
     for (const shipment of shipments) {
-      try {
-        if (stage == 'completion') await finish_shipment(shipment._id);
-        else await run_shipment(shipment._id);
+      const key = `${stage}:${shipment._id}`;
+      if (!recovery_tasks.has(key)) {
+        const recover = stage == 'completion' ?
+          finish_shipment : run_shipment;
+        const task = recover(shipment._id).catch(error => {
+          console.error(`Unable to recover shipment ${shipment._id}:`, error);
+        }).finally(() => recovery_tasks.delete(key));
+        recovery_tasks.set(key, task);
       }
-      catch (error) {
-        console.error(`Unable to recover shipment ${shipment._id}:`, error);
-      }
+      tasks.push(recovery_tasks.get(key));
     }
   }
+  return tasks;
 };
 
 const reset_shipment = async function (slug, date) {

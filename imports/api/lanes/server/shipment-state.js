@@ -28,7 +28,9 @@ const claim_shipment = async (shipment_id, stage, work) => {
     ));
   }, claim_duration / 3);
   try {
-    return await work(await Shipments.findOneAsync(shipment_id), selector);
+    const shipment = await Shipments.findOneAsync(selector);
+    if (!shipment) return undefined;
+    return await work(shipment, selector);
   }
   finally {
     clearInterval(renew);

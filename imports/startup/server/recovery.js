@@ -1,4 +1,5 @@
 import H from '../config/namespace';
+import { WebApp } from 'meteor/webapp';
 import { recover_shipments } from '../../api/lanes/server/methods';
 
 const retry_delay = 30000;
@@ -9,15 +10,13 @@ const resume_harbor = async (name, harbor) => {
   }
   catch (error) {
     console.error(`Unable to resume harbor ${name}:`, error);
-    setTimeout(() => resume_harbor(name, harbor), retry_delay);
+    H.setTimeout(() => resume_harbor(name, harbor), retry_delay);
   }
 };
 
-const resume_harbors = async () => {
-  for (const [name, harbor] of Object.entries(H.harbors)) {
-    if (typeof harbor.resume == 'function') await resume_harbor(name, harbor);
-  }
-};
+const resume_harbors = () => Promise.all(Object.entries(H.harbors)
+  .filter(([, harbor]) => typeof harbor.resume == 'function')
+  .map(([name, harbor]) => resume_harbor(name, harbor)));
 
 const start_shipment_recovery = () => {
   const recover = async () => {
@@ -27,9 +26,14 @@ const start_shipment_recovery = () => {
     catch (error) {
       console.error('Unable to recover shipments:', error);
     }
-    setTimeout(recover, retry_delay);
+    H.setTimeout(recover, retry_delay);
   };
   return recover();
 };
 
-export { resume_harbors, start_shipment_recovery };
+const start_recovery = () => WebApp.onListening(() => {
+  resume_harbors();
+  start_shipment_recovery();
+});
+
+export { resume_harbors, start_shipment_recovery, start_recovery };

@@ -24,6 +24,7 @@ import path from "path";
 import Module from "module";
 import { resetDatabase } from "../../test-helpers/reset-database";
 import { Harbors } from "../../api/harbors";
+import { resume_harbors } from './recovery';
 import {
   setupInMemoryCollection,
 } from "../../test-helpers/setup-collection-stubs";
@@ -670,6 +671,8 @@ describe("Harbors startup", () => {
       H.recovery_test_resumed = [];
       try {
         await register_harbors();
+        expect(H.recovery_test_resumed).to.deep.eq([]);
+        await resume_harbors();
         expect(H.recovery_test_resumed).to.deep.eq(['first', 'second']);
       }
       finally {

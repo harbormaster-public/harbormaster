@@ -75,16 +75,16 @@ describe('Shipment recovery', () => {
     expect(calls).to.eq(1);
   });
 
-  it('reuses a downstream shipment after history fails', async () => {
+  it('starts a downstream shipment after history is repaired', async () => {
     const upsert = LatestShipment.upsertAsync;
     replace(LatestShipment, 'upsertAsync', async (...args) => {
       if (args[0]._id == 'parent') throw new Error('history unavailable');
       return upsert.apply(LatestShipment, args);
     });
     await reject(() => finish(), 'history unavailable');
-    expect(calls).to.eq(1);
+    expect(calls).to.eq(0);
     LatestShipment.upsertAsync = upsert;
-    await recover_shipments();
+    await Promise.all(await recover_shipments());
     expect(calls).to.eq(1);
     expect(await Shipments.find({ lane: 'child' }).countAsync()).to.eq(1);
     expect((await Shipments.findOneAsync('source')).completion.pending)
@@ -100,7 +100,7 @@ describe('Shipment recovery', () => {
     expect(child.manifest.original).to.eq(true);
     expect(child.dispatch.pending).to.eq(true);
     H.harbors.test = { work: () => { calls++; return {}; } };
-    await recover_shipments();
+    await Promise.all(await recover_shipments());
     expect(calls).to.eq(1);
     expect((await Shipments.findOneAsync(child._id)).dispatch).to.eq(undefined);
     expect((await Shipments.findOneAsync('source')).completion.pending)
@@ -118,7 +118,7 @@ describe('Shipment recovery', () => {
       finish(1),
       end_shipment({ _id: 'parent' }, 1, { shipment_id: 'second' }),
     ]);
-    await recover_shipments();
+    await Promise.all(await recover_shipments());
     expect((await Lanes.findOneAsync('parent')).salvage_runs).to.eq(9);
     expect(await Shipments.find({ lane: 'child' }).countAsync()).to.eq(2);
     await finish(1);
@@ -193,7 +193,7 @@ describe('Shipment recovery', () => {
       'work response lost');
     expect(calls).to.eq(1);
     Shipments.updateAsync = update;
-    await recover_shipments();
+    await Promise.all(await recover_shipments());
     expect(calls).to.eq(1);
     expect((await Shipments.findOneAsync('saved-work')).dispatch)
       .to.eq(undefined);
@@ -203,7 +203,7 @@ describe('Shipment recovery', () => {
     await Shipments.updateAsync('source', {
       $set: { active: false, dispatch: { pending: true } },
     });
-    await recover_shipments();
+    await Promise.all(await recover_shipments());
     expect(calls).to.eq(0);
     expect((await Shipments.findOneAsync('source')).dispatch).to.eq(undefined);
   });
@@ -351,7 +351,7 @@ describe('Shipment recovery', () => {
       await reject(() => start_shipment('child', {}, 'planned', 'error-work'),
         'work response lost');
       Shipments.updateAsync = update;
-      await recover_shipments();
+      await Promise.all(await recover_shipments());
       const saved = await Shipments.findOneAsync('error-work');
       expect(saved.exit_code).to.eq(1);
       expect(saved.manifest.error).to.eq('Error: returned failure');
@@ -365,7 +365,7 @@ describe('Shipment recovery', () => {
     await Shipments.updateAsync('source', {
       $set: { lane: 'missing', dispatch: { pending: true } },
     });
-    await recover_shipments();
+    await Promise.all(await recover_shipments());
     expect((await Shipments.findOneAsync('source')).dispatch.pending)
       .to.eq(true);
     await reject(() => end_shipment({ _id: 'parent' }, 0,
