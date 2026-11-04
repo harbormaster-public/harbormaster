@@ -207,6 +207,32 @@ describe('Shipment recovery', () => {
     expect((await Shipments.findOneAsync('source')).dispatch).to.eq(undefined);
   });
 
+  it('preserves a returned error through a lost work acknowledgment',
+    async () => {
+      H.harbors.test.work = (lane, manifest) => {
+        calls++;
+        return { ...manifest, error: new Error('returned failure') };
+      };
+      const update = Shipments.updateAsync;
+      replace(Shipments, 'updateAsync', async (...args) => {
+        const result = await update.apply(Shipments, args);
+        if (args[1].$set && args[1].$set['dispatch.returned']) {
+          throw new Error('work response lost');
+        }
+        return result;
+      });
+      await reject(() => start_shipment('child', {}, 'planned', 'error-work'),
+        'work response lost');
+      Shipments.updateAsync = update;
+      await recover_shipments();
+      const saved = await Shipments.findOneAsync('error-work');
+      expect(saved.exit_code).to.eq(1);
+      expect(saved.manifest.error).to.eq('Error: returned failure');
+      expect(Object.keys(saved.stderr)[0]).to.match(/GMT/);
+      expect(Object.values(saved.stderr)).to.include('Error: returned failure');
+      expect(calls).to.eq(1);
+    });
+
   it('reports recovery failures and continues', async () => {
     replace(console, 'error', () => {});
     await Shipments.updateAsync('source', {

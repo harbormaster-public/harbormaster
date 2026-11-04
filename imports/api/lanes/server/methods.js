@@ -265,13 +265,16 @@ const run_shipment = async (shipment_id) => claim_shipment(
         manifest.error = error.toString();
         new_manifest = manifest;
       }
+      if (new_manifest && new_manifest.error) {
+        new_manifest.error = new_manifest.error.toString();
+      }
       await Shipments.updateAsync(selector, { $set: {
         'dispatch.returned': true, 'dispatch.result': new_manifest,
       } });
     }
     if (new_manifest && new_manifest.error) {
       await Shipments.updateAsync({ _id: shipment_id }, { $set: {
-        [`stderr.${Date.now()}`]: new_manifest.error.toString(),
+        [`stderr.${new Date()}`]: new_manifest.error.toString(),
       } });
       // Keep the retryable dispatch until completion has been recorded.
       await H.call('Lanes#end_shipment', lane, 1, new_manifest);

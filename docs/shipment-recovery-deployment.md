@@ -28,8 +28,9 @@ deadline. New sleeps need no separate settings write. Completion removes old
 `sleep_resume` data.
 
 Claims prevent concurrent healthy workers from dispatching the same shipment.
-If a process dies after an external effect but before recording the returned
-work result, recovery may invoke that harbor again with the same shipment ID.
+If a process stops renewing its claim after an external effect but before
+recording the returned work result, recovery may invoke that harbor again with
+the same shipment ID.
 External commands and messages need their own idempotency mechanism when that
 case matters. Sleep itself is repeatable because every invocation uses the same
 saved start time and manifest.
