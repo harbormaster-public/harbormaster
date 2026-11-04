@@ -359,9 +359,17 @@ H.end_shipment(lane, exit_code, manifest);
 ```
 Ends an active Shipment for the given Lane object when its `work` is done.  Expects a number, `exit_code`, representing the success or failure of the work, with `0` as success and anything else as failure.  Accepts any updated `manifest` object representing state to be tracked.  Typically called at the end of a Harbor's `work` method.
 
-Only the caller that atomically changes the shipment from active to inactive updates lane history and starts follow-up or salvage work. Calls for missing or inactive shipments return the supplied manifest without repeating those actions.
+The first active-to-inactive update saves the result and any downstream shipment instruction together. Pending completion remains retryable after the shipment becomes inactive. Retries reuse the saved result, downstream manifest, start date, and shipment ID. Missing shipments and inactive shipments without pending completion return the supplied manifest.
 
-Completion and starting the next shipment are separate database operations. A server stopping between them can leave the next shipment unstarted; this collision check does not provide a transaction across both operations.
+Shipment creation saves the input in the existing `manifest` field before invoking `work(lane, manifest, shipment)`. The optional third argument is the persisted shipment, including its original `actual` time. A fourth `start_shipment` argument supplies an existing shipment ID for idempotent downstream creation.
+
+The server recovers pending completion and dispatch every 30 seconds after startup. Claims expire after 60 seconds and renew every 20 seconds during work. External effects must use the shipment ID for idempotency when they can outlive an unacknowledged work invocation; this does not guarantee exactly-once execution of external commands or messages.
+
+The existing collections are retained. Optional shipment `dispatch` and `completion` objects record pending work; a lane's `shipment_totals` preserves offsets for existing counters. Counters use indexed source counts and monotonic updates, and history is reconciled with compare-and-set writes. No replica set or new dependency is required.
+
+Harbors may expose an async `resume()` method. Core calls it after all harbors and their dependencies have initialized. Failed hooks retry after 30 seconds. `register()` should retain references and return registration metadata; recovery belongs in `resume()`.
+
+See [the deployment and migration plan](docs/shipment-recovery-deployment.md) before upgrading an existing server.
 
 #### #start_date
 ```
@@ -435,14 +443,12 @@ GPL 3.0, see `LICENSE` file.
 ## Build Status
 
 ```
-LAST UPDATED: Tue Oct 20 12:22:05 PM PDT 2026
+LAST UPDATED: Wed Nov  4 10:39:33 PST 2026
 +---------------------------------+
 | All files                       |
-| Statements:    100% (3030/3030) |
-| Branches  :    100% (530/530)   |
-| Functions :    100% (232/232)   |
-| Lines     :    100% (3030/3030) |
+| Statements:    100% (3142/3142) |
+| Branches  :    100% (592/592)   |
+| Functions :    100% (243/243)   |
+| Lines     :    100% (3142/3142) |
 +---------------------------------+
 ```
-
-LATEST BUILD: Tue Oct 20 12:22:29 PDT 2026

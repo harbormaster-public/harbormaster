@@ -37,6 +37,21 @@ Shipments.rawCollection().createIndex(
   { start: 1, lane: 1 }, { background: true },
 );
 
+for (const stage of ['completion', 'dispatch']) {
+  const field = `${stage}.pending`;
+  Shipments.rawCollection().createIndex({ [field]: 1 }, {
+    partialFilterExpression: { [field]: true }, background: true,
+  });
+}
+Shipments.rawCollection().createIndex(
+  { lane: 1, 'completion.failed': 1 }, {
+    partialFilterExpression: { 'completion.failed': true }, background: true,
+  },
+);
+Shipments.rawCollection().createIndex(
+  { lane: 1, actual: -1, _id: -1 }, { background: true },
+);
+
 log_shipment_totals();
 
 const publishCursor = (sub, collectionName, cursor) => {
