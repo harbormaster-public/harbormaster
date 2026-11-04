@@ -1,9 +1,6 @@
 import H from '../../../startup/config/namespace';
 import { Lanes } from '..';
-import {
-  Shipments,
-  LatestShipment,
-} from '../../shipments';
+import { Shipments } from '../../shipments';
 import { Harbors } from '../../harbors';
 import { v4 as uuidv4 } from 'uuid';
 import _ from 'lodash';
@@ -246,7 +243,8 @@ const run_shipment = async (shipment_id) => claim_shipment(
     await update_shipment_totals(lane._id);
     await update_shipment_history(lane._id);
     const manifest = _.cloneDeep(shipment.manifest);
-    let new_manifest = shipment.dispatch.result;
+    let new_manifest = shipment.dispatch.has_result ?
+      _.cloneDeep(shipment.manifest) : undefined;
     if (!shipment.dispatch.returned) {
       /* istanbul ignore next */
       if (!H.isTest) console.log('Starting shipment for lane:', lane.name);
@@ -268,16 +266,32 @@ const run_shipment = async (shipment_id) => claim_shipment(
       if (new_manifest && new_manifest.error) {
         new_manifest.error = new_manifest.error.toString();
       }
-      await Shipments.updateAsync(selector, { $set: {
-        'dispatch.returned': true, 'dispatch.result': new_manifest,
-      } });
+      const checkpoint = {
+        'dispatch.returned': true,
+        'dispatch.has_result': new_manifest !== undefined,
+      };
+      if (new_manifest !== undefined) checkpoint.manifest = new_manifest;
+      if (new_manifest && new_manifest.error) checkpoint.exit_code = 1;
+      const updated = await Shipments.updateAsync({
+        ...selector, active: true,
+      }, { $set: checkpoint });
+      if (!updated) {
+        // A synchronous harbor may already have completed its shipment.
+        const owned = await Shipments.findOneAsync(selector);
+        if (!owned) return undefined;
+        await update_shipment_history(lane._id);
+        await Shipments.updateAsync(selector, { $unset: { dispatch: '' } });
+        return new_manifest;
+      }
     }
     if (new_manifest && new_manifest.error) {
-      await Shipments.updateAsync({ _id: shipment_id }, { $set: {
+      const logged = await Shipments.updateAsync(selector, { $set: {
         [`stderr.${new Date()}`]: new_manifest.error.toString(),
       } });
+      if (!logged) return undefined;
       // Keep the retryable dispatch until completion has been recorded.
-      await H.call('Lanes#end_shipment', lane, 1, new_manifest);
+      new_manifest = await H.call('Lanes#end_shipment', lane, 1, new_manifest,
+        selector['dispatch.token']);
     }
     await update_shipment_history(lane._id);
     await Shipments.updateAsync(selector, { $unset: { dispatch: '' } });
@@ -355,6 +369,11 @@ const finish_shipment = async (shipment_id) => claim_shipment(
   shipment_id, 'completion', async (shipment, selector) => {
     await update_shipment_totals(shipment.lane, shipment.completion.failed);
     const next = shipment.completion.next;
+    const parent_manifest = {
+      ..._.cloneDeep(shipment.manifest),
+      stdout: shipment.stdout, stderr: shipment.stderr,
+    };
+    let result = parent_manifest;
     if (next) {
       /* istanbul ignore next */
       if (!H.isTest) console.log(
@@ -363,21 +382,20 @@ const finish_shipment = async (shipment_id) => claim_shipment(
         shipment.manifest.lane_name,
       );
       const next_manifest = _.cloneDeep(next.manifest);
-      next_manifest.prior_manifest = trim_manifest({
-        ..._.cloneDeep(shipment.manifest),
-        stdout: shipment.stdout, stderr: shipment.stderr,
-      });
-      await H.call('Lanes#start_shipment', next.lane,
+      next_manifest.prior_manifest = trim_manifest(parent_manifest);
+      result = await H.call('Lanes#start_shipment', next.lane,
         next_manifest, next.start, next.shipment_id);
     }
     const completion = { failed: shipment.completion.failed };
     await update_shipment_history(shipment.lane);
     await Shipments.updateAsync(selector, { $set: { completion } });
-    return shipment.manifest;
+    return { result };
   },
 );
 
-const end_shipment = async function (lane, exit_code, manifest) {
+const end_shipment = async function (
+  lane, exit_code, manifest, dispatch_token,
+) {
   if (
     !lane || typeof lane._id != 'string' ||
     (typeof exit_code != 'string' && typeof exit_code != 'number') ||
@@ -393,7 +411,9 @@ const end_shipment = async function (lane, exit_code, manifest) {
     );
   }
   const shipment_id = manifest.shipment_id;
-  const shipment = await Shipments.findOneAsync(shipment_id);
+  const selector = { _id: shipment_id };
+  if (dispatch_token) selector['dispatch.token'] = dispatch_token;
+  const shipment = await Shipments.findOneAsync(selector);
   if (!shipment) return manifest;
   if (shipment.lane != lane._id) {
     throw new Error('Shipment belongs to another lane');
@@ -408,15 +428,20 @@ const end_shipment = async function (lane, exit_code, manifest) {
     const next = await next_shipment(current_lane, exit_code);
     const completion = { pending: true, failed: exit_code != 0 };
     if (next) completion.next = next;
-    await Shipments.updateAsync({ _id: shipment_id, active: true }, { $set: {
+    const completed = await Shipments.updateAsync({
+      ...selector, active: true,
+    }, { $set: {
       finished: new Date(), exit_code, manifest, active: false, completion,
     }, $unset: { sleep_resume: '' } });
+    if (!completed && dispatch_token) return manifest;
+    manifest.stdout = shipment.stdout;
+    manifest.stderr = shipment.stderr;
     /* istanbul ignore next */
     if (!H.isTest) console.log('Shipping completed for lane:', lane.name,
       'with shipment:', shipment_id, 'and exit code:', exit_code);
   }
-  await finish_shipment(shipment_id);
-  return manifest;
+  const finished = await finish_shipment(shipment_id);
+  return finished ? finished.result : manifest;
 };
 
 const recover_shipments = async () => {
@@ -452,16 +477,7 @@ const reset_shipment = async function (slug, date) {
     },
   });
 
-  await LatestShipment.upsertAsync(
-    { _id: lane._id },
-    { $set: { shipment: await Shipments.findOneAsync({ _id: shipment._id }) } },
-  );
-
-  lane.last_shipment = await Shipments.findOneAsync({ _id: shipment._id });
-  await Lanes.updateAsync(
-    { _id: lane._id },
-    { $set: { last_shipment: lane.last_shipment } },
-  );
+  lane.last_shipment = await update_shipment_history(lane._id);
 
   return lane;
 };
@@ -481,18 +497,7 @@ const reset_all_active_shipments = async function (name) {
     { multi: true },
   );
 
-  lane.last_shipment = await Shipments.findOneAsync(
-    { lane: lane._id },
-    { sort: { actual: -1 } },
-  );
-  await LatestShipment.upsertAsync(
-    { _id: lane._id },
-    { $set: { shipment: lane.last_shipment } },
-  );
-  await Lanes.updateAsync(
-    { _id: lane._id },
-    { $set: { last_shipment: lane.last_shipment } },
-  );
+  lane.last_shipment = await update_shipment_history(lane._id);
 
   return lane;
 };
@@ -569,6 +574,7 @@ const duplicate = async (lane) => {
   delete lane._id;
   delete lane.tokens;
   delete lane.shipment_totals;
+  delete lane.shipment_history;
   lane.shipment_count = 0;
   lane.salvage_runs = 0;
   lane.name = `${lane.name.replace(replacement_regex, '')}${increment}`;

@@ -50,12 +50,10 @@ import Welcome from '../../components/welcome';
 
 import '../../tailwind.css';
 
-import _ from 'lodash';
-
-import { Lanes } from '../../../api/lanes';
-import { Users } from '../../../api/users';
 import {
   is_loaded,
+  email,
+  role,
   no_users,
   logged_in,
   no_harbormasters,
@@ -92,24 +90,8 @@ export default {
 
   methods: {
     get_version () { return H.VERSION; },
-    email () { return H.user().emails[0].address; },
-    role () {
-      if (Users.findOne({ _id: H.user().emails[0].address }).harbormaster) {
-        return 'a Harbormaster';
-      }
-      const lanes_captained = Lanes.find({
-        captains: { $in: [H.user().emails[0].address] },
-      }).count();
-      let tokened_lanes = Lanes.find({ tokens: { $exists: true }}).fetch();
-      tokened_lanes = tokened_lanes.map(lane => {
-        const tokens = _.invert(lane.tokens);
-        if (tokens[H.user().emails[0].address]) return lane._id;
-      });
-      if (lanes_captained + tokened_lanes.length > 0) {
-        return `Captain of ${lanes_captained + tokened_lanes.length} lanes`;
-      }
-      return 'a User';
-    },
+    email,
+    role,
     current_time () {
       this.timestamp = new Date().toLocaleTimeString();
     },

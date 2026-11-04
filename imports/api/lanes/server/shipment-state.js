@@ -66,7 +66,7 @@ const update_shipment_totals = async (lane_id, failed = false) => {
   await Lanes.updateAsync(lane_id, { $max: maximum });
 };
 
-// Compare the old snapshots before writing either projection. A retry reads
+// Compare compact revisions before writing either projection. A retry reads
 // the source again, so an older completion cannot replace newer history.
 const update_shipment_history = async (lane_id) => {
   for (;;) {
@@ -77,17 +77,20 @@ const update_shipment_history = async (lane_id) => {
       sort: { actual: -1, _id: -1 },
       fields: { completion: 0, dispatch: 0 },
     }) || { actual: 'Never', start: '' };
-    const previous = lane.last_shipment === undefined ?
-      { $exists: false } : lane.last_shipment;
+    const previous = lane.shipment_history === undefined ?
+      { $exists: false } : lane.shipment_history;
     const updated = await Lanes.updateAsync({
-      _id: lane_id, last_shipment: previous,
-    }, { $set: { last_shipment: shipment } });
+      _id: lane_id, shipment_history: previous,
+    }, {
+      $set: { last_shipment: shipment }, $inc: { shipment_history: 1 },
+    });
     if (!updated) continue;
     try {
       await LatestShipment.upsertAsync({
         _id: lane_id,
-        shipment: latest ? latest.shipment : { $exists: false },
-      }, { $set: { shipment } });
+        shipment_history: latest && latest.shipment_history !== undefined ?
+          latest.shipment_history : { $exists: false },
+      }, { $set: { shipment }, $inc: { shipment_history: 1 } });
       return shipment;
     }
     catch (error) {

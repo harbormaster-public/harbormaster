@@ -144,7 +144,7 @@ describe('Shipment recovery', () => {
       expect(await Shipments.find({ lane: 'child' }).countAsync()).to.eq(1);
     });
 
-  it('persists original input before work can mutate it', async () => {
+  it('persists input and checkpoints the returned state', async () => {
     H.harbors.test.work = async (lane, manifest, shipment) => {
       const saved = await Shipments.findOneAsync(shipment._id);
       expect(saved.manifest).to.deep.eq(manifest);
@@ -154,11 +154,12 @@ describe('Shipment recovery', () => {
     };
     await start_shipment('child', { nested: { value: 'original' } }, 'planned');
     const saved = await Shipments.findOneAsync({ lane: 'child' });
-    expect(saved.manifest.nested.value).to.eq('original');
+    expect(saved.manifest.nested.value).to.eq('mutated');
   });
 
   it('retries an ambiguous creation using the same shipment identity',
     async () => {
+      H.harbors.test.work = (lane, manifest) => { calls++; return manifest; };
       const upsert = Shipments.upsertAsync;
       let fail = true;
       replace(Shipments, 'upsertAsync', async (...args) => {
@@ -205,6 +206,132 @@ describe('Shipment recovery', () => {
     await recover_shipments();
     expect(calls).to.eq(0);
     expect((await Shipments.findOneAsync('source')).dispatch).to.eq(undefined);
+  });
+
+  it('discards a result after another worker takes over dispatch', async () => {
+    H.harbors.test.work = async (lane, manifest, shipment) => {
+      await Shipments.updateAsync(shipment._id, { $set: {
+        'dispatch.token': 'replacement',
+        'dispatch.until': new Date(Date.now() + 60000),
+      } });
+      return { ...manifest, error: 'expired worker' };
+    };
+    await start_shipment('child', {}, 'planned', 'lost-claim');
+    const saved = await Shipments.findOneAsync('lost-claim');
+    expect(saved.active).to.eq(true);
+    expect(saved.exit_code).to.eq(undefined);
+    expect(saved.dispatch.token).to.eq('replacement');
+    expect(saved.dispatch.returned).to.eq(undefined);
+    expect(saved.completion).to.eq(undefined);
+    expect(saved.stderr).to.deep.eq({});
+  });
+
+  it('fences error completion after losing ownership', async () => {
+    H.harbors.test.work = (lane, manifest) => ({
+      ...manifest, error: 'failed',
+    });
+    const update = Shipments.updateAsync;
+    replace(Shipments, 'updateAsync', async (...args) => {
+      const result = await update.apply(Shipments, args);
+      if (args[1].$set && args[1].$set['dispatch.returned']) {
+        await update.call(Shipments, 'lost-after-save', { $set: {
+          'dispatch.token': 'replacement',
+        } });
+      }
+      return result;
+    });
+    await start_shipment('child', {}, 'planned', 'lost-after-save');
+    const saved = await Shipments.findOneAsync('lost-after-save');
+    expect(saved.active).to.eq(true);
+    expect(saved.completion).to.eq(undefined);
+    expect(saved.dispatch.token).to.eq('replacement');
+  });
+
+  it('checks ownership in the atomic completion update', async () => {
+    H.harbors.test.work = (lane, manifest) => ({
+      ...manifest, error: 'failed',
+    });
+    const update = Shipments.updateAsync;
+    replace(Shipments, 'updateAsync', async (...args) => {
+      if (args[1].$set && args[1].$set.active === false) {
+        await update.call(Shipments, 'lost-before-completion', { $set: {
+          'dispatch.token': 'replacement',
+        } });
+      }
+      return update.apply(Shipments, args);
+    });
+    await start_shipment('child', {}, 'planned', 'lost-before-completion');
+    const saved = await Shipments.findOneAsync('lost-before-completion');
+    expect(saved.active).to.eq(true);
+    expect(saved.completion).to.eq(undefined);
+  });
+
+  it('checkpoints and completes a manifest larger than half the BSON limit',
+    async () => {
+      H.harbors.test.work = (lane, manifest) => manifest;
+      const payload = 'x'.repeat(9 * 1024 * 1024);
+      await start_shipment('child', { payload }, 'planned', 'large-input');
+      const saved = await Shipments.findOneAsync('large-input');
+      expect(saved.manifest.payload.length).to.eq(payload.length);
+      expect(saved.dispatch).to.eq(undefined);
+      await end_shipment({ _id: 'child' }, 0,
+        { shipment_id: saved._id, payload });
+      expect((await Shipments.findOneAsync(saved._id)).active).to.eq(false);
+      expect((await LatestShipment.findOneAsync('child')).shipment.active)
+        .to.eq(false);
+    });
+
+  it('returns downstream results and attaches the parent output', async () => {
+    H.harbors.test.work = () => ({ child_result: true });
+    await Shipments.updateAsync('source', { $set: {
+      stdout: { output: 'parent output' }, stderr: { warning: 'parent error' },
+    } });
+    const manifest = { shipment_id: 'source' };
+    const result = await end_shipment({ _id: 'parent' }, 0, manifest);
+    expect(result.child_result).to.eq(true);
+    expect(manifest.stdout).to.deep.eq({ output: 'parent output' });
+    expect(manifest.stderr).to.deep.eq({ warning: 'parent error' });
+  });
+
+  it('returns the updated manifest for terminal completions', async () => {
+    await Lanes.updateAsync('parent', { $unset: { followup: '' } });
+    await Shipments.updateAsync('source', { $set: {
+      stdout: { output: 'terminal output' },
+    } });
+    const manifest = { shipment_id: 'source', result: 'done' };
+    const result = await end_shipment({ _id: 'parent' }, 0, manifest);
+    expect(result.result).to.eq('done');
+    expect(result.stdout).to.deep.eq({ output: 'terminal output' });
+  });
+
+  it('returns salvage results after work fails', async () => {
+    await Lanes.updateAsync('parent', {
+      $set: { salvage_plan: { _id: 'child' } },
+    });
+    H.harbors.test.work = (lane, manifest) => lane._id == 'parent' ?
+      { ...manifest, error: 'failed' } : { salvaged: true };
+    const result = await start_shipment('parent', {}, 'planned', 'failed-work');
+    expect(result).to.deep.eq({ salvaged: true });
+    expect((await Shipments.findOneAsync('failed-work')).active).to.eq(false);
+  });
+
+  it('preserves an undefined downstream return value', async () => {
+    H.harbors.test.work = () => undefined;
+    expect(await finish()).to.eq(undefined);
+    expect((await Shipments.findOneAsync('source')).completion.pending)
+      .to.eq(undefined);
+  });
+
+  it('does not overwrite results completed inside work', async () => {
+    H.harbors.test.work = (lane, manifest) => H.call(
+      'Lanes#end_shipment', lane, 0, { ...manifest, result: 'completed' },
+    );
+    const result = await start_shipment('child', {}, 'planned', 'synchronous');
+    const saved = await Shipments.findOneAsync('synchronous');
+    expect(result.result).to.eq('completed');
+    expect(saved.manifest.result).to.eq('completed');
+    expect(saved.dispatch).to.eq(undefined);
+    expect(saved.active).to.eq(false);
   });
 
   it('preserves a returned error through a lost work acknowledgment',
@@ -266,7 +393,7 @@ describe('Shipment recovery', () => {
       const update = Lanes.updateAsync;
       let fail = true;
       replace(Lanes, 'updateAsync', async (...args) => {
-        if (fail && args[0].last_shipment) {
+        if (fail && args[0].shipment_history) {
           fail = false;
           return 0;
         }

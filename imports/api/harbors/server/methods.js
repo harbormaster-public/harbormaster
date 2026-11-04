@@ -6,9 +6,8 @@ import cp from 'child_process';
 import { promisify } from 'util';
 import { Harbors } from '..';
 import { Lanes } from '../../lanes';
-import {
-  LatestShipment, Shipments,
-} from '../../shipments';
+import { Shipments } from '../../shipments';
+import { update_shipment_history } from '../../lanes/server/shipment-state';
 
 H.copySync = fse.copySync;
 
@@ -36,20 +35,18 @@ const update_harbor = async function (lane, values) {
     }
 
     if (success && lane.rendered_work_preview && !lane.last_shipment) {
-      lane.last_shipment = {
-        actual: 'Never',
-        start: '',
-        shipment_count: 0,
-        salvage_runs: 0,
-      };
-
-      await LatestShipment.upsertAsync(
-        { _id: lane._id },
-        { $set: { shipment: lane.last_shipment } },
-      );
+      lane.last_shipment = await update_shipment_history(lane._id);
     }
 
-    if (success) await Lanes.updateAsync(lane._id, lane);
+    if (success) {
+      const internal = [
+        '_id', 'last_shipment', 'shipment_count', 'salvage_runs',
+        'shipment_totals', 'shipment_history',
+      ];
+      const fields = Object.fromEntries(Object.entries(lane)
+        .filter(([key]) => !internal.includes(key)));
+      await Lanes.updateAsync(lane._id, { $set: fields });
+    }
 
     return { lane, success };
 

@@ -1,5 +1,6 @@
 import { Harbors } from "../../../api/harbors";
 import { Users } from '../../../api/users';
+import { Lanes } from '../../../api/lanes';
 
 let Constraints = new H.ReactiveVar({
   global: [],
@@ -25,6 +26,22 @@ const no_users = function () {
 
 const logged_in = function () {
   return H.user();
+};
+
+const email = () => H.user()?.emails?.[0]?.address || '';
+
+const role = () => {
+  const address = email();
+  if (!address) return '';
+  if (Users.findOne({ _id: address })?.harbormaster) return 'a Harbormaster';
+  const lanes_captained = Lanes.find({
+    captains: { $in: [address] },
+  }).count();
+  const tokened_lanes = Lanes.find({ tokens: { $exists: true } }).fetch()
+    .filter(lane => Object.values(lane.tokens || {}).includes(address)).length;
+  const count = lanes_captained + tokened_lanes;
+  if (count) return `Captain of ${count} lanes`;
+  return 'a User';
 };
 
 const no_harbormasters = function () {
@@ -101,6 +118,8 @@ export {
   no_harbormasters,
   no_users,
   logged_in,
+  email,
+  role,
   set_constraints,
   Constraints,
   is_valid_constraint,
