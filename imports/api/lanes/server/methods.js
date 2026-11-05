@@ -318,8 +318,8 @@ const run_shipment = async (shipment_id) => claim_shipment(
   },
 );
 
-const start_shipment = async function (
-  id, manifest, shipment_start_date, shipment_id = uuidv4(),
+const prepare_shipment = async function (
+  id, manifest, shipment_start_date, shipment_id, pending = true,
 ) {
   if (
     typeof id != 'string' ||
@@ -340,16 +340,28 @@ const start_shipment = async function (
   await prepare_shipment_totals(id);
   manifest.shipment_start_date = shipment_start_date;
   manifest.shipment_id = shipment_id;
-  await Shipments.upsertAsync({ _id: shipment_id }, { $setOnInsert: {
-    start: shipment_start_date,
-    actual: new Date(),
-    lane: id,
-    manifest: _.cloneDeep(manifest),
-    stdin: [], stdout: {}, stderr: {}, active: true,
-    dispatch: { pending: true },
-  } });
-  const saved = await Shipments.findOneAsync(shipment_id);
+  let saved = await Shipments.findOneAsync(shipment_id);
+  if (!saved) {
+    await Shipments.upsertAsync({ _id: shipment_id }, { $setOnInsert: {
+      start: shipment_start_date,
+      actual: new Date(),
+      lane: id,
+      manifest: _.cloneDeep(manifest),
+      stdin: [], stdout: {}, stderr: {}, active: true,
+      dispatch: { pending },
+    } });
+    saved = await Shipments.findOneAsync(shipment_id);
+  }
   if (saved.lane != id) throw new Error('Shipment belongs to another lane');
+  return saved;
+};
+
+const start_shipment = async function (
+  id, manifest, shipment_start_date, shipment_id = uuidv4(),
+) {
+  const saved = await prepare_shipment(
+    id, manifest, shipment_start_date, shipment_id,
+  );
   if (!saved.dispatch || !saved.dispatch.pending) return saved.manifest;
   return await run_shipment(shipment_id);
 };
@@ -394,11 +406,32 @@ const resolve_next_shipment = async (next, failed) => {
   };
 };
 
+const prepare_next_shipment = async (next, parent_manifest, failed) => {
+  if (typeof next.shipment_id != 'string' || !next.shipment_id) {
+    throw new Error('Invalid next shipment id');
+  }
+  const saved = await Shipments.findOneAsync(next.shipment_id);
+  if (saved) {
+    const lane = next.lane || next.reference?._id;
+    if (lane && saved.lane != lane) {
+      throw new Error('Shipment belongs to another lane');
+    }
+    return saved;
+  }
+  const resolved = next.manifest ? next :
+    await resolve_next_shipment(next, failed);
+  const manifest = _.cloneDeep(resolved.manifest);
+  manifest.prior_manifest = trim_manifest(parent_manifest);
+  return await prepare_shipment(
+    resolved.lane, manifest, resolved.start, resolved.shipment_id, false,
+  );
+};
+
 const finish_shipment = async (shipment_id) => claim_shipment(
   shipment_id, 'completion', async (shipment, selector) => {
     await update_shipment_totals(shipment.lane, shipment.completion.failed);
     await update_shipment_history(shipment.lane);
-    let next = shipment.completion.next;
+    const next = shipment.completion.next;
     const parent_manifest = {
       ..._.cloneDeep(shipment.manifest),
       stdout: shipment.stdout, stderr: shipment.stderr,
@@ -406,23 +439,30 @@ const finish_shipment = async (shipment_id) => claim_shipment(
     let result = parent_manifest;
     try {
       if (next) {
-        if (!next.manifest) {
-          next = await resolve_next_shipment(next, shipment.completion.failed);
-          const saved = await Shipments.updateAsync(selector, { $set: {
-            'completion.next': next,
-          }, $unset: { 'completion.error': '' } });
-          if (!saved) return undefined;
-        }
+        const child = await prepare_next_shipment(
+          next, parent_manifest, shipment.completion.failed,
+        );
+        const saved = await Shipments.updateAsync(selector, { $set: {
+          'completion.next': {
+            lane: child.lane, shipment_id: child._id, start: child.start,
+          },
+        }, $unset: { 'completion.error': '' } });
+        if (!saved) return undefined;
+        await Shipments.updateAsync({
+          _id: child._id, active: true,
+          'dispatch.pending': false,
+          'dispatch.started': { $exists: false },
+        }, { $set: { 'dispatch.pending': true } });
         /* istanbul ignore next */
         if (!H.isTest) console.log(
-          'Starting shipment for', next.lane, 'as',
+          'Starting shipment for', child.lane, 'as',
           shipment.completion.failed ? 'salvage run of' : 'followup of',
           shipment.manifest.lane_name,
         );
-        const next_manifest = _.cloneDeep(next.manifest);
-        next_manifest.prior_manifest = trim_manifest(parent_manifest);
-        result = await H.call('Lanes#start_shipment', next.lane,
-          next_manifest, next.start, next.shipment_id);
+        const manifest = child.manifest && typeof child.manifest == 'object' ?
+          child.manifest : {};
+        result = await H.call('Lanes#start_shipment', child.lane,
+          manifest, child.start, child._id);
       }
       const completion = { failed: shipment.completion.failed };
       await Shipments.updateAsync(selector, { $set: { completion } });

@@ -313,6 +313,9 @@ describe('Shipment safety', () => {
     await end_shipment({ _id: 'parent' }, 0,
       { shipment_id: 'parent-work' });
     expect(effects).to.eq(0);
+    const child = await Shipments.findOneAsync({ lane: 'child' });
+    expect(child.dispatch.pending).to.eq(false);
+    expect(child.dispatch.started).to.eq(undefined);
     expect((await Shipments.findOneAsync('parent-work')).completion.pending)
       .to.eq(true);
     Shipments.updateAsync = update;
