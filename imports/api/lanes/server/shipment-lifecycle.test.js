@@ -33,7 +33,8 @@ describe('Shipment lifecycle', () => {
     let error;
     try { await finish(); }
     catch (caught) { error = caught; }
-    expect(error?.message).to.eq('parent finalization unavailable');
+    expect(error?.error).to.eq('shipment-pending');
+    expect(error.reason).to.eq('parent finalization unavailable');
   };
   let effects;
   beforeEach(async () => {

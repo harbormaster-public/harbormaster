@@ -276,6 +276,10 @@ const run_shipment = async (shipment_id) => claim_shipment(
       return await finish_dispatch(shipment, selector,
         await shipment_result(shipment));
     }
+    if (shipment.dispatch.returned &&
+      shipment.dispatch.has_result === false) {
+      return await finish_dispatch(shipment, selector, undefined);
+    }
     const lane = await Lanes.findOneAsync(shipment.lane);
     if (!lane) throw new Error(`Lane not found: ${shipment.lane}`);
     const harbor = H.harbors[lane.type];
@@ -544,6 +548,14 @@ const finish_shipment = async (shipment_id) => claim_shipment(
   },
 );
 
+const completion_step = async (work) => {
+  try { return await work(); }
+  catch (error) {
+    if (error.error == 'shipment-pending') throw error;
+    throw new H.Error('shipment-pending', error.message);
+  }
+};
+
 const end_shipment = async function (
   lane, exit_code, manifest, dispatch_token,
 ) {
@@ -564,44 +576,48 @@ const end_shipment = async function (
   const shipment_id = manifest.shipment_id;
   const selector = { _id: shipment_id };
   if (dispatch_token) selector['dispatch.token'] = dispatch_token;
-  const shipment = await Shipments.findOneAsync(selector);
+  const shipment = await completion_step(
+    () => Shipments.findOneAsync(selector),
+  );
   if (!shipment) return manifest;
   if (shipment.lane != lane._id) {
     throw new Error('Shipment belongs to another lane');
   }
-  if (shipment.active) {
-    const current_lane = await Lanes.findOneAsync(lane._id) || lane;
-    await with_existing_lane(lane._id,
-      () => prepare_shipment_totals(lane._id));
-    manifest.lane_id = current_lane._id;
-    manifest.lane_name = current_lane.name;
-    manifest.lane_slug = current_lane.slug;
-    const next = next_shipment(current_lane, exit_code);
-    const completion = { pending: true, failed: exit_code != 0 };
-    if (next) completion.next = next;
-    const completed = await Shipments.updateAsync({
-      ...selector, active: true,
-    }, { $set: {
-      finished: new Date(), exit_code, manifest, active: false, completion,
-    }, $unset: { sleep_resume: '' } });
-    if (!completed && dispatch_token) return manifest;
-    manifest.stdout = shipment.stdout;
-    manifest.stderr = shipment.stderr;
-    /* istanbul ignore next */
-    if (!H.isTest) console.log('Shipping completed for lane:', lane.name,
-      'with shipment:', shipment_id, 'and exit code:', exit_code);
-  }
-  const finished = await finish_shipment(shipment_id);
-  if (finished) return finished.result;
-  const current = await Shipments.findOneAsync(shipment_id);
-  if (current.completion?.pending) {
-    throw new H.Error('shipment-pending',
-      'Shipment completion is pending; retry after it settles');
-  }
-  if (current.completion?.has_result !== undefined) {
-    return await shipment_result(current, 'completion');
-  }
-  return manifest;
+  return await completion_step(async () => {
+    if (shipment.active) {
+      const current_lane = await Lanes.findOneAsync(lane._id) || lane;
+      await with_existing_lane(lane._id,
+        () => prepare_shipment_totals(lane._id));
+      manifest.lane_id = current_lane._id;
+      manifest.lane_name = current_lane.name;
+      manifest.lane_slug = current_lane.slug;
+      const next = next_shipment(current_lane, exit_code);
+      const completion = { pending: true, failed: exit_code != 0 };
+      if (next) completion.next = next;
+      const completed = await Shipments.updateAsync({
+        ...selector, active: true,
+      }, { $set: {
+        finished: new Date(), exit_code, manifest, active: false, completion,
+      }, $unset: { sleep_resume: '' } });
+      if (!completed && dispatch_token) return manifest;
+      manifest.stdout = shipment.stdout;
+      manifest.stderr = shipment.stderr;
+      /* istanbul ignore next */
+      if (!H.isTest) console.log('Shipping completed for lane:', lane.name,
+        'with shipment:', shipment_id, 'and exit code:', exit_code);
+    }
+    const finished = await finish_shipment(shipment_id);
+    if (finished) return finished.result;
+    const current = await Shipments.findOneAsync(shipment_id);
+    if (current.completion?.pending) {
+      throw new H.Error('shipment-pending',
+        'Shipment completion is pending; retry after it settles');
+    }
+    if (current.completion?.has_result !== undefined) {
+      return await shipment_result(current, 'completion');
+    }
+    return manifest;
+  });
 };
 
 const recovery_tasks = new Map();

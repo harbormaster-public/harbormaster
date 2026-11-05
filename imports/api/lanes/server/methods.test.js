@@ -895,7 +895,8 @@ describe('Lanes', function () {
       }
       catch (err) {
         expect(err instanceof Error).to.eq(true);
-        expect(err.message).to.eq('Harbor or lane manifest not found');
+        expect(err.error).to.eq('shipment-pending');
+        expect(err.reason).to.eq('Harbor or lane manifest not found');
       }
     });
     it('throws a clear error when followup harbor is not found', async () => {
@@ -926,7 +927,8 @@ describe('Lanes', function () {
       }
       catch (err) {
         expect(err instanceof Error).to.eq(true);
-        expect(err.message).to.eq('Harbor or lane manifest not found');
+        expect(err.error).to.eq('shipment-pending');
+        expect(err.reason).to.eq('Harbor or lane manifest not found');
       }
     });
     it('allows only one concurrent completion', async () => {

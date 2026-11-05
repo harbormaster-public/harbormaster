@@ -4,7 +4,9 @@ import { resetDatabase } from '../../../test-helpers/reset-database';
 import { Lanes } from '..';
 import { Shipments } from '../../shipments';
 import { ShipmentReturns } from '../../shipments/server/returns';
-import { start_shipment, end_shipment, recover_shipments } from './methods';
+import {
+  start_shipment, end_shipment, delete_lane, recover_shipments,
+} from './methods';
 
 describe('Shipment return interleavings', () => {
   const restores = [];
@@ -38,6 +40,50 @@ describe('Shipment return interleavings', () => {
 
   afterEach(() => {
     while (restores.length) restores.pop()();
+  });
+
+  [false, true].forEach(defined => {
+    ['keep', 'delete-lane', 'remove-harbor'].forEach(change => {
+      it(`settles a captured return without live work: ${defined}, ${change}`,
+        async () => {
+          const value = defined ? { returned: true } : undefined;
+          H.harbors.test.work = () => { effects++; return value; };
+          const update = replace(Shipments, 'updateAsync', async (...args) => {
+            const saved = await update.apply(Shipments, args);
+            if (args[1].$set?.['dispatch.returned']) {
+              throw new Error('checkpoint acknowledgment lost');
+            }
+            return saved;
+          });
+          await fails(start, 'checkpoint acknowledgment lost');
+          const checkpoint = await Shipments.findOneAsync('source');
+          expect(checkpoint.dispatch.returned).to.eq(true);
+          expect(checkpoint.dispatch.has_result).to.eq(defined);
+          Shipments.updateAsync = update;
+          if (change == 'delete-lane') {
+            await delete_lane(await Lanes.findOneAsync('lane'));
+          }
+          if (change == 'remove-harbor') H.harbors = {};
+          await Lanes.insertAsync({ _id: 'parent', type: 'test' });
+          await Shipments.insertAsync({
+            _id: 'parent-source', lane: 'parent', actual: new Date(),
+            active: false, manifest: { shipment_id: 'parent-source' },
+            stdout: {}, stderr: {},
+            completion: { pending: true, failed: false, next: {
+              lane: 'lane', shipment_id: 'source', start: 'planned',
+            } },
+          });
+          expect(await end_shipment({ _id: 'parent' }, 0,
+            { shipment_id: 'parent-source' })).to.deep.eq(value);
+          expect((await Shipments.findOneAsync('parent-source'))
+            .completion.pending).to.eq(undefined);
+          await recover();
+          expect(await start()).to.deep.eq(value);
+          const saved = await Shipments.findOneAsync('source');
+          expect(saved.dispatch.pending).to.eq(undefined);
+          expect(effects).to.eq(1);
+        });
+    });
   });
 
   ['checkpoint', 'manifest'].forEach(stage => {
