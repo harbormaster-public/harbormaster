@@ -30,6 +30,9 @@ describe('Harbors', () => {
   });
 
   describe('#update_harbor', () => {
+    beforeEach(async () => {
+      await Lanes.insertAsync({ _id: 'test', type: 'test' });
+    });
     it("calls a registered Harbor's update() method", async () => {
       H.call = async () => ({});
       let called = false;
@@ -67,7 +70,7 @@ describe('Harbors', () => {
     it("records if a Lane has no LatestShipment", async () => {
       expect(await LatestShipment.find().countAsync()).to.eq(0);
       H.call = async () => ({ _id: 'test', rendered_work_preview: true });
-      await Lanes.insertAsync({ _id: 'test' });
+      await Lanes.updateAsync('test', { $unset: { type: '' } });
       H.harbors.test = { update: () => true };
       await Harbors.insertAsync({ _id: 'test' });
       await update_harbor({ _id: 'test', type: 'test' }, { test: true });
@@ -81,7 +84,7 @@ describe('Harbors', () => {
           shipment_history: 5, shipment_totals: { shipments: 100, salvage: 7 },
           last_shipment: { _id: 'latest', active: true },
         };
-        await Lanes.insertAsync(saved);
+        await Lanes.updateAsync('test', { $set: saved });
         H.harbors.test = { update: () => true };
         H.call = async () => ({ ...saved, rendered_work_preview: true,
           shipment_count: 0, salvage_runs: 0, shipment_history: 0,

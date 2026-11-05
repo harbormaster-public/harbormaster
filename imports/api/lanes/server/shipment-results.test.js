@@ -152,7 +152,7 @@ describe('Shipment return receipts', () => {
     const update = Shipments.updateAsync;
     replace(Shipments, 'updateAsync', async (...args) => {
       const result = await update.apply(Shipments, args);
-      if (args[0].active && args[1].$set?.['dispatch.returned']) {
+      if (args[1].$set?.['dispatch.returned']) {
         await update.call(Shipments, 'lost-receipt', { $set: {
           'dispatch.token': 'replacement',
           'dispatch.until': new Date(Date.now() + 60000),

@@ -93,6 +93,12 @@ describe('Shipment return publication', () => {
         await fails(start, 'return write unavailable');
         target[method] = update;
         await recover();
+        if (stage == 'row' && when == 'before') {
+          await fails(start, 'unknown');
+          expect(await ShipmentReturns.find().countAsync()).to.eq(0);
+          expect(effects).to.eq(1);
+          return;
+        }
         expect(await start()).to.deep.eq(result);
         const saved = await Shipments.findOneAsync('source');
         expect(saved.dispatch.pending).to.eq(undefined);
@@ -255,7 +261,7 @@ describe('Shipment return publication', () => {
       const update = Shipments.updateAsync;
       replace(Shipments, 'updateAsync', async (...args) => {
         const saved = await update.apply(Shipments, args);
-        if (args[0].active && args[1].$set?.['dispatch.returned']) {
+        if (args[1].$set?.['dispatch.returned']) {
           throw new Error('work acknowledgment lost');
         }
         return saved;

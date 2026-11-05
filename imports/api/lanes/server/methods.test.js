@@ -75,9 +75,10 @@ describe('Lanes', function () {
         type: 't1',
       });
 
-      const updated = await upsert({ _id: 'lane-id', type: 't2' });
+      const updated = await upsert({ _id: 'lane-id', name: 'Renamed' });
       expect(updated._id).to.eq('lane-id');
-      expect(updated.type).to.eq('t2');
+      expect(updated.type).to.eq('t1');
+      expect(updated.name).to.eq('Renamed');
     });
 
     it('does not wipe fields when matching by slug', async () => {

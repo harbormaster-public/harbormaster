@@ -5,7 +5,7 @@ import { Harbors } from '../../harbors';
 import { v4 as uuidv4 } from 'uuid';
 import _ from 'lodash';
 import YAML from 'yaml';
-import { editable_lane_fields } from './lane-fields';
+import { editable_lane_fields, save_lane_fields } from './lane-fields';
 import {
   ShipmentReturns, shipment_result, checkpoint_return,
 } from '../../shipments/server/returns';
@@ -236,6 +236,11 @@ const update_webhook_token = async function (lane_id, user_id, remove) {
 const finish_dispatch = async (shipment, selector, result) => {
   const checkpoint = await checkpoint_return(shipment, selector, result);
   if (!checkpoint) return undefined;
+  if (checkpoint.receipt.has_result) {
+    await Shipments.updateAsync({ ...selector, active: true }, {
+      $set: { manifest: checkpoint.result },
+    });
+  }
   await with_existing_lane(shipment.lane,
     () => update_shipment_history(shipment.lane));
   const saved = await Shipments.updateAsync(selector, {
@@ -317,6 +322,7 @@ const run_shipment = async (shipment_id) => claim_shipment(
         new_manifest = await work_method(lane, manifest, shipment);
       }
       catch (error) {
+        if (error.error == 'shipment-pending') throw error;
         /* istanbul ignore next */
         if (!H.isTest) console.error(
           'Shipment failed with error:\n', error + '\n',
@@ -325,18 +331,16 @@ const run_shipment = async (shipment_id) => claim_shipment(
         manifest.error = error.toString();
         new_manifest = manifest;
       }
-      if (new_manifest && new_manifest.error) {
-        new_manifest.error = new_manifest.error.toString();
+      if (!new_manifest || !new_manifest.error) {
+        return await finish_dispatch(shipment, selector, new_manifest);
       }
+      new_manifest.error = new_manifest.error.toString();
       const checkpoint = {
         'dispatch.returned': true,
-        'dispatch.has_result': new_manifest !== undefined,
+        'dispatch.has_result': true,
+        'dispatch.failed': true,
+        manifest: new_manifest, exit_code: 1,
       };
-      if (new_manifest !== undefined) checkpoint.manifest = new_manifest;
-      if (new_manifest && new_manifest.error) {
-        checkpoint.exit_code = 1;
-        checkpoint['dispatch.failed'] = true;
-      }
       const updated = await Shipments.updateAsync({
         ...selector, active: true,
       }, { $set: checkpoint });
@@ -409,7 +413,8 @@ const start_shipment = async function (
   if (dispatched) return dispatched.result;
   const current = await Shipments.findOneAsync(shipment_id);
   if (current.dispatch?.pending) {
-    throw new Error('Shipment return is pending; retry after dispatch settles');
+    throw new H.Error('shipment-pending',
+      'Shipment return is pending; retry after dispatch settles');
   }
   return await shipment_result(current);
 };
@@ -590,7 +595,8 @@ const end_shipment = async function (
   if (finished) return finished.result;
   const current = await Shipments.findOneAsync(shipment_id);
   if (current.completion?.pending) {
-    throw new Error('Shipment completion is pending; retry after it settles');
+    throw new H.Error('shipment-pending',
+      'Shipment completion is pending; retry after it settles');
   }
   if (current.completion?.has_result !== undefined) {
     return await shipment_result(current, 'completion');
@@ -692,6 +698,7 @@ const upsert = async function (lane = {}) {
   }
   const { _id, slug, name } = lane;
   const fields = editable_lane_fields(lane);
+  if (lane.type !== undefined) fields.type = lane.type;
   const initial = { shipment_count: 0, salvage_runs: 0 };
 
   // IMPORTANT:
@@ -709,13 +716,17 @@ const upsert = async function (lane = {}) {
   }
 
   const query = { $or };
-  // Use a modifier update to avoid replacing the whole document and dropping
-  // fields not present in `lane`.
-  const modifier = { $set: fields, $setOnInsert: initial };
-  if (_id) modifier.$setOnInsert._id = _id;
-
-  await Lanes.upsertAsync(query, modifier);
-  return await Lanes.findOneAsync(query);
+  let current = await Lanes.findOneAsync(query);
+  if (!current) {
+    if (_id && await Shipments.findOneAsync({ lane: _id }, {
+      fields: { _id: 1 },
+    })) throw new Error('Cannot reuse a lane ID with shipment history');
+    if (_id) initial._id = _id;
+    await Lanes.upsertAsync(query, { $setOnInsert: { ...fields, ...initial } });
+    current = await Lanes.findOneAsync(query);
+  }
+  await save_lane_fields(current, fields);
+  return await Lanes.findOneAsync(current._id);
 };
 
 const duplicate = async (lane) => {

@@ -4,6 +4,7 @@ import { resetDatabase } from '../../../test-helpers/reset-database';
 import { Lanes } from '..';
 import { Shipments, LatestShipment } from '../../shipments';
 import { Harbors } from '../../harbors';
+import { ShipmentReturns } from '../../shipments/server/returns';
 import { claim_shipment } from './shipment-state';
 import {
   start_shipment, end_shipment, recover_shipments,
@@ -51,16 +52,12 @@ describe('Shipment safety', () => {
 
   it('holds uncertain work instead of replaying an external effect',
     async () => {
-      const update = Shipments.updateAsync;
-      replace(Shipments, 'updateAsync', async (...args) => {
-        if (args[1].$set && args[1].$set['dispatch.returned']) {
-          throw new Error('checkpoint unavailable');
-        }
-        return update.apply(Shipments, args);
+      const upsert = replace(ShipmentReturns, 'upsertAsync', async () => {
+        throw new Error('checkpoint unavailable');
       });
       await fails(() => start_shipment('child', {}, 'planned', 'uncertain'),
         'checkpoint unavailable');
-      Shipments.updateAsync = update;
+      ShipmentReturns.upsertAsync = upsert;
       await recover();
       await recover();
       const saved = await Shipments.findOneAsync('uncertain');
