@@ -101,8 +101,10 @@ describe('Shipment recovery', () => {
     expect(child.dispatch.pending).to.eq(true);
     H.harbors.test = { work: () => { calls++; return {}; } };
     await Promise.all(await recover_shipments());
+    await Promise.all(await recover_shipments());
     expect(calls).to.eq(1);
-    expect((await Shipments.findOneAsync(child._id)).dispatch).to.eq(undefined);
+    expect((await Shipments.findOneAsync(child._id)).dispatch.pending)
+      .to.eq(undefined);
     expect((await Shipments.findOneAsync('source')).completion.pending)
       .to.eq(undefined);
   });
@@ -195,7 +197,7 @@ describe('Shipment recovery', () => {
     Shipments.updateAsync = update;
     await Promise.all(await recover_shipments());
     expect(calls).to.eq(1);
-    expect((await Shipments.findOneAsync('saved-work')).dispatch)
+    expect((await Shipments.findOneAsync('saved-work')).dispatch.pending)
       .to.eq(undefined);
   });
 
@@ -205,7 +207,8 @@ describe('Shipment recovery', () => {
     });
     await Promise.all(await recover_shipments());
     expect(calls).to.eq(0);
-    expect((await Shipments.findOneAsync('source')).dispatch).to.eq(undefined);
+    expect((await Shipments.findOneAsync('source')).dispatch.pending)
+      .to.eq(undefined);
   });
 
   it('discards a result after another worker takes over dispatch', async () => {
@@ -216,7 +219,8 @@ describe('Shipment recovery', () => {
       } });
       return { ...manifest, error: 'expired worker' };
     };
-    await start_shipment('child', {}, 'planned', 'lost-claim');
+    await reject(() => start_shipment('child', {}, 'planned',
+      'lost-claim'), 'pending');
     const saved = await Shipments.findOneAsync('lost-claim');
     expect(saved.active).to.eq(true);
     expect(saved.exit_code).to.eq(undefined);
@@ -240,7 +244,8 @@ describe('Shipment recovery', () => {
       }
       return result;
     });
-    await start_shipment('child', {}, 'planned', 'lost-after-save');
+    await reject(() => start_shipment('child', {}, 'planned',
+      'lost-after-save'), 'pending');
     const saved = await Shipments.findOneAsync('lost-after-save');
     expect(saved.active).to.eq(true);
     expect(saved.completion).to.eq(undefined);
@@ -260,7 +265,8 @@ describe('Shipment recovery', () => {
       }
       return update.apply(Shipments, args);
     });
-    await start_shipment('child', {}, 'planned', 'lost-before-completion');
+    await reject(() => start_shipment('child', {}, 'planned',
+      'lost-before-completion'), 'pending');
     const saved = await Shipments.findOneAsync('lost-before-completion');
     expect(saved.active).to.eq(true);
     expect(saved.completion).to.eq(undefined);
@@ -273,7 +279,7 @@ describe('Shipment recovery', () => {
       await start_shipment('child', { payload }, 'planned', 'large-input');
       const saved = await Shipments.findOneAsync('large-input');
       expect(saved.manifest.payload.length).to.eq(payload.length);
-      expect(saved.dispatch).to.eq(undefined);
+      expect(saved.dispatch.pending).to.eq(undefined);
       await end_shipment({ _id: 'child' }, 0,
         { shipment_id: saved._id, payload });
       expect((await Shipments.findOneAsync(saved._id)).active).to.eq(false);
@@ -330,7 +336,7 @@ describe('Shipment recovery', () => {
     const saved = await Shipments.findOneAsync('synchronous');
     expect(result.result).to.eq('completed');
     expect(saved.manifest.result).to.eq('completed');
-    expect(saved.dispatch).to.eq(undefined);
+    expect(saved.dispatch.pending).to.eq(undefined);
     expect(saved.active).to.eq(false);
   });
 
@@ -376,7 +382,9 @@ describe('Shipment recovery', () => {
     'another lane');
     await Shipments.updateAsync('source', { $set: { lane: 'parent' } });
     await Lanes.removeAsync('parent');
-    await reject(() => finish(), 'Lane not found');
+    await finish();
+    expect((await Shipments.findOneAsync('source')).active).to.eq(false);
+    expect(await Lanes.findOneAsync('parent')).to.eq(undefined);
   });
 
   it('keeps newer history when an older shipment completes', async () => {

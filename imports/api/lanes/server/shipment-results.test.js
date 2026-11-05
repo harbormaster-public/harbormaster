@@ -160,7 +160,8 @@ describe('Shipment return receipts', () => {
       }
       return result;
     });
-    await start_shipment('child', {}, 'planned', 'lost-receipt');
+    await fails(() => start_shipment('child', {}, 'planned', 'lost-receipt'),
+      'pending');
     const saved = await Shipments.findOneAsync('lost-receipt');
     expect(saved.dispatch.token).to.eq('replacement');
     expect(saved.dispatch.pending).to.eq(true);
@@ -183,8 +184,11 @@ describe('Shipment return receipts', () => {
           dispatch: { pending: true, returned: true, has_result },
         });
         await recover();
-        expect((await Shipments.findOneAsync('deleted')).dispatch)
-          .to.deep.eq(has_result ? undefined : { has_result: false });
+        const saved = await Shipments.findOneAsync('deleted');
+        expect(saved.dispatch.pending).to.eq(undefined);
+        expect(saved.dispatch.has_result).to.eq(has_result);
+        expect(await start_shipment('missing', {}, 'later', 'deleted'))
+          .to.deep.eq(has_result ? { result: 'saved' } : undefined);
         expect(effects).to.eq(0);
       });
   });

@@ -934,9 +934,16 @@ describe('Lanes', function () {
         Lanes.findOneAsync({ _id: 'test' }),
       ]);
 
-      await Promise.all(lanes.map(lane => end_shipment(lane, 1, {
-        shipment_id: 'test',
-      })));
+      const results = await Promise.allSettled(lanes.map(lane =>
+        end_shipment(lane, 1, {
+          shipment_id: 'test',
+        })));
+      expect(results.some(result => result.status == 'fulfilled')).to.eq(true);
+      for (const result of results) {
+        if (result.status == 'rejected') {
+          expect(result.reason.message).to.include('pending');
+        }
+      }
 
       expect((await Lanes.findOneAsync({ _id: 'test' })).salvage_runs)
         .to.eq(1);
@@ -954,9 +961,17 @@ describe('Lanes', function () {
           Lanes.findOneAsync('test'), Lanes.findOneAsync('test'),
         ]);
 
-        await Promise.all(lanes.map(lane => end_shipment(lane, 0, {
-          shipment_id: 'test',
-        })));
+        const results = await Promise.allSettled(lanes.map(lane =>
+          end_shipment(lane, 0, {
+            shipment_id: 'test',
+          })));
+        expect(results.some(result => result.status == 'fulfilled'))
+          .to.eq(true);
+        for (const result of results) {
+          if (result.status == 'rejected') {
+            expect(result.reason.message).to.include('pending');
+          }
+        }
 
         expect(
           await Shipments.find({ lane: 'test_followup' }).countAsync(),

@@ -66,6 +66,17 @@ const update_shipment_totals = async (lane_id, failed = false) => {
     }).countAsync();
   }
   await Lanes.updateAsync(lane_id, { $max: maximum });
+  return await Lanes.findOneAsync(lane_id, { fields: {
+    shipment_count: 1, salvage_runs: 1,
+  } });
+};
+
+const with_existing_lane = async (lane_id, update) => {
+  try { return await update(); }
+  catch (error) {
+    if (await Lanes.findOneAsync(lane_id)) throw error;
+    return undefined;
+  }
 };
 
 // Compare compact revisions before writing either projection. A retry reads
@@ -121,4 +132,5 @@ export {
   prepare_shipment_totals,
   update_shipment_totals,
   update_shipment_history,
+  with_existing_lane,
 };

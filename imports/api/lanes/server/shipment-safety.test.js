@@ -83,7 +83,8 @@ describe('Shipment safety', () => {
     });
     await recover();
     expect(effects).to.eq(1);
-    expect((await Shipments.findOneAsync('safe')).dispatch).to.eq(undefined);
+    expect((await Shipments.findOneAsync('safe')).dispatch.pending)
+      .to.eq(undefined);
   });
 
   it('can retry when work was never marked started', async () => {
@@ -112,7 +113,8 @@ describe('Shipment safety', () => {
       }
       return update.apply(Shipments, args);
     });
-    await start_shipment('child', {}, 'planned', 'lost-start');
+    await fails(() => start_shipment('child', {}, 'planned', 'lost-start'),
+      'pending');
     expect(effects).to.eq(0);
     expect((await Shipments.findOneAsync('lost-start')).dispatch.token)
       .to.eq('replacement');
@@ -197,7 +199,8 @@ describe('Shipment safety', () => {
     expect(saved.dispatch.error).to.eq(undefined);
     expect(saved.stderr).to.deep.eq({});
     await recover();
-    expect((await Shipments.findOneAsync('late')).dispatch).to.eq(undefined);
+    expect((await Shipments.findOneAsync('late')).dispatch.pending)
+      .to.eq(undefined);
     expect(effects).to.eq(0);
   });
 
@@ -310,8 +313,8 @@ describe('Shipment safety', () => {
       }
       return update.apply(Shipments, args);
     });
-    await end_shipment({ _id: 'parent' }, 0,
-      { shipment_id: 'parent-work' });
+    await fails(() => end_shipment({ _id: 'parent' }, 0,
+      { shipment_id: 'parent-work' }), 'pending');
     expect(effects).to.eq(0);
     const child = await Shipments.findOneAsync({ lane: 'child' });
     expect(child.dispatch.pending).to.eq(false);
