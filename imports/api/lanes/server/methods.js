@@ -5,6 +5,7 @@ import { Harbors } from '../../harbors';
 import { v4 as uuidv4 } from 'uuid';
 import _ from 'lodash';
 import YAML from 'yaml';
+import { editable_lane_fields } from './lane-fields';
 import {
   claim_shipment,
   prepare_shipment_totals,
@@ -576,7 +577,12 @@ const delete_lane = async function (lane) {
 };
 
 const upsert = async function (lane = {}) {
+  if (!lane || typeof lane != 'object' || Array.isArray(lane)) {
+    throw new TypeError('Invalid lane');
+  }
   const { _id, slug, name } = lane;
+  const fields = editable_lane_fields(lane);
+  const initial = { shipment_count: 0, salvage_runs: 0 };
 
   // IMPORTANT:
   // Never query with undefined/empty values (e.g. { slug: undefined } matches
@@ -588,21 +594,15 @@ const upsert = async function (lane = {}) {
 
   // If we have no identity fields, this must be a brand new lane. Insert it.
   if (!$or.length) {
-    const insertedId = await Lanes.insertAsync(lane);
+    const insertedId = await Lanes.insertAsync({ ...fields, ...initial });
     return await Lanes.findOneAsync(insertedId);
   }
 
   const query = { $or };
   // Use a modifier update to avoid replacing the whole document and dropping
   // fields not present in `lane`.
-  const $set = Object.fromEntries(
-    Object.entries(lane)
-      .filter(([key, value]) => key !== '_id' && value !== undefined),
-  );
-  const modifier = { $set };
-  if (_id) {
-    modifier.$setOnInsert = { _id };
-  }
+  const modifier = { $set: fields, $setOnInsert: initial };
+  if (_id) modifier.$setOnInsert._id = _id;
 
   await Lanes.upsertAsync(query, modifier);
   return await Lanes.findOneAsync(query);

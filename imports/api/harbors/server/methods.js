@@ -8,6 +8,7 @@ import { Harbors } from '..';
 import { Lanes } from '../../lanes';
 import { Shipments } from '../../shipments';
 import { update_shipment_history } from '../../lanes/server/shipment-state';
+import { editable_lane_fields } from '../../lanes/server/lane-fields';
 
 H.copySync = fse.copySync;
 
@@ -39,12 +40,7 @@ const update_harbor = async function (lane, values) {
     }
 
     if (success) {
-      const internal = [
-        '_id', 'last_shipment', 'shipment_count', 'salvage_runs',
-        'shipment_totals', 'shipment_history',
-      ];
-      const fields = Object.fromEntries(Object.entries(lane)
-        .filter(([key]) => !internal.includes(key)));
+      const fields = editable_lane_fields(lane);
       await Lanes.updateAsync(lane._id, { $set: fields });
     }
 

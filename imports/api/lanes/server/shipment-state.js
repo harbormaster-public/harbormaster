@@ -70,7 +70,7 @@ const update_shipment_totals = async (lane_id, failed = false) => {
 
 // Compare compact revisions before writing either projection. A retry reads
 // the source again, so an older completion cannot replace newer history.
-const update_shipment_history = async (lane_id) => {
+const write_shipment_history = async (lane_id) => {
   for (;;) {
     const lane = await Lanes.findOneAsync(lane_id);
     if (!lane) throw new Error(`Lane not found: ${lane_id}`);
@@ -99,6 +99,21 @@ const update_shipment_history = async (lane_id) => {
       if (error.code != 11000) throw error;
     }
   }
+};
+
+const history_updates = new Map();
+
+// Serialize local projections per lane; revisions still fence other servers.
+const update_shipment_history = (lane_id) => {
+  const previous = history_updates.get(lane_id) || Promise.resolve();
+  const update = previous.catch(() => undefined)
+    .then(() => write_shipment_history(lane_id));
+  history_updates.set(lane_id, update);
+  return update.finally(() => {
+    if (history_updates.get(lane_id) === update) {
+      history_updates.delete(lane_id);
+    }
+  });
 };
 
 export {
