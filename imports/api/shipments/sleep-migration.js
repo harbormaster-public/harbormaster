@@ -8,7 +8,7 @@ const plan_sleep_migration = (shipments, harbor) => {
     const recorded = saved ? saved.manifest : shipment.manifest;
     const input = recorded || (config && config.manifest);
     if (!input) throw new Error(`Missing sleep settings: ${shipment._id}`);
-    const manifest = structuredClone(input);
+    const manifest = { ...input };
     if (!recorded && typeof manifest.seconds == 'string' &&
       manifest.seconds.trim()) {
       manifest.seconds = Number(manifest.seconds);

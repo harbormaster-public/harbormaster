@@ -229,13 +229,32 @@ const update_webhook_token = async function (lane_id, user_id, remove) {
   return await Lanes.updateAsync(lane_id, { $set: { tokens: lane.tokens } });
 };
 
+const shipment_result = (shipment) =>
+  shipment.dispatch?.has_result === false ? undefined : shipment.manifest;
+
+const finish_dispatch = async (lane, selector, result) => {
+  const has_result = result !== undefined;
+  if (!has_result) {
+    // Keep a known absent result through a failed history repair.
+    const saved = await Shipments.updateAsync(selector, { $set: {
+      'dispatch.returned': true, 'dispatch.has_result': false,
+    } });
+    if (!saved) return undefined;
+  }
+  if (lane) await update_shipment_history(lane._id);
+  const update = has_result ? { $unset: { dispatch: '' } } :
+    { $set: { dispatch: { has_result: false } } };
+  await Shipments.updateAsync(selector, update);
+  return result;
+};
+
 const run_shipment = async (shipment_id) => claim_shipment(
   shipment_id, 'dispatch', async (shipment, selector) => {
-    if (!shipment.active) {
-      await Shipments.updateAsync(selector, { $unset: { dispatch: '' } });
-      return shipment.manifest;
-    }
     const lane = await Lanes.findOneAsync(shipment.lane);
+    if (!shipment.active) {
+      return await finish_dispatch(lane, selector,
+        shipment_result(shipment));
+    }
     if (!lane) throw new Error(`Lane not found: ${shipment.lane}`);
     const harbor = H.harbors[lane.type];
     if (!harbor || typeof harbor.work != 'function') {
@@ -298,9 +317,7 @@ const run_shipment = async (shipment_id) => claim_shipment(
         // A synchronous harbor may already have completed its shipment.
         const owned = await Shipments.findOneAsync(selector);
         if (!owned) return undefined;
-        await update_shipment_history(lane._id);
-        await Shipments.updateAsync(selector, { $unset: { dispatch: '' } });
-        return new_manifest;
+        return await finish_dispatch(lane, selector, new_manifest);
       }
     }
     if (new_manifest && new_manifest.error) {
@@ -312,9 +329,7 @@ const run_shipment = async (shipment_id) => claim_shipment(
       new_manifest = await H.call('Lanes#end_shipment', lane, 1, new_manifest,
         selector['dispatch.token']);
     }
-    await update_shipment_history(lane._id);
-    await Shipments.updateAsync(selector, { $unset: { dispatch: '' } });
-    return new_manifest;
+    return await finish_dispatch(lane, selector, new_manifest);
   },
 );
 
@@ -362,7 +377,7 @@ const start_shipment = async function (
   const saved = await prepare_shipment(
     id, manifest, shipment_start_date, shipment_id,
   );
-  if (!saved.dispatch || !saved.dispatch.pending) return saved.manifest;
+  if (!saved.dispatch || !saved.dispatch.pending) return shipment_result(saved);
   return await run_shipment(shipment_id);
 };
 

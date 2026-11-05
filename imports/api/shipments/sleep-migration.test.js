@@ -1,4 +1,6 @@
 import { expect } from 'chai';
+import { Mongo } from 'meteor/mongo';
+import { ObjectId, Binary } from 'mongodb';
 import { Shipments } from '.';
 import { resetDatabase } from '../../test-helpers/reset-database';
 import { plan_sleep_migration, apply_sleep_migration } from './sleep-migration';
@@ -32,6 +34,57 @@ describe('Sleep migration', () => {
     expect(plan.report[0].estimated).to.eq(false);
     expect(plan.report[0].deadline).to.deep.eq(saved.sleep_resume.deadline);
     expect(plan.changes[0].manifest.prior_manifest).to.eq('original');
+  });
+
+  it('preserves typed saved context without changing the original', () => {
+    const record_id = new Mongo.ObjectID();
+    const manifest = { seconds: 5, exit_code: 0,
+      prior_manifest: { record_id },
+    };
+    const saved = { ...shipment, sleep_resume: {
+      deadline: new Date(105000), exit_code: 0, manifest,
+    } };
+    const plan = plan_sleep_migration([saved], harbor);
+    expect(plan.changes[0].manifest.prior_manifest.record_id)
+      .to.be.instanceOf(Mongo.ObjectID);
+    expect(plan.changes[0].manifest.prior_manifest.record_id.equals(record_id))
+      .to.eq(true);
+    expect(manifest.shipment_id).to.eq(undefined);
+    expect(manifest.shipment_start_date).to.eq(undefined);
+  });
+
+  it('normalizes a typed template without changing its settings', () => {
+    const record_id = new Mongo.ObjectID();
+    const manifest = { seconds: '5', exit_code: 0,
+      prior_manifest: { record_id },
+    };
+    const plan = plan_sleep_migration([shipment], { lanes: {
+      'sleep-lane': { manifest },
+    } });
+    expect(plan.changes[0].manifest.seconds).to.eq(5);
+    expect(plan.changes[0].manifest.prior_manifest.record_id.equals(record_id))
+      .to.eq(true);
+    expect(manifest.seconds).to.eq('5');
+    expect(manifest.shipment_id).to.eq(undefined);
+  });
+
+  it('preserves BSON values through an offline backfill', async () => {
+    const raw = Shipments.rawCollection();
+    const record_id = new ObjectId();
+    const manifest = { seconds: 5, exit_code: 0,
+      prior_manifest: { record_id, binary: new Binary(Buffer.from('context')) },
+    };
+    await raw.insertOne({ ...shipment, sleep_resume: {
+      deadline: new Date(105000), exit_code: 0, manifest,
+    } });
+    const plan = plan_sleep_migration(await raw.find().toArray(), harbor);
+    expect((await apply_sleep_migration(raw, plan)).updated).to.eq(1);
+    const saved = await raw.findOne({ _id: shipment._id });
+    const context = saved.manifest.prior_manifest;
+    expect(context.record_id.toHexString()).to.eq(record_id.toHexString());
+    expect(context.binary.value().toString()).to.eq('context');
+    expect(saved.sleep_resume.manifest.prior_manifest).to.deep.eq(context);
+    expect(saved.sleep_resume.manifest.shipment_id).to.eq(undefined);
   });
 
   it('does not rewrite initialized or inactive shipments', () => {

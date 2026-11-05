@@ -243,7 +243,7 @@ describe('Shipment preparation', () => {
       expect(effects).to.eq(0);
     });
 
-  ['text result', null].forEach(result => {
+  ['text result', null, undefined].forEach(result => {
     it(`retains a downstream return value of ${result} during repair`,
       async () => {
         H.harbors.test.work = () => { effects++; return result; };
