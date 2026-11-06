@@ -488,17 +488,21 @@ const prepare_shipment = async function (
   return saved;
 };
 
+const dispatch_result = (shipment) => {
+  if (shipment.dispatch?.pending === false && !shipment.dispatch.started &&
+    shipment.dispatch.error) {
+    throw new H.Error('lane-not-found', shipment.dispatch.error);
+  }
+  return shipment_result(shipment);
+};
+
 const start_shipment = async function (
   id, manifest, shipment_start_date, shipment_id = uuidv4(),
 ) {
   const saved = await prepare_shipment(
     id, manifest, shipment_start_date, shipment_id,
   );
-  if (saved.dispatch?.pending === false && !saved.dispatch.started &&
-    saved.dispatch.error) {
-    throw new H.Error('lane-not-found', saved.dispatch.error);
-  }
-  if (!saved.dispatch || !saved.dispatch.pending) return shipment_result(saved);
+  if (!saved.dispatch || !saved.dispatch.pending) return dispatch_result(saved);
   const dispatched = await run_shipment(shipment_id);
   if (dispatched) return dispatched.result;
   const current = await Shipments.findOneAsync(shipment_id);
@@ -507,7 +511,7 @@ const start_shipment = async function (
     throw new H.Error('shipment-pending',
       'Shipment return is pending; retry after dispatch settles');
   }
-  return await shipment_result(current);
+  return await dispatch_result(current);
 };
 
 const next_shipment = (lane, exit_code) => {

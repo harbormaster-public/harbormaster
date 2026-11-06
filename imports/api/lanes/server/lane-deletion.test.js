@@ -6,6 +6,7 @@ import { Shipments } from '../../shipments';
 import { Harbors } from '../../harbors';
 import {
   delete_lane, start_shipment, reset_shipment, recover_shipments,
+  end_shipment,
 } from './methods';
 
 const fails = async (work, code) => {
@@ -42,6 +43,90 @@ describe('Idle lane deletion', () => {
     } });
   });
   afterEach(() => { while (restores.length) restores.pop()(); });
+
+  ['start', 'completion'].forEach(caller => {
+    it(`rejects an overlapping ${caller} when deletion cancels its dispatch`,
+      async () => {
+        const pause = () => {
+          let entered;
+          let resume;
+          const reached = new Promise(resolve => { entered = resolve; });
+          const waiting = new Promise(resolve => { resume = resolve; });
+          const wait = () => { entered(); return waiting; };
+          return { reached, resume, wait };
+        };
+        const deletion = pause();
+        const admission = pause();
+        const claim = pause();
+        const remove_lane = replace(Lanes, 'removeAsync', async (...args) => {
+          await deletion.wait();
+          return remove_lane.apply(Lanes, args);
+        });
+        const update = replace(Lanes, 'updateAsync', async (...args) => {
+          if (args[0]._id == 'lane' && args[0].shipment_history) {
+            await admission.wait();
+          }
+          return update.apply(Lanes, args);
+        });
+        if (caller == 'completion') {
+          await Lanes.insertAsync({ _id: 'parent', type: 'test' });
+          await Shipments.insertAsync({
+            _id: 'parent-source', lane: 'parent', active: false,
+            actual: new Date(), manifest: { shipment_id: 'parent-source' },
+            stdout: {}, stderr: {},
+            completion: { pending: true, failed: false, next: {
+              lane: 'lane', shipment_id: 'source', start: 'planned',
+            } },
+          });
+        }
+        const deleting = remove();
+        let first;
+        let second;
+        try {
+          await deletion.reached;
+          first = start().catch(error => error);
+          await admission.reached;
+          const shipment_update = replace(Shipments, 'updateAsync',
+            async (...args) => {
+              if (args[1].$set?.['dispatch.token']) await claim.wait();
+              return shipment_update.apply(Shipments, args);
+            });
+          second = (caller == 'start' ? start() : end_shipment(
+            { _id: 'parent' }, 0, { shipment_id: 'parent-source' },
+          )).catch(error => error);
+          await claim.reached;
+          deletion.resume();
+          await deleting;
+          admission.resume();
+          const first_error = await first;
+          expect(first_error.error).to.eq('lane-not-found');
+          claim.resume();
+          const second_error = await second;
+          expect(second_error.error).to.eq(caller == 'start' ?
+            'lane-not-found' : 'shipment-pending');
+          expect(second_error.reason).to.include('Lane not found');
+          const later_error = await fails(start, 'lane-not-found');
+          expect(later_error.reason).to.eq(first_error.reason);
+          const saved = await Shipments.findOneAsync('source');
+          expect(saved.active).to.eq(false);
+          expect(saved.dispatch.pending).to.eq(false);
+          expect(saved.dispatch.started).to.eq(undefined);
+          expect(effects).to.eq(0);
+          if (caller == 'completion') {
+            const parent = await Shipments.findOneAsync('parent-source');
+            expect(parent.completion.pending).to.eq(true);
+            expect(parent.completion.return_id).to.eq(undefined);
+            expect(parent.completion.error).to.include('Lane not found');
+          }
+        }
+        finally {
+          deletion.resume();
+          admission.resume();
+          claim.resume();
+          await Promise.allSettled([deleting, first, second]);
+        }
+      });
+  });
 
   it('requires a reset even when the latest shipment appears inactive',
     async () => {
