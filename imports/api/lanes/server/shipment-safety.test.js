@@ -232,8 +232,11 @@ describe('Shipment safety', () => {
             1000);
         })]);
         const tasks = await scanning;
+        const owner = (await Shipments.findOneAsync('slow')).dispatch.token;
         const repeated = await recover_shipments();
-        expect(repeated).to.include(tasks[0]);
+        expect(repeated).to.have.length(tasks.length);
+        expect((await Shipments.findOneAsync('slow')).dispatch.token)
+          .to.eq(owner);
         expect(effects).to.eq(2);
       }
       finally {

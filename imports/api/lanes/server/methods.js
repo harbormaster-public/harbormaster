@@ -5,6 +5,7 @@ import { Harbors } from '../../harbors';
 import { v4 as uuidv4 } from 'uuid';
 import _ from 'lodash';
 import YAML from 'yaml';
+import { retry, cancel_retry } from '../../../startup/server/retry';
 import { editable_lane_fields, save_lane_fields } from './lane-fields';
 import {
   ShipmentReturns, shipment_result, checkpoint_return,
@@ -233,6 +234,57 @@ const update_webhook_token = async function (lane_id, user_id, remove) {
   return await Lanes.updateAsync(lane_id, { $set: { tokens: lane.tokens } });
 };
 
+const recovery_tasks = new Map();
+const recovery_key = (id, stage) => `shipment:${stage}:${id}`;
+const retry_shipment = (id, stage, at) => retry(
+  recovery_key(id, stage), () => recover_one(id, stage), at,
+);
+
+const recover_one = (id, stage) => {
+  const key = recovery_key(id, stage);
+  if (recovery_tasks.has(key)) return recovery_tasks.get(key);
+  const task = (async () => {
+    const shipment = await Shipments.findOneAsync(id, {
+      fields: { [stage]: 1 },
+    });
+    if (!shipment?.[stage]?.pending) return undefined;
+    if (shipment[stage].token && shipment[stage].until > new Date()) {
+      return shipment[stage].until;
+    }
+    const recover = stage == 'completion' ? finish_shipment : run_shipment;
+    const result = await recover(id);
+    if (result) return undefined;
+    const current = await Shipments.findOneAsync(id, {
+      fields: { [stage]: 1 },
+    });
+    if (!current?.[stage]?.pending) return undefined;
+    if (current[stage].token && current[stage].until > new Date()) {
+      return current[stage].until;
+    }
+    throw new H.Error('shipment-pending', 'Shipment recovery is pending');
+  })().finally(() => {
+    if (recovery_tasks.get(key) === task) recovery_tasks.delete(key);
+  });
+  recovery_tasks.set(key, task);
+  return task;
+};
+
+const recoverable_shipment = async (id, stage, work) => {
+  try { return await claim_shipment(id, stage, work); }
+  catch (error) {
+    retry_shipment(id, stage);
+    throw error;
+  }
+};
+
+const resume_dispatch = async (shipment, selector) => {
+  const lane = await Lanes.findOneAsync(shipment.lane);
+  const harbor = lane && H.harbors[lane.type];
+  if (typeof harbor?.resume_shipment != 'function') return;
+  const current = await Shipments.findOneAsync({ ...selector, active: true });
+  if (current) await harbor.resume_shipment(lane, current);
+};
+
 const finish_dispatch = async (shipment, selector, result) => {
   const checkpoint = await checkpoint_return(shipment, selector, result);
   if (!checkpoint) return undefined;
@@ -243,19 +295,24 @@ const finish_dispatch = async (shipment, selector, result) => {
   }
   await with_existing_lane(shipment.lane,
     () => update_shipment_history(shipment.lane));
+  await resume_dispatch(shipment, selector);
   const saved = await Shipments.updateAsync(selector, {
     $set: { dispatch: checkpoint.receipt },
   });
-  return saved ? { result: checkpoint.result } : undefined;
+  if (!saved) return undefined;
+  cancel_retry(recovery_key(shipment._id, 'dispatch'));
+  return { result: checkpoint.result };
 };
 
-const run_shipment = async (shipment_id) => claim_shipment(
+const run_shipment = async (shipment_id) => recoverable_shipment(
   shipment_id, 'dispatch', async (shipment, selector) => {
     if (shipment.dispatch.return_id) {
       const saved = await ShipmentReturns.findOneAsync(
         shipment.dispatch.return_id,
       );
-      if (saved) return await finish_dispatch(shipment, selector, saved.value);
+      if (saved) {
+        return await finish_dispatch(shipment, selector, saved.value);
+      }
     }
     if (!shipment.active) {
       if (shipment.dispatch.failed) {
@@ -387,20 +444,27 @@ const prepare_shipment = async function (
   }
   manifest.shipment_start_date = shipment_start_date;
   manifest.shipment_id = shipment_id;
-  let saved = await Shipments.findOneAsync(shipment_id);
-  if (!saved) {
-    const lane = await Lanes.findOneAsync(id);
-    if (!lane) throw new Error(`Lane not found: ${id}`);
-    await prepare_shipment_totals(id);
-    await Shipments.upsertAsync({ _id: shipment_id }, { $setOnInsert: {
-      start: shipment_start_date,
-      actual: new Date(),
-      lane: id,
-      manifest: _.cloneDeep(manifest),
-      stdin: [], stdout: {}, stderr: {}, active: true,
-      dispatch: { pending },
-    } });
+  let saved;
+  try {
     saved = await Shipments.findOneAsync(shipment_id);
+    if (!saved) {
+      const lane = await Lanes.findOneAsync(id);
+      if (!lane) throw new Error(`Lane not found: ${id}`);
+      await prepare_shipment_totals(id);
+      await Shipments.upsertAsync({ _id: shipment_id }, { $setOnInsert: {
+        start: shipment_start_date,
+        actual: new Date(),
+        lane: id,
+        manifest: _.cloneDeep(manifest),
+        stdin: [], stdout: {}, stderr: {}, active: true,
+        dispatch: { pending },
+      } });
+      saved = await Shipments.findOneAsync(shipment_id);
+    }
+  }
+  catch (error) {
+    retry_shipment(shipment_id, 'dispatch');
+    throw error;
   }
   if (saved.lane != id) throw new Error('Shipment belongs to another lane');
   return saved;
@@ -417,6 +481,7 @@ const start_shipment = async function (
   if (dispatched) return dispatched.result;
   const current = await Shipments.findOneAsync(shipment_id);
   if (current.dispatch?.pending) {
+    retry_shipment(shipment_id, 'dispatch', current.dispatch.until);
     throw new H.Error('shipment-pending',
       'Shipment return is pending; retry after dispatch settles');
   }
@@ -484,7 +549,7 @@ const prepare_next_shipment = async (next, parent_manifest, failed) => {
   );
 };
 
-const finish_shipment = async (shipment_id) => claim_shipment(
+const finish_shipment = async (shipment_id) => recoverable_shipment(
   shipment_id, 'completion', async (shipment, selector) => {
     await with_existing_lane(shipment.lane, async () => {
       await update_shipment_totals(shipment.lane, shipment.completion.failed);
@@ -537,7 +602,9 @@ const finish_shipment = async (shipment_id) => claim_shipment(
       const saved = await Shipments.updateAsync(selector, {
         $set: { completion },
       });
-      return saved ? { result: checkpoint.result } : undefined;
+      if (!saved) return undefined;
+      cancel_retry(recovery_key(shipment_id, 'completion'));
+      return { result: checkpoint.result };
     }
     catch (error) {
       await Shipments.updateAsync({
@@ -548,9 +615,10 @@ const finish_shipment = async (shipment_id) => claim_shipment(
   },
 );
 
-const completion_step = async (work) => {
+const completion_step = async (shipment_id, work) => {
   try { return await work(); }
   catch (error) {
+    retry_shipment(shipment_id, 'completion');
     if (error.error == 'shipment-pending') throw error;
     throw new H.Error('shipment-pending', error.message);
   }
@@ -577,13 +645,13 @@ const end_shipment = async function (
   const selector = { _id: shipment_id };
   if (dispatch_token) selector['dispatch.token'] = dispatch_token;
   const shipment = await completion_step(
-    () => Shipments.findOneAsync(selector),
+    shipment_id, () => Shipments.findOneAsync(selector),
   );
   if (!shipment) return manifest;
   if (shipment.lane != lane._id) {
     throw new Error('Shipment belongs to another lane');
   }
-  return await completion_step(async () => {
+  return await completion_step(shipment_id, async () => {
     if (shipment.active) {
       const current_lane = await Lanes.findOneAsync(lane._id) || lane;
       await with_existing_lane(lane._id,
@@ -610,6 +678,7 @@ const end_shipment = async function (
     if (finished) return finished.result;
     const current = await Shipments.findOneAsync(shipment_id);
     if (current.completion?.pending) {
+      retry_shipment(shipment_id, 'completion', current.completion.until);
       throw new H.Error('shipment-pending',
         'Shipment completion is pending; retry after it settles');
     }
@@ -620,8 +689,6 @@ const end_shipment = async function (
   });
 };
 
-const recovery_tasks = new Map();
-
 const recover_shipments = async () => {
   const tasks = [];
   for (const stage of ['completion', 'dispatch']) {
@@ -629,16 +696,14 @@ const recover_shipments = async () => {
       [`${stage}.pending`]: true,
     }, { fields: { _id: 1 } }).fetchAsync();
     for (const shipment of shipments) {
-      const key = `${stage}:${shipment._id}`;
-      if (!recovery_tasks.has(key)) {
-        const recover = stage == 'completion' ?
-          finish_shipment : run_shipment;
-        const task = recover(shipment._id).catch(error => {
-          console.error(`Unable to recover shipment ${shipment._id}:`, error);
-        }).finally(() => recovery_tasks.delete(key));
-        recovery_tasks.set(key, task);
-      }
-      tasks.push(recovery_tasks.get(key));
+      const task = recover_one(shipment._id, stage);
+      task.then(at => {
+        if (at) retry_shipment(shipment._id, stage, at);
+      }).catch(error => {
+        console.error(`Unable to recover shipment ${shipment._id}:`, error);
+        retry_shipment(shipment._id, stage);
+      });
+      tasks.push(task.catch(() => undefined));
     }
   }
   return tasks;

@@ -1,11 +1,13 @@
 import { Lanes } from '..';
 import { Shipments, LatestShipment } from '../../shipments';
 import { v4 as uuidv4 } from 'uuid';
+import { retry } from '../../../startup/server/retry';
 
 const claim_duration = 60000;
 
 const claim_shipment = async (shipment_id, stage, work) => {
   const token = uuidv4();
+  const until = new Date(Date.now() + claim_duration);
   const selector = { _id: shipment_id, [`${stage}.token`]: token };
   const claimed = await Shipments.updateAsync({
     _id: shipment_id,
@@ -16,24 +18,26 @@ const claim_shipment = async (shipment_id, stage, work) => {
     ],
   }, { $set: {
     [`${stage}.token`]: token,
-    [`${stage}.until`]: new Date(Date.now() + claim_duration),
+    [`${stage}.until`]: until,
   } });
   if (!claimed) return undefined;
 
-  const renew = setInterval(() => {
-    Shipments.updateAsync(selector, { $set: {
-      [`${stage}.until`]: new Date(Date.now() + claim_duration),
-    } }).catch(error => console.error(
-      'Unable to renew shipment claim:', error,
-    ));
-  }, claim_duration / 3);
+  const renew_at = deadline => new Date(Date.now() +
+    Math.max(0, deadline - Date.now()) * (0.5 + Math.random() / 4));
+  const stop_renewing = retry(`claim:${token}`, async () => {
+    const deadline = new Date(Date.now() + claim_duration);
+    const renewed = await Shipments.updateAsync(selector, { $set: {
+      [`${stage}.until`]: deadline,
+    } });
+    return renewed ? renew_at(deadline) : undefined;
+  }, renew_at(until));
   try {
     const shipment = await Shipments.findOneAsync(selector);
     if (!shipment) return undefined;
     return await work(shipment, selector);
   }
   finally {
-    clearInterval(renew);
+    stop_renewing();
     await Shipments.updateAsync(selector, { $unset: {
       [`${stage}.token`]: '', [`${stage}.until`]: '',
     } });

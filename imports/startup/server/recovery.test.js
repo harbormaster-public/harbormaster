@@ -57,9 +57,7 @@ describe('Startup recovery', () => {
         await work_started;
         tasks = await recover_shipments();
         await new Promise(resolve => setImmediate(resolve));
-        expect(pending[0].delay).to.eq(30000);
-        await pending[0].callback();
-        expect(pending.length).to.eq(2);
+        expect(pending).to.have.length(0);
       }
       finally {
         release?.();
@@ -73,15 +71,17 @@ describe('Startup recovery', () => {
 
   it('retries only the harbor that failed to resume', async () => {
     const harbors = H.harbors;
-    const timeout = H.setTimeout;
+    const timeout = globalThis.setTimeout;
     const error = console.error;
     const pending = [];
     let successful = 0;
     let attempts = 0;
     try {
       console.error = () => {};
-      H.setTimeout = (callback, delay) => {
+      globalThis.setTimeout = (callback, delay) => {
+        if (callback.name != 'run') return timeout(callback, delay);
         pending.push({ callback, delay });
+        return 0;
       };
       H.harbors = {
         ordinary: {},
@@ -94,40 +94,42 @@ describe('Startup recovery', () => {
       await resume_harbors();
       expect(successful).to.eq(1);
       expect(attempts).to.eq(1);
-      expect(pending[0].delay).to.eq(30000);
-      await pending[0].callback();
+      expect(pending[0].delay).to.be.within(500, 1000);
+      await pending.shift().callback();
       expect(successful).to.eq(1);
       expect(attempts).to.eq(2);
+      expect(pending).to.have.length(0);
     }
     finally {
       H.harbors = harbors;
-      H.setTimeout = timeout;
+      globalThis.setTimeout = timeout;
       console.error = error;
     }
   });
 
-  it('keeps the core recovery loop running after a query failure', async () => {
+  it('retries failed startup scans and stops after success', async () => {
     await resetDatabase();
-    const timeout = H.setTimeout;
+    const timeout = globalThis.setTimeout;
     const find = Shipments.find;
     const error = console.error;
     const pending = [];
     try {
       console.error = () => {};
-      H.setTimeout = (callback, delay) => {
+      globalThis.setTimeout = (callback, delay) => {
+        if (callback.name != 'run') return timeout(callback, delay);
         pending.push({ callback, delay });
+        return 0;
       };
       Shipments.find = () => { throw new Error('database unavailable'); };
       await start_shipment_recovery();
-      expect(pending[0].delay).to.eq(30000);
+      expect(pending[0].delay).to.be.within(500, 1000);
       Shipments.find = find;
-      await pending[0].callback();
-      expect(pending.length).to.be.at.least(2);
-      expect(pending[pending.length - 1].delay).to.eq(30000);
+      await pending.shift().callback();
+      expect(pending).to.have.length(0);
     }
     finally {
       Shipments.find = find;
-      H.setTimeout = timeout;
+      globalThis.setTimeout = timeout;
       console.error = error;
     }
   });

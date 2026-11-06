@@ -20,6 +20,24 @@ describe('Shipment recovery', () => {
     target[key] = value;
     return previous;
   };
+  const retry_timers = () => {
+    const pending = [];
+    const timeout = globalThis.setTimeout;
+    const clear = globalThis.clearTimeout;
+    replace(globalThis, 'setTimeout', (callback, delay) => {
+      if (callback.name != 'run') return timeout(callback, delay);
+      const timer = { callback, delay };
+      pending.push(timer);
+      return timer;
+    });
+    replace(globalThis, 'clearTimeout', timer => {
+      const index = pending.indexOf(timer);
+      if (index == -1) return clear(timer);
+      pending.splice(index, 1);
+      return undefined;
+    });
+    return pending;
+  };
   const reject = async (work, message) => {
     let error;
     try { await work(); }
@@ -452,25 +470,107 @@ describe('Shipment recovery', () => {
       .to.eq('new-owner');
   });
 
-  it('renews long work claims and reports renewal failures', async () => {
-    let tick;
-    replace(globalThis, 'setInterval', callback => {
-      tick = callback; return 0;
-    });
+  it('renews at lease deadlines and backs off after failures', async () => {
+    const pending = retry_timers();
     replace(console, 'error', () => {});
     await Shipments.updateAsync('source', {
       $set: { dispatch: { pending: true } },
     });
     await claim_shipment('source', 'dispatch', async () => {
-      tick();
-      await new Promise(resolve => setImmediate(resolve));
+      expect(pending[0].delay).to.be.within(29000, 45000);
+      await pending.shift().callback();
       const update = Shipments.updateAsync;
-      Shipments.updateAsync = async () => {
-        throw new Error('renewal failed');
-      };
-      tick();
-      await new Promise(resolve => setImmediate(resolve));
-      Shipments.updateAsync = update;
+      try {
+        Shipments.updateAsync = async () => {
+          throw new Error('renewal failed');
+        };
+        await pending.shift().callback();
+        expect(pending[0].delay).to.be.within(500, 1000);
+      }
+      finally { Shipments.updateAsync = update; }
+      await pending.shift().callback();
+      await update.call(Shipments, 'source', {
+        $set: { 'dispatch.token': 'replacement' },
+      });
+      await pending.shift().callback();
+      expect(pending).to.have.length(0);
     });
+  });
+
+  it('uses the saved lease deadline after a delayed claim acknowledgment',
+    async () => {
+      const pending = retry_timers();
+      let now = Date.now();
+      replace(Date, 'now', () => now);
+      const update = replace(Shipments, 'updateAsync', async (...args) => {
+        const saved = await update.apply(Shipments, args);
+        if (args[1].$set?.['dispatch.token']) now += 45000;
+        return saved;
+      });
+      await Shipments.updateAsync('source', {
+        $set: { dispatch: { pending: true } },
+      });
+      await claim_shipment('source', 'dispatch', async () => {
+        expect(pending[0].delay).to.be.within(7500, 11250);
+      });
+      expect(pending).to.have.length(0);
+    });
+
+  it('retries failed completion without rescanning healthy shipments',
+    async () => {
+      const pending = retry_timers();
+      replace(console, 'error', () => {});
+      const upsert = replace(LatestShipment, 'upsertAsync', async () => {
+        throw new Error('history unavailable');
+      });
+      await reject(() => finish(), 'history unavailable');
+      expect(pending).to.have.length(1);
+      expect(pending[0].delay).to.be.within(500, 1000);
+      await pending.shift().callback();
+      expect(pending[0].delay).to.be.within(1000, 2000);
+      LatestShipment.upsertAsync = upsert;
+      await pending.shift().callback();
+      expect(pending).to.have.length(0);
+      expect((await Shipments.findOneAsync('source')).completion.pending)
+        .to.eq(undefined);
+      expect(calls).to.eq(1);
+    });
+
+  it('checks a remote claim at its current expiry and recovers when free',
+    async () => {
+      const pending = retry_timers();
+      await Shipments.updateAsync('source', { $set: { dispatch: {
+        pending: true, token: 'remote', until: new Date(Date.now() + 5000),
+      } } });
+      await Promise.all(await recover_shipments());
+      expect(pending).to.have.length(1);
+      expect(pending[0].delay).to.be.within(4000, 5000);
+      await Shipments.updateAsync('source', { $set: {
+        'dispatch.until': new Date(Date.now() + 20000),
+      } });
+      await pending.shift().callback();
+      expect(pending[0].delay).to.be.within(19000, 20000);
+      await Shipments.updateAsync('source', {
+        $set: { 'dispatch.until': new Date(0) },
+      });
+      await pending.shift().callback();
+      expect(pending).to.have.length(0);
+      expect(calls).to.eq(1);
+    });
+
+  it('drops a queued retry after a pending shipment is deleted', async () => {
+    const pending = retry_timers();
+    replace(console, 'error', () => {});
+    const upsert = replace(Shipments, 'upsertAsync', async (...args) => {
+      const saved = await upsert.apply(Shipments, args);
+      throw new Error(`lost acknowledgment: ${saved.numberAffected}`);
+    });
+    await reject(() => start_shipment('child', {}, 'planned', 'deleted'),
+      'lost acknowledgment');
+    Shipments.upsertAsync = upsert;
+    await Shipments.removeAsync('deleted');
+    await pending.shift().callback();
+    expect(pending).to.have.length(0);
+    expect(calls).to.eq(0);
   });
 });
