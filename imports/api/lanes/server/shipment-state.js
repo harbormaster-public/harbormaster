@@ -5,6 +5,12 @@ import { retry } from '../../../startup/server/retry';
 
 const claim_duration = 60000;
 
+const lane_revision = lane => ({
+  _id: lane._id,
+  shipment_history: lane.shipment_history === undefined ?
+    { $exists: false } : lane.shipment_history,
+});
+
 const claim_shipment = async (shipment_id, stage, work) => {
   const token = uuidv4();
   const until = new Date(Date.now() + claim_duration);
@@ -94,11 +100,7 @@ const write_shipment_history = async (lane_id) => {
       sort: { actual: -1, _id: -1 },
       fields: { completion: 0, dispatch: 0 },
     }) || { actual: 'Never', start: '' };
-    const previous = lane.shipment_history === undefined ?
-      { $exists: false } : lane.shipment_history;
-    const updated = await Lanes.updateAsync({
-      _id: lane_id, shipment_history: previous,
-    }, {
+    const updated = await Lanes.updateAsync(lane_revision(lane), {
       $set: { last_shipment: shipment }, $inc: { shipment_history: 1 },
     });
     if (!updated) continue;
@@ -132,6 +134,7 @@ const update_shipment_history = (lane_id) => {
 };
 
 export {
+  lane_revision,
   claim_shipment,
   prepare_shipment_totals,
   update_shipment_totals,

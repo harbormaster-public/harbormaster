@@ -391,7 +391,7 @@ describe('Shipment recovery', () => {
     });
     await Promise.all(await recover_shipments());
     expect((await Shipments.findOneAsync('source')).dispatch.pending)
-      .to.eq(true);
+      .to.eq(false);
     await reject(() => end_shipment({ _id: 'parent' }, 0,
       { shipment_id: 'source' }), 'another lane');
     await reject(() => start_shipment(

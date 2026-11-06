@@ -122,7 +122,7 @@ describe('Lane harbor types', () => {
     async () => {
       const lane = { _id: 'old', type: 'one', slug: 'same' };
       await Lanes.insertAsync(lane);
-      await Shipments.insertAsync({ lane: 'old', active: true });
+      await Shipments.insertAsync({ lane: 'old', active: false });
       await delete_lane(lane);
       await fails(() => upsert({ ...lane, type: 'two' }),
         'Cannot reuse a lane ID');

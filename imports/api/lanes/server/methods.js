@@ -11,6 +11,7 @@ import {
   ShipmentReturns, shipment_result, checkpoint_return,
 } from '../../shipments/server/returns';
 import {
+  lane_revision,
   claim_shipment,
   prepare_shipment_totals,
   update_shipment_totals,
@@ -304,6 +305,20 @@ const finish_dispatch = async (shipment, selector, result) => {
   return { result: checkpoint.result };
 };
 
+const missing_dispatch_lane = async (shipment, selector) => {
+  const error = `Lane not found: ${shipment.lane}`;
+  if (!shipment.dispatch.started) {
+    await Shipments.updateAsync({
+      ...selector, active: true,
+      'dispatch.started': { $exists: false },
+    }, { $set: {
+      active: false, exit_code: 1, finished: new Date(),
+      'dispatch.pending': false, 'dispatch.error': error,
+    } });
+  }
+  throw new H.Error('lane-not-found', error);
+};
+
 const run_shipment = async (shipment_id) => recoverable_shipment(
   shipment_id, 'dispatch', async (shipment, selector) => {
     if (shipment.dispatch.return_id) {
@@ -338,7 +353,7 @@ const run_shipment = async (shipment_id) => recoverable_shipment(
       return await finish_dispatch(shipment, selector, undefined);
     }
     const lane = await Lanes.findOneAsync(shipment.lane);
-    if (!lane) throw new Error(`Lane not found: ${shipment.lane}`);
+    if (!lane) return missing_dispatch_lane(shipment, selector);
     const harbor = H.harbors[lane.type];
     if (!harbor || typeof harbor.work != 'function') {
       throw new Error(`Harbor is not ready: ${lane.type}`);
@@ -346,8 +361,11 @@ const run_shipment = async (shipment_id) => recoverable_shipment(
     const counters = await with_existing_lane(lane._id,
       () => update_shipment_totals(lane._id));
     Object.assign(lane, counters);
-    await with_existing_lane(lane._id,
+    const history = await with_existing_lane(lane._id,
       () => update_shipment_history(lane._id));
+    // A shipment exists before this revision advances. Deletion checks for
+    // that shipment and removes only the revision it inspected.
+    if (!history) return missing_dispatch_lane(shipment, selector);
     const manifest = _.cloneDeep(shipment.manifest);
     let new_manifest = shipment.dispatch.has_result ?
       _.cloneDeep(shipment.manifest) : undefined;
@@ -476,6 +494,10 @@ const start_shipment = async function (
   const saved = await prepare_shipment(
     id, manifest, shipment_start_date, shipment_id,
   );
+  if (saved.dispatch?.pending === false && !saved.dispatch.started &&
+    saved.dispatch.error) {
+    throw new H.Error('lane-not-found', saved.dispatch.error);
+  }
   if (!saved.dispatch || !saved.dispatch.pending) return shipment_result(saved);
   const dispatched = await run_shipment(shipment_id);
   if (dispatched) return dispatched.result;
@@ -756,9 +778,35 @@ const update_slug = async (lane) => {
   return true;
 };
 
+const require_idle_lane = async (lane_id) => {
+  if (await Shipments.findOneAsync({ lane: lane_id, active: true }, {
+    fields: { _id: 1 },
+  })) {
+    throw new H.Error('lane-active',
+      'This lane has an active shipment. Reset it before deleting the lane.');
+  }
+  if (await Shipments.findOneAsync({ lane: lane_id, $or: [
+    { 'dispatch.pending': true }, { 'completion.pending': true },
+  ] }, { fields: { _id: 1 } })) {
+    throw new H.Error('lane-pending',
+      'This lane has pending shipment work. Wait for it to finish ' +
+      'before deleting the lane.');
+  }
+};
+
 const delete_lane = async function (lane) {
   if (!lane || !lane._id) throw new Error('Invalid lane');
-  await Lanes.removeAsync({ _id: lane._id });
+  const current = await Lanes.findOneAsync(lane._id);
+  if (current) {
+    await require_idle_lane(current._id);
+    const removed = await Lanes.removeAsync(lane_revision(current));
+    if (!removed) {
+      await require_idle_lane(current._id);
+      throw new H.Error('lane-changed',
+        'This lane changed while it was being deleted. Try again.');
+    }
+    lane = current;
+  }
   /* istanbul ignore else */
   if (lane.type) {
     const harbor = await Harbors.findOneAsync(lane.type);

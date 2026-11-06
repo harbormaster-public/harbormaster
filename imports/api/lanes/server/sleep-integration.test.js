@@ -8,7 +8,7 @@ import { Lanes } from '..';
 import { Shipments } from '../../shipments';
 import { Harbors } from '../../harbors';
 import { ShipmentReturns } from '../../shipments/server/returns';
-import { start_shipment, recover_shipments } from './methods';
+import { start_shipment, recover_shipments, delete_lane } from './methods';
 
 const sleep_path = process.env.SLEEP_HARBOR_PATH ||
   path.resolve(process.env.PWD, '../harbormaster-sleep/sleep.js');
@@ -97,6 +97,32 @@ integration('Sleep and core recovery integration', () => {
     expect(followups).to.eq(1);
     expect(work).to.eq(1);
   });
+
+  it('blocks deletion during return capture and retains the timer handoff',
+    async () => {
+      let attempted = false;
+      const upsert = ShipmentReturns.upsertAsync;
+      replace(ShipmentReturns, 'upsertAsync', async (...args) => {
+        const saved = await upsert.apply(ShipmentReturns, args);
+        if (!attempted) {
+          attempted = true;
+          const lane = await Lanes.findOneAsync('sleeper');
+          let error;
+          try { await delete_lane(lane); }
+          catch (caught) { error = caught; }
+          expect(error?.error).to.eq('lane-active');
+          expect(error.reason).to.include('Reset it before deleting');
+        }
+        return saved;
+      });
+      await start();
+      expect(attempted).to.eq(true);
+      await tick();
+      expect(followups).to.eq(1);
+      expect(work).to.eq(1);
+      await delete_lane(await Lanes.findOneAsync('sleeper'));
+      expect(await Lanes.findOneAsync('sleeper')).to.eq(undefined);
+    });
 
   it('arms a new timer only after the dispatch return is durable', async () => {
     let entered;

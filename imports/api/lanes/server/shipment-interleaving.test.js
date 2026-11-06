@@ -5,7 +5,7 @@ import { Lanes } from '..';
 import { Shipments } from '../../shipments';
 import { ShipmentReturns } from '../../shipments/server/returns';
 import {
-  start_shipment, end_shipment, delete_lane, recover_shipments,
+  start_shipment, end_shipment, recover_shipments,
 } from './methods';
 
 describe('Shipment return interleavings', () => {
@@ -61,7 +61,8 @@ describe('Shipment return interleavings', () => {
           expect(checkpoint.dispatch.has_result).to.eq(defined);
           Shipments.updateAsync = update;
           if (change == 'delete-lane') {
-            await delete_lane(await Lanes.findOneAsync('lane'));
+            // Retain recovery coverage for a lane removed outside the RPC.
+            await Lanes.removeAsync('lane');
           }
           if (change == 'remove-harbor') H.harbors = {};
           await Lanes.insertAsync({ _id: 'parent', type: 'test' });

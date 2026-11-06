@@ -112,7 +112,8 @@ describe('Shipment lifecycle', () => {
     async () => {
       await Lanes.updateAsync('parent', { $unset: { followup: '' } });
       const lane = await Lanes.findOneAsync('parent');
-      await delete_lane(lane);
+      // Legacy records may reference a lane removed outside the delete RPC.
+      await Lanes.removeAsync(lane._id);
       await end_shipment(lane, 0, { shipment_id: 'source', result: 'done' });
       const saved = await Shipments.findOneAsync('source');
       expect(saved.active).to.eq(false);
