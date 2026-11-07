@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+import { deferred } from '../../test-helpers/async';
 import { retry, cancel_retry, cancel_retries } from './retry';
 import '../config/namespace.server';
 
@@ -110,17 +111,16 @@ describe('Failure backoff', () => {
   [false, true].forEach(fails => {
     it(`keeps a replacement after cancelling running work: ${fails}`,
       async () => {
-        let release;
-        retry('replaced', () => new Promise((resolve, reject) => {
-          release = fails ? () => reject(new Error('old failure')) : resolve;
-        }));
+        const work = deferred();
+        retry('replaced', () => work.promise);
         const timer = pending.shift();
         const running = timer.callback();
         await Promise.resolve();
         cancel_retry('replaced');
         let replacement = 0;
         retry('replaced', () => { replacement++; });
-        release();
+        if (fails) work.reject(new Error('old failure'));
+        else work.resolve();
         await running;
         expect(pending).to.have.length(1);
         await next();

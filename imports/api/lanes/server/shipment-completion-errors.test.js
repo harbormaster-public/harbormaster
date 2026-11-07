@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import H from '../../../startup/config/namespace';
 import { resetDatabase } from '../../../test-helpers/reset-database';
+import { patches, rejects as fails } from '../../../test-helpers/async';
 import { Lanes } from '..';
 import { Shipments } from '../../shipments';
 import { Harbors } from '../../harbors';
@@ -8,24 +9,11 @@ import { ShipmentReturns } from '../../shipments/server/returns';
 import { start_shipment, end_shipment, recover_shipments } from './methods';
 
 describe('Shipment completion errors', () => {
-  const restores = [];
-  const replace = (target, key, value) => {
-    const previous = target[key];
-    restores.push(() => { target[key] = previous; });
-    target[key] = value;
-    return previous;
-  };
+  const { replace, restore_all } = patches();
   const start = () => start_shipment('lane', {}, 'planned', 'source');
   const finish = () => end_shipment({ _id: 'lane' }, 0,
     { shipment_id: 'source' });
   const recover = async () => Promise.all(await recover_shipments());
-  const fails = async (work, message) => {
-    let error;
-    try { await work(); }
-    catch (caught) { error = caught; }
-    expect(error?.message).to.include(message);
-    return error;
-  };
   let effects;
 
   beforeEach(async () => {
@@ -39,9 +27,7 @@ describe('Shipment completion errors', () => {
     await Lanes.insertAsync({ _id: 'lane', type: 'test' });
   });
 
-  afterEach(() => {
-    while (restores.length) restores.pop()();
-  });
+  afterEach(restore_all);
 
   const faults = [
     'lookup', 'lane-read', 'outcome-before', 'outcome-after',

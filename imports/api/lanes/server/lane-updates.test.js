@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import H from '../../../startup/config/namespace';
 import { resetDatabase } from '../../../test-helpers/reset-database';
+import { patches } from '../../../test-helpers/async';
 import { Lanes } from '..';
 import { Shipments, LatestShipment } from '../../shipments';
 import { Harbors } from '../../harbors';
@@ -15,26 +16,20 @@ import {
 } from '../../harbors/server/methods';
 
 describe('Lane updates', () => {
-  let harbors;
-  let call;
+  const { replace, restore_all } = patches();
   beforeEach(async () => {
     await resetDatabase();
-    harbors = H.harbors;
-    call = H.call;
-    H.harbors = { test: {
+    replace(H, 'harbors', { test: {
       update: () => true,
       render_work_preview: () => 'updated preview',
       work: (lane, manifest) => manifest,
-    } };
-    H.call = async (method, ...args) => {
+    } });
+    replace(H, 'call', async (method, ...args) => {
       expect(method).to.eq('Harbors#render_work_preview');
       return render_work_preview(...args);
-    };
+    });
   });
-  afterEach(() => {
-    H.harbors = harbors;
-    H.call = call;
-  });
+  afterEach(restore_all);
 
   it('rejects malformed updates without creating lanes', async () => {
     for (const value of [null, 'lane', 7, true, []]) {

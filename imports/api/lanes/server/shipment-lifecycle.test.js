@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import H from '../../../startup/config/namespace';
 import { resetDatabase } from '../../../test-helpers/reset-database';
+import { patches } from '../../../test-helpers/async';
 import { Lanes } from '..';
 import { Shipments } from '../../shipments';
 import { Harbors } from '../../harbors';
@@ -9,13 +10,7 @@ import {
 } from './methods';
 
 describe('Shipment lifecycle', () => {
-  const restores = [];
-  const replace = (target, key, value) => {
-    const previous = target[key];
-    restores.push(() => { target[key] = previous; });
-    target[key] = value;
-    return previous;
-  };
+  const { replace, restore_all } = patches();
   const finish = () => end_shipment({ _id: 'parent' }, 0,
     { shipment_id: 'source' });
   const fail_parent = () => {
@@ -56,9 +51,7 @@ describe('Shipment lifecycle', () => {
       manifest: { shipment_id: 'source' },
     });
   });
-  afterEach(() => {
-    while (restores.length) restores.pop()();
-  });
+  afterEach(restore_all);
 
   const values = [undefined, null, false, 0, '', 'result',
     { successful_result: true }, ['result'], new Date(100000)];
@@ -76,16 +69,28 @@ describe('Shipment lifecycle', () => {
             if (lane._id == 'salvage') return expected;
             if (mode == 'error') return { ...manifest, error: 'failed' };
             if (mode == 'followup') return end_shipment(lane, 0, manifest);
-            if (mode == 'synchronous') await end_shipment(lane, 0, manifest);
+            if (mode == 'synchronous') {
+              await H.call('Lanes#end_shipment', lane, 0, manifest);
+            }
             return expected;
           };
           const restore = fail_parent();
           await interrupt();
+          let child;
+          if (expected === undefined) {
+            child = await Shipments.findOneAsync({ lane: 'child' });
+            expect(child.dispatch).to.deep.eq({ has_result: false });
+            expect(child.manifest.shipment_id).to.eq(child._id);
+          }
           const completed_effects = effects;
           restore();
           const result = await finish();
-          expect(effects).to.eq(completed_effects);
           expect(result).to.deep.eq(expected);
+          if (child) {
+            expect(await start_shipment('child', {}, 'later', child._id))
+              .to.eq(undefined);
+          }
+          expect(effects).to.eq(completed_effects);
         });
     });
   });

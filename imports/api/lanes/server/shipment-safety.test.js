@@ -1,6 +1,9 @@
 import { expect } from 'chai';
 import H from '../../../startup/config/namespace';
 import { resetDatabase } from '../../../test-helpers/reset-database';
+import {
+  patches, rejects as fails, gate, deferred,
+} from '../../../test-helpers/async';
 import { Lanes } from '..';
 import { Shipments, LatestShipment } from '../../shipments';
 import { Harbors } from '../../harbors';
@@ -11,20 +14,8 @@ import {
 } from './methods';
 
 describe('Shipment safety', () => {
-  const restores = [];
-  const replace = (target, key, value) => {
-    const previous = target[key];
-    restores.push(() => { target[key] = previous; });
-    target[key] = value;
-    return previous;
-  };
+  const { replace, restore_all } = patches();
   const recover = async () => Promise.all(await recover_shipments());
-  const fails = async (work, text) => {
-    let error;
-    try { await work(); }
-    catch (caught) { error = caught; }
-    expect(error && error.message).to.include(text);
-  };
   let effects;
 
   beforeEach(async () => {
@@ -46,9 +37,7 @@ describe('Shipment safety', () => {
       manifest: { shipment_id: 'parent-work' },
     });
   });
-  afterEach(() => {
-    while (restores.length) restores.pop()();
-  });
+  afterEach(restore_all);
 
   it('holds uncertain work instead of replaying an external effect',
     async () => {
@@ -203,19 +192,15 @@ describe('Shipment safety', () => {
 
   it('keeps independent recovery moving while another work promise waits',
     async () => {
-      let release;
-      let started;
-      let independent;
       let timeout;
-      const slow = new Promise(resolve => { started = resolve; });
-      const fast = new Promise(resolve => { independent = resolve; });
+      const slow = gate();
+      const fast = deferred();
       H.harbors.test.work = async (lane, manifest) => {
         effects++;
         if (manifest.shipment_id == 'slow') {
-          started();
-          await new Promise(resolve => { release = resolve; });
+          await slow.wait();
         }
-        else independent();
+        else fast.resolve();
         return manifest;
       };
       for (const _id of ['slow', 'independent']) {
@@ -225,9 +210,9 @@ describe('Shipment safety', () => {
         });
       }
       const scanning = recover_shipments();
-      await slow;
+      await slow.reached;
       try {
-        await Promise.race([fast, new Promise((resolve, reject) => {
+        await Promise.race([fast.promise, new Promise((resolve, reject) => {
           timeout = setTimeout(() => reject(new Error('recovery blocked')),
             1000);
         })]);
@@ -241,7 +226,7 @@ describe('Shipment safety', () => {
       }
       finally {
         clearTimeout(timeout);
-        release();
+        slow.resume();
         await Promise.all(await scanning);
       }
     });

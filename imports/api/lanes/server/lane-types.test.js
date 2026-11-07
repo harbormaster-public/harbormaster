@@ -1,6 +1,9 @@
 import { expect } from 'chai';
 import H from '../../../startup/config/namespace';
 import { resetDatabase } from '../../../test-helpers/reset-database';
+import {
+  patches, rejects as fails, deferred,
+} from '../../../test-helpers/async';
 import { Lanes } from '..';
 import { Shipments } from '../../shipments';
 import { Harbors } from '../../harbors';
@@ -8,32 +11,20 @@ import { upsert, delete_lane } from './methods';
 import { update_harbor } from '../../harbors/server/methods';
 
 describe('Lane harbor types', () => {
-  let harbors;
-  let call;
+  const { replace, restore_all } = patches();
   let effects;
-  const fails = async (work, message) => {
-    let error;
-    try { await work(); }
-    catch (caught) { error = caught; }
-    expect(error?.message).to.include(message);
-  };
 
   beforeEach(async () => {
     await resetDatabase();
-    harbors = H.harbors;
-    call = H.call;
     effects = 0;
-    H.harbors = Object.fromEntries(['one', 'two'].map(type => [type, {
+    replace(H, 'harbors', Object.fromEntries(['one', 'two'].map(type => [type, {
       update: () => { effects++; return true; },
-    }]));
-    H.call = async (method, lane) => lane;
+    }])));
+    replace(H, 'call', async (method, lane) => lane);
     for (const _id of ['one', 'two']) await Harbors.insertAsync({ _id });
   });
 
-  afterEach(() => {
-    H.harbors = harbors;
-    H.call = call;
-  });
+  afterEach(restore_all);
 
   const saves = {
     lane: lane => upsert(lane),
@@ -65,14 +56,13 @@ describe('Lane harbor types', () => {
       async () => {
         await Lanes.insertAsync({ _id: 'lane' });
         const find = Lanes.findOneAsync;
-        let release;
         let reads = 0;
-        const ready = new Promise(resolve => { release = resolve; });
+        const ready = deferred();
         Lanes.findOneAsync = async (...args) => {
           const current = await find.apply(Lanes, args);
           if (current?._id == 'lane' && current.type === undefined) {
-            if (++reads == 2) release();
-            await ready;
+            if (++reads == 2) ready.resolve();
+            await ready.promise;
           }
           return current;
         };

@@ -2,6 +2,7 @@ import { expect } from 'chai';
 import { Mongo } from 'meteor/mongo';
 import H from '../../../startup/config/namespace';
 import { resetDatabase } from '../../../test-helpers/reset-database';
+import { patches, rejects as fails, gate } from '../../../test-helpers/async';
 import { Lanes } from '..';
 import { Shipments } from '../../shipments';
 import { Harbors } from '../../harbors';
@@ -9,21 +10,9 @@ import { ShipmentReturns } from '../../shipments/server/returns';
 import { start_shipment, end_shipment, recover_shipments } from './methods';
 
 describe('Shipment return publication', () => {
-  const restores = [];
-  const replace = (target, key, value) => {
-    const previous = target[key];
-    restores.push(() => { target[key] = previous; });
-    target[key] = value;
-    return previous;
-  };
+  const { replace, restore_all } = patches();
   const recover = async () => Promise.all(await recover_shipments());
   const start = () => start_shipment('lane', {}, 'planned', 'source');
-  const fails = async (work, message) => {
-    let error;
-    try { await work(); }
-    catch (caught) { error = caught; }
-    expect(error?.message).to.include(message);
-  };
   let effects;
   let result;
 
@@ -38,9 +27,7 @@ describe('Shipment return publication', () => {
     } } });
     await Lanes.insertAsync({ _id: 'lane', type: 'test' });
   });
-  afterEach(() => {
-    while (restores.length) restores.pop()();
-  });
+  afterEach(restore_all);
 
   it('preserves a typed return after the completed manifest changes',
     async () => {
@@ -206,34 +193,31 @@ describe('Shipment return publication', () => {
 
   it('does not publish a return from a superseded safe-replay attempt',
     async () => {
-      let began;
-      let release;
-      const started = new Promise(resolve => { began = resolve; });
+      const work = gate();
       H.harbors.test.replay_safe = true;
       H.harbors.test.work = async () => {
         const attempt = ++effects;
         if (attempt == 1) {
-          began();
-          await new Promise(resolve => { release = resolve; });
+          await work.wait();
         }
         return { attempt };
       };
       const first = start();
-      await started;
+      await work.reached;
       try {
         const old = await Shipments.findOneAsync('source');
         await Shipments.updateAsync('source', { $set: {
           'dispatch.token': 'expired', 'dispatch.until': new Date(0),
         } });
         expect(await start()).to.deep.eq({ attempt: 2 });
-        release();
+        work.resume();
         await first;
         expect(await start()).to.deep.eq({ attempt: 2 });
         expect((await Shipments.findOneAsync('source')).dispatch.return_id)
           .not.to.eq(old.dispatch.return_id);
         expect(await ShipmentReturns.find().countAsync()).to.eq(1);
       }
-      finally { release(); await first; }
+      finally { work.resume(); await first; }
     });
 
   it('reports a missing published return instead of substituting a manifest',
@@ -333,17 +317,14 @@ describe('Shipment return publication', () => {
 
   it('keeps a parent pending while another worker captures its child return',
     async () => {
-      let began;
-      let release;
-      const started = new Promise(resolve => { began = resolve; });
+      const work = gate();
       H.harbors.test.work = async () => {
         effects++;
-        began();
-        await new Promise(resolve => { release = resolve; });
+        await work.wait();
         return result;
       };
       const child = start();
-      await started;
+      await work.reached;
       try {
         await Lanes.insertAsync({ _id: 'parent', type: 'test' });
         await Shipments.insertAsync({ _id: 'parent-source', lane: 'parent',
@@ -359,12 +340,12 @@ describe('Shipment return publication', () => {
         const parent = await Shipments.findOneAsync('parent-source');
         expect(parent.completion.pending).to.eq(true);
         expect(parent.completion.has_result).to.eq(undefined);
-        release();
+        work.resume();
         await child;
         expect(await finish()).to.deep.eq(result);
         expect(effects).to.eq(1);
       }
-      finally { release(); await child; }
+      finally { work.resume(); await child; }
     });
 
   ['checkpoint', 'receipt'].forEach(stage => {

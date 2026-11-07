@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import H from '../../../startup/config/namespace';
 import { resetDatabase } from '../../../test-helpers/reset-database';
+import { patches, rejects as reject } from '../../../test-helpers/async';
 import { Lanes } from '..';
 import { Shipments, LatestShipment } from '../../shipments';
 import {
@@ -13,13 +14,7 @@ import {
 import { Harbors } from '../../harbors';
 
 describe('Shipment recovery', () => {
-  const restores = [];
-  const replace = (target, key, value) => {
-    const previous = target[key];
-    restores.push(() => { target[key] = previous; });
-    target[key] = value;
-    return previous;
-  };
+  const { replace, restore_all } = patches();
   const retry_timers = () => {
     const pending = [];
     const timeout = globalThis.setTimeout;
@@ -37,12 +32,6 @@ describe('Shipment recovery', () => {
       return undefined;
     });
     return pending;
-  };
-  const reject = async (work, message) => {
-    let error;
-    try { await work(); }
-    catch (caught) { error = caught; }
-    expect(error && error.message).to.include(message);
   };
   const finish = (exit_code = 0, result = 'original') => end_shipment(
     { _id: 'parent' }, exit_code, { shipment_id: 'source', result },
@@ -69,9 +58,7 @@ describe('Shipment recovery', () => {
       manifest: { shipment_id: 'source' },
     });
   });
-  afterEach(() => {
-    while (restores.length) restores.pop()();
-  });
+  afterEach(restore_all);
 
   it('retries finalization after the result has become inactive', async () => {
     const update = Lanes.updateAsync;

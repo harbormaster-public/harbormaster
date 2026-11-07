@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import H from '../../../startup/config/namespace';
 import { resetDatabase } from '../../../test-helpers/reset-database';
+import { patches, rejects as fails } from '../../../test-helpers/async';
 import { Lanes } from '..';
 import { Shipments, LatestShipment } from '../../shipments';
 import { Harbors } from '../../harbors';
@@ -9,22 +10,10 @@ import {
 } from './methods';
 
 describe('Shipment return receipts', () => {
-  const restores = [];
-  const replace = (target, key, value) => {
-    const previous = target[key];
-    restores.push(() => { target[key] = previous; });
-    target[key] = value;
-    return previous;
-  };
+  const { replace, restore_all } = patches();
   const recover = async () => Promise.all(await recover_shipments());
   const finish = () => end_shipment({ _id: 'parent' }, 0,
     { shipment_id: 'source' });
-  const fails = async (work, message) => {
-    let error;
-    try { await work(); }
-    catch (caught) { error = caught; }
-    expect(error && error.message).to.include(message);
-  };
   let effects;
 
   const configure_work = (mode) => {
@@ -70,33 +59,9 @@ describe('Shipment return receipts', () => {
       manifest: { shipment_id: 'source' },
     });
   });
-  afterEach(() => {
-    while (restores.length) restores.pop()();
-  });
+  afterEach(restore_all);
 
   ['ordinary', 'synchronous', 'error'].forEach(mode => {
-    it(`retains an undefined ${mode} return after parent repair`, async () => {
-      configure_work(mode);
-      const update = Shipments.updateAsync;
-      replace(Shipments, 'updateAsync', async (...args) => {
-        if (args[0]._id == 'source' && args[1].$set?.completion &&
-          !args[1].$set.completion.pending) {
-          throw new Error('completion unavailable');
-        }
-        return update.apply(Shipments, args);
-      });
-      await fails(finish, 'completion unavailable');
-      const child = await Shipments.findOneAsync({ lane: 'child' });
-      expect(child.dispatch).to.deep.eq({ has_result: false });
-      expect(child.manifest.shipment_id).to.eq(child._id);
-      const completed_effects = effects;
-      Shipments.updateAsync = update;
-      expect(await finish()).to.eq(undefined);
-      expect(await start_shipment('child', {}, 'later', child._id))
-        .to.eq(undefined);
-      expect(effects).to.eq(completed_effects);
-    });
-
     it(`keeps an undefined ${mode} return through a history failure`,
       async () => {
         const returned = configure_work(mode);

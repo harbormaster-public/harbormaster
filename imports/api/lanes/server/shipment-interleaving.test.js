@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import H from '../../../startup/config/namespace';
 import { resetDatabase } from '../../../test-helpers/reset-database';
+import { patches, rejects as fails, gate } from '../../../test-helpers/async';
 import { Lanes } from '..';
 import { Shipments } from '../../shipments';
 import { ShipmentReturns } from '../../shipments/server/returns';
@@ -9,22 +10,9 @@ import {
 } from './methods';
 
 describe('Shipment return interleavings', () => {
-  const restores = [];
-  const replace = (target, key, value) => {
-    const previous = target[key];
-    restores.push(() => { target[key] = previous; });
-    target[key] = value;
-    return previous;
-  };
+  const { replace, restore_all } = patches();
   const start = () => start_shipment('lane', {}, 'planned', 'source');
   const recover = async () => Promise.all(await recover_shipments());
-  const fails = async (work, message) => {
-    let error;
-    try { await work(); }
-    catch (caught) { error = caught; }
-    expect(error?.message).to.include(message);
-    return error;
-  };
   let effects;
 
   beforeEach(async () => {
@@ -38,9 +26,7 @@ describe('Shipment return interleavings', () => {
     await Lanes.insertAsync({ _id: 'lane', type: 'test' });
   });
 
-  afterEach(() => {
-    while (restores.length) restores.pop()();
-  });
+  afterEach(restore_all);
 
   [false, true].forEach(defined => {
     ['keep', 'delete-lane', 'remove-harbor'].forEach(change => {
@@ -135,15 +121,12 @@ describe('Shipment return interleavings', () => {
 
   it('propagates completion contention without saving a business failure',
     async () => {
-      let release;
-      let entered;
+      const repair = gate();
       let recovering;
-      const began = new Promise(resolve => { entered = resolve; });
       const update = replace(Lanes, 'updateAsync', async (...args) => {
         if (args[0] == 'lane' && args[1].$max &&
           (await Shipments.findOneAsync('source'))?.active === false) {
-          entered();
-          await new Promise(resolve => { release = resolve; });
+          await repair.wait();
         }
         return update.apply(Lanes, args);
       });
@@ -152,7 +135,7 @@ describe('Shipment return interleavings', () => {
         if (args[1].$set?.completion?.pending &&
           args[1].$set.active === false) {
           recovering = recover();
-          await began;
+          await repair.reached;
         }
         return result;
       });
@@ -166,7 +149,7 @@ describe('Shipment return interleavings', () => {
       }
       finally {
         Lanes.updateAsync = update;
-        release?.();
+        repair.resume();
         await recovering;
       }
       const saved = await Shipments.findOneAsync('source');

@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+import { gate, deferred } from '../../test-helpers/async';
 import H from '../config/namespace';
 import {
   resume_harbors, start_shipment_recovery, start_recovery,
@@ -17,11 +18,9 @@ describe('Startup recovery', () => {
       const harbors = H.harbors;
       const timeout = H.setTimeout;
       let on_listening;
-      let release;
-      let finish_work;
-      let began_work;
+      const resuming = deferred();
+      const work = gate();
       let tasks = [];
-      const work_started = new Promise(resolve => { began_work = resolve; });
       let resumed = false;
       let independent = false;
       const pending = [];
@@ -39,11 +38,10 @@ describe('Startup recovery', () => {
           slow: {
             resume: () => {
               resumed = true;
-              return new Promise(resolve => { release = resolve; });
+              return resuming.promise;
             },
             work: async (lane, manifest) => {
-              began_work();
-              await new Promise(resolve => { finish_work = resolve; });
+              await work.wait();
               return manifest;
             },
           },
@@ -54,14 +52,14 @@ describe('Startup recovery', () => {
         expect(on_listening()).to.eq(undefined);
         expect(resumed).to.eq(true);
         expect(independent).to.eq(true);
-        await work_started;
+        await work.reached;
         tasks = await recover_shipments();
         await new Promise(resolve => setImmediate(resolve));
         expect(pending).to.have.length(0);
       }
       finally {
-        release?.();
-        finish_work?.();
+        resuming.resolve();
+        work.resume();
         await Promise.all(tasks);
         WebApp.onListening = listening;
         H.harbors = harbors;

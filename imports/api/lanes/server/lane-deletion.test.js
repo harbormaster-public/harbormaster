@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import H from '../../../startup/config/namespace';
 import { resetDatabase } from '../../../test-helpers/reset-database';
+import { patches, gate } from '../../../test-helpers/async';
 import { Lanes } from '..';
 import { Shipments } from '../../shipments';
 import { Harbors } from '../../harbors';
@@ -18,13 +19,7 @@ const fails = async (work, code) => {
 };
 
 describe('Idle lane deletion', () => {
-  const restores = [];
-  const replace = (target, key, value) => {
-    const previous = target[key];
-    restores.push(() => { target[key] = previous; });
-    target[key] = value;
-    return previous;
-  };
+  const { replace, restore_all } = patches();
   const start = () => start_shipment('lane', {}, 'planned', 'source');
   const remove = () => delete_lane({ _id: 'lane', type: 'wrong' });
   let effects;
@@ -42,22 +37,14 @@ describe('Idle lane deletion', () => {
       lane: { manifest: {} }, other: { manifest: {} },
     } });
   });
-  afterEach(() => { while (restores.length) restores.pop()(); });
+  afterEach(restore_all);
 
   ['start', 'completion'].forEach(caller => {
     it(`rejects an overlapping ${caller} when deletion cancels its dispatch`,
       async () => {
-        const pause = () => {
-          let entered;
-          let resume;
-          const reached = new Promise(resolve => { entered = resolve; });
-          const waiting = new Promise(resolve => { resume = resolve; });
-          const wait = () => { entered(); return waiting; };
-          return { reached, resume, wait };
-        };
-        const deletion = pause();
-        const admission = pause();
-        const claim = pause();
+        const deletion = gate();
+        const admission = gate();
+        const claim = gate();
         const remove_lane = replace(Lanes, 'removeAsync', async (...args) => {
           await deletion.wait();
           return remove_lane.apply(Lanes, args);

@@ -2,6 +2,7 @@ import { expect } from 'chai';
 import { Lanes } from '..';
 import { Shipments, LatestShipment } from '../../shipments';
 import { resetDatabase } from '../../../test-helpers/reset-database';
+import { gate } from '../../../test-helpers/async';
 import { update_shipment_history } from './shipment-state';
 
 describe('Shipment history scheduling', () => {
@@ -17,37 +18,34 @@ describe('Shipment history scheduling', () => {
 
   it('refreshes queued history while other lanes proceed', async () => {
     const find = Shipments.findOneAsync;
-    let began;
-    let release;
+    const reading = gate();
     let reads = 0;
     let first;
     let second;
-    const started = new Promise(resolve => { began = resolve; });
     try {
       Shipments.findOneAsync = async (...args) => {
         const saved = await find.apply(Shipments, args);
         if (args[0].lane == 'lane' && ++reads == 1) {
-          began();
-          await new Promise(resolve => { release = resolve; });
+          await reading.wait();
         }
         return saved;
       };
       first = update_shipment_history('lane');
-      await started;
+      await reading.reached;
       second = update_shipment_history('lane');
       await update_shipment_history('other');
       expect(reads).to.eq(1);
       await Shipments.insertAsync({ _id: 'new', lane: 'lane', active: false,
         actual: new Date(),
       });
-      release();
+      reading.resume();
       await Promise.all([first, second]);
       expect((await Lanes.findOneAsync('lane')).last_shipment._id).to.eq('new');
       expect((await LatestShipment.findOneAsync('lane')).shipment._id)
         .to.eq('new');
     }
     finally {
-      release?.();
+      reading.resume();
       await Promise.allSettled([first, second]);
       Shipments.findOneAsync = find;
     }

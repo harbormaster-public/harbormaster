@@ -4,6 +4,7 @@ import vm from 'vm';
 import path from 'path';
 import H from '../../../startup/config/namespace';
 import { resetDatabase } from '../../../test-helpers/reset-database';
+import { patches, gate, deferred } from '../../../test-helpers/async';
 import { Lanes } from '..';
 import { Shipments } from '../../shipments';
 import { Harbors } from '../../harbors';
@@ -20,13 +21,7 @@ const integration = fs.existsSync(sleep_path) ? describe : describe.skip;
 integration('Sleep and core recovery integration', () => {
   const source = fs.existsSync(sleep_path) ?
     fs.readFileSync(sleep_path, 'utf8') : '';
-  const restores = [];
-  const replace = (target, key, value) => {
-    const previous = target[key];
-    restores.push(() => { target[key] = previous; });
-    target[key] = value;
-    return previous;
-  };
+  const { replace, restore_all } = patches();
   const recover = async () => Promise.all(await recover_shipments());
   const start = () => start_shipment('sleeper',
     { seconds: 0, exit_code: 0, request: true }, 'planned', 'source');
@@ -85,9 +80,7 @@ integration('Sleep and core recovery integration', () => {
     } });
     load_sleep();
   });
-  afterEach(() => {
-    while (restores.length) restores.pop()();
-  });
+  afterEach(restore_all);
 
   it('completes a normal timer through real core RPCs', async () => {
     const value = await start();
@@ -125,24 +118,20 @@ integration('Sleep and core recovery integration', () => {
     });
 
   it('arms a new timer only after the dispatch return is durable', async () => {
-    let entered;
-    let release;
-    const saving = new Promise(resolve => { entered = resolve; });
-    const ready = new Promise(resolve => { release = resolve; });
+    const saving = gate();
     const upsert = replace(ShipmentReturns, 'upsertAsync', async (...args) => {
-      entered();
-      await ready;
+      await saving.wait();
       return upsert.apply(ShipmentReturns, args);
     });
     const starting = start();
     try {
-      await saving;
+      await saving.reached;
       expect(queued).to.have.length(0);
       expect(followups).to.eq(0);
       expect((await Shipments.findOneAsync('source')).active).to.eq(true);
     }
     finally {
-      release();
+      saving.resume();
       await starting;
     }
     await tick();
@@ -241,14 +230,13 @@ integration('Sleep and core recovery integration', () => {
           const interrupted = await Shipments.findOneAsync('source');
           const value = interrupted.manifest;
           const sleep = load_sleep();
-          let release;
+          const ready = deferred();
           if (order == 'timer-first') {
-            const ready = new Promise(resolve => { release = resolve; });
             const find = replace(Shipments, 'find', (...args) => {
               const cursor = find.apply(Shipments, args);
               if (args[0]['dispatch.pending'] === true) {
                 return { fetchAsync: async () => {
-                  await ready;
+                  await ready.promise;
                   return await cursor.fetchAsync();
                 } };
               }
@@ -262,7 +250,7 @@ integration('Sleep and core recovery integration', () => {
             if (order == 'timer-first') expect(queued).to.have.length(0);
           }
           finally {
-            release?.();
+            ready.resolve();
             await repairing;
           }
           await tick();

@@ -1,31 +1,20 @@
 import { expect } from 'chai';
 import H from '../../../startup/config/namespace';
 import { resetDatabase } from '../../../test-helpers/reset-database';
+import { patches, rejects as fails } from '../../../test-helpers/async';
 import { Lanes } from '..';
 import { Shipments } from '../../shipments';
 import { Harbors } from '../../harbors';
 import { end_shipment, recover_shipments } from './methods';
 
 describe('Shipment preparation', () => {
-  const restores = [];
-  const replace = (target, key, value) => {
-    const previous = target[key];
-    restores.push(() => { target[key] = previous; });
-    target[key] = value;
-    return previous;
-  };
+  const { replace, restore_all } = patches();
   const recover = async () => Promise.all(await recover_shipments());
   const finish = () => end_shipment({ _id: 'parent' }, 0,
     { shipment_id: 'source', result: 'parent result' });
   const continue_with = (next) => Shipments.updateAsync('source', { $set: {
     active: false, completion: { pending: true, failed: false, next },
   } });
-  const fails = async (work, text) => {
-    let error;
-    try { await work(); }
-    catch (caught) { error = caught; }
-    expect(error && error.message).to.include(text);
-  };
   let effects;
 
   beforeEach(async () => {
@@ -47,9 +36,7 @@ describe('Shipment preparation', () => {
       manifest: { shipment_id: 'source' },
     });
   });
-  afterEach(() => {
-    while (restores.length) restores.pop()();
-  });
+  afterEach(restore_all);
 
   it('completes large parent and child inputs without combining them',
     async () => {
