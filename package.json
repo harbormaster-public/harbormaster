@@ -10,9 +10,10 @@
     "test:watch": "MOCHA_TIMEOUT=30000 WHEN_USING_OLD_API=1 BROWSERSLIST_IGNORE_OLD_DATA=1 NODE_OPTIONS='--trace-warnings --no-warnings=DeprecationWarning --no-warnings=ExperimentalWarning' ROOT_URL='' MONGO_URL='' NO_HMR=1 meteor test --port=${TEST_PORT:-4040} --driver-package meteortesting:mocha",
     "start": "NODE_OPTIONS='--no-warnings=ExperimentalWarning' NO_HMR=1 meteor run",
     "e2e:server": "E2E=1 NODE_OPTIONS='--no-warnings=ExperimentalWarning' ROOT_URL=http://localhost:4042 NO_HMR=1 meteor run --port 4042 --settings private/e2e-settings.json",
+    "e2e:server:once": "E2E=1 NODE_OPTIONS='--no-warnings=ExperimentalWarning' ROOT_URL=http://localhost:4042 NO_HMR=1 meteor run --once --port 4042 --settings private/e2e-settings.json",
     "cypress:run": "CYPRESS_BASE_URL=http://localhost:4042 cypress run",
     "cypress:open": "CYPRESS_BASE_URL=http://localhost:4042 cypress open",
-    "test:e2e": "start-server-and-test e2e:server http://localhost:4042 cypress:run",
+    "test:e2e": "start-server-and-test e2e:server:once http://localhost:4042 cypress:run",
     "test:e2e:watch": "start-server-and-test e2e:server http://localhost:4042 cypress:open",
     "reset": "bash scripts/reset.sh",
     "postinstall": "node scripts/postinstall.js"

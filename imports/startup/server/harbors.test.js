@@ -24,6 +24,7 @@ import path from "path";
 import Module from "module";
 import { resetDatabase } from "../../test-helpers/reset-database";
 import { Harbors } from "../../api/harbors";
+import { resume_harbors } from './recovery';
 import {
   setupInMemoryCollection,
 } from "../../test-helpers/setup-collection-stubs";
@@ -650,6 +651,34 @@ describe("Harbors startup", () => {
         fs.unlinkSync(harbors_upstream_packages);
       }
       if (harborsStub) harborsStub.restore();
+    });
+
+    it("resumes only after every harbor is initialized", async () => {
+      fs.readdir = (dir, cb) => cb(null, ['first.js', 'second.js']);
+      fs.readFile = (filename, encoding, cb) => {
+        const name = path.basename(filename, '.js');
+        cb(null, `module.exports = {
+          register: () => ({ name: '${name}' }),
+          resume: async () => {
+            if (!H.harbors.second) throw new Error('registration incomplete');
+            const harbor = await H.recovery_test_harbors.findOneAsync('second');
+            if (!harbor.registered) throw new Error('initialization pending');
+            H.recovery_test_resumed.push('${name}');
+          },
+        };`);
+      };
+      H.recovery_test_harbors = Harbors;
+      H.recovery_test_resumed = [];
+      try {
+        await register_harbors();
+        expect(H.recovery_test_resumed).to.deep.eq([]);
+        await resume_harbors();
+        expect(H.recovery_test_resumed).to.deep.eq(['first', 'second']);
+      }
+      finally {
+        delete H.recovery_test_harbors;
+        delete H.recovery_test_resumed;
+      }
     });
 
     it("returns undefined for a non-match", async () => {

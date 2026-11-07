@@ -73,6 +73,14 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Checkout companion Sleep harbor
+        if: matrix.suite == 'unit'
+        uses: actions/checkout@v4
+        with:
+          repository: strictlyskyler/sleep
+          ref: bad6a5a84e948d9393388ce68e1dc730b5404164
+          path: .integration/sleep
+
       - name: Install Meteor
         run: |
           curl https://install.meteor.com/ | sh
@@ -101,6 +109,8 @@ jobs:
 
       - name: Run unit/integration tests
         if: matrix.suite == 'unit'
+        env:
+          SLEEP_HARBOR_PATH: ${{ github.workspace }}/.integration/sleep/sleep.js
         run: |
           meteor npm run test
 

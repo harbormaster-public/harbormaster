@@ -30,6 +30,9 @@ describe('Harbors', () => {
   });
 
   describe('#update_harbor', () => {
+    beforeEach(async () => {
+      await Lanes.insertAsync({ _id: 'test', type: 'test' });
+    });
     it("calls a registered Harbor's update() method", async () => {
       H.call = async () => ({});
       let called = false;
@@ -66,12 +69,35 @@ describe('Harbors', () => {
     });
     it("records if a Lane has no LatestShipment", async () => {
       expect(await LatestShipment.find().countAsync()).to.eq(0);
-      H.call = async () => ({ rendered_work_preview: true });
+      H.call = async () => ({ _id: 'test', rendered_work_preview: true });
+      await Lanes.updateAsync('test', { $unset: { type: '' } });
       H.harbors.test = { update: () => true };
       await Harbors.insertAsync({ _id: 'test' });
       await update_harbor({ _id: 'test', type: 'test' }, { test: true });
       expect(await LatestShipment.find({}).countAsync()).to.eq(1);
     });
+    it('preserves shipment state when editing a stale lane snapshot',
+      async () => {
+        await Harbors.insertAsync({ _id: 'test' });
+        const saved = {
+          _id: 'test', type: 'test', shipment_count: 100, salvage_runs: 7,
+          shipment_history: 5, shipment_totals: { shipments: 100, salvage: 7 },
+          last_shipment: { _id: 'latest', active: true },
+        };
+        await Lanes.updateAsync('test', { $set: saved });
+        H.harbors.test = { update: () => true };
+        H.call = async () => ({ ...saved, rendered_work_preview: true,
+          shipment_count: 0, salvage_runs: 0, shipment_history: 0,
+          shipment_totals: {}, last_shipment: { _id: 'stale' },
+        });
+        await update_harbor(saved, {});
+        const updated = await Lanes.findOneAsync('test');
+        expect(updated.shipment_count).to.eq(100);
+        expect(updated.salvage_runs).to.eq(7);
+        expect(updated.shipment_history).to.eq(5);
+        expect(updated.shipment_totals).to.deep.eq(saved.shipment_totals);
+        expect(updated.last_shipment).to.deep.eq(saved.last_shipment);
+      });
     it("returns the Lane which failed to update on failure", async () => {
       H.call = async () => ({});
       H.harbors.test = { update: () => false };

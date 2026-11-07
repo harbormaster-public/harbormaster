@@ -75,9 +75,10 @@ describe('Lanes', function () {
         type: 't1',
       });
 
-      const updated = await upsert({ _id: 'lane-id', type: 't2' });
+      const updated = await upsert({ _id: 'lane-id', name: 'Renamed' });
       expect(updated._id).to.eq('lane-id');
-      expect(updated.type).to.eq('t2');
+      expect(updated.type).to.eq('t1');
+      expect(updated.name).to.eq('Renamed');
     });
 
     it('does not wipe fields when matching by slug', async () => {
@@ -680,7 +681,9 @@ describe('Lanes', function () {
 
       const testLane = await Lanes.findOneAsync({ _id: 'test' });
       await Lanes.updateAsync({ _id: 'test' }, { $set: { ...testLane } });
-      await Shipments.insertAsync({ _id: 'test', lane: 'test' });
+      await Shipments.insertAsync({
+        _id: 'test', lane: 'test', active: true,
+      });
 
       await Harbors.insertAsync(H.harbors.test);
     });
@@ -892,7 +895,8 @@ describe('Lanes', function () {
       }
       catch (err) {
         expect(err instanceof Error).to.eq(true);
-        expect(err.message).to.eq('Harbor or lane manifest not found');
+        expect(err.error).to.eq('shipment-pending');
+        expect(err.reason).to.eq('Harbor or lane manifest not found');
       }
     });
     it('throws a clear error when followup harbor is not found', async () => {
@@ -923,23 +927,121 @@ describe('Lanes', function () {
       }
       catch (err) {
         expect(err instanceof Error).to.eq(true);
-        expect(err.message).to.eq('Harbor or lane manifest not found');
+        expect(err.error).to.eq('shipment-pending');
+        expect(err.reason).to.eq('Harbor or lane manifest not found');
       }
     });
-    it('increments salvage runs for a non-zero exit code', async () => {
-      await end_shipment(await Lanes.findOneAsync({ _id: 'test' }), 1, {
-        shipment_id: 'test', salvage_runs: undefined,
-      });
+    it('allows only one concurrent completion', async () => {
+      const lanes = await Promise.all([
+        Lanes.findOneAsync({ _id: 'test' }),
+        Lanes.findOneAsync({ _id: 'test' }),
+      ]);
+
+      const results = await Promise.allSettled(lanes.map(lane =>
+        end_shipment(lane, 1, {
+          shipment_id: 'test',
+        })));
+      expect(results.some(result => result.status == 'fulfilled')).to.eq(true);
+      for (const result of results) {
+        if (result.status == 'rejected') {
+          expect(result.reason.message).to.include('pending');
+        }
+      }
+
       expect((await Lanes.findOneAsync({ _id: 'test' })).salvage_runs)
         .to.eq(1);
-      await end_shipment(
-        await Lanes.findOneAsync({ _id: 'test' }),
-        1,
-        { shipment_id: 'test' },
-      );
+      expect(
+        await Shipments.find({ lane: 'test_salvage_plan' }).countAsync(),
+      ).to.eq(1);
+    });
+    it('starts only one followup when successful completions collide',
+      async () => {
+        await Lanes.insertAsync({ _id: 'test_followup', type: 'test' });
+        await Lanes.updateAsync('test', {
+          $set: { followup: { _id: 'test_followup' } },
+        });
+        const lanes = await Promise.all([
+          Lanes.findOneAsync('test'), Lanes.findOneAsync('test'),
+        ]);
+
+        const results = await Promise.allSettled(lanes.map(lane =>
+          end_shipment(lane, 0, {
+            shipment_id: 'test',
+          })));
+        expect(results.some(result => result.status == 'fulfilled'))
+          .to.eq(true);
+        for (const result of results) {
+          if (result.status == 'rejected') {
+            expect(result.reason.message).to.include('pending');
+          }
+        }
+
+        expect(
+          await Shipments.find({ lane: 'test_followup' }).countAsync(),
+        ).to.eq(1);
+        expect((await Lanes.findOneAsync('test_followup')).shipment_count)
+          .to.eq(1);
+      });
+    it('increments salvage runs for distinct failed shipments', async () => {
+      await Shipments.insertAsync({
+        _id: 'next-shipment', lane: 'test', active: true,
+      });
+      for (const shipmentId of ['test', 'next-shipment']) {
+        await end_shipment(
+          await Lanes.findOneAsync({ _id: 'test' }),
+          1,
+          { shipment_id: shipmentId },
+        );
+      }
       expect((await Lanes.findOneAsync({ _id: 'test' })).salvage_runs)
         .to.eq(2);
+      expect(
+        await Shipments.find({ lane: 'test_salvage_plan' }).countAsync(),
+      ).to.eq(2);
     });
+    it('preserves the first completion when called again', async () => {
+      await end_shipment(
+        await Lanes.findOneAsync('test'),
+        0,
+        { shipment_id: 'test', result: 'original' },
+      );
+      const shipment = await Shipments.findOneAsync('test');
+      const lane = await Lanes.findOneAsync('test');
+      const latest = await LatestShipment.findOneAsync('test');
+
+      await end_shipment(
+        await Lanes.findOneAsync('test'),
+        1,
+        { shipment_id: 'test', result: 'duplicate' },
+      );
+
+      expect(await Shipments.findOneAsync('test')).to.deep.eq(shipment);
+      expect(await Lanes.findOneAsync('test')).to.deep.eq(lane);
+      expect(await LatestShipment.findOneAsync('test')).to.deep.eq(latest);
+      expect(
+        await Shipments.find({ lane: 'test_salvage_plan' }).countAsync(),
+      ).to.eq(0);
+    });
+    it('ignores reset and missing shipments without changing the lane',
+      async () => {
+        await Shipments.updateAsync('test', {
+          $set: { active: false, exit_code: 0 },
+        });
+        const shipment = await Shipments.findOneAsync('test');
+        const lane = await Lanes.findOneAsync('test');
+
+        for (const shipmentId of ['test', 'missing']) {
+          const callerLane = await Lanes.findOneAsync('test');
+          const manifest = { shipment_id: shipmentId };
+          expect(await end_shipment(callerLane, 1, manifest)).to.eq(manifest);
+          expect(callerLane).to.deep.eq(lane);
+        }
+
+        expect(await Shipments.findOneAsync('test')).to.deep.eq(shipment);
+        expect(await Lanes.findOneAsync('test')).to.deep.eq(lane);
+        expect(await LatestShipment.find().countAsync()).to.eq(0);
+        expect(await Shipments.find().countAsync()).to.eq(1);
+      });
     it(
       'updates a shipment record with results and sets it inactive',
       async () => {
@@ -969,7 +1071,9 @@ describe('Lanes', function () {
       await Lanes.insertAsync({
         _id: 'lane', type: 'test', salvage_plan: null, followup: null,
       });
-      await Shipments.insertAsync({ _id: 'shipment', lane: 'lane' });
+      await Shipments.insertAsync({
+        _id: 'shipment', lane: 'lane', active: true,
+      });
       expect(await LatestShipment.find().countAsync()).to.eq(0);
       await end_shipment(
         await Lanes.findOneAsync({ _id: 'lane' }),
