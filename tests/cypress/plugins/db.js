@@ -195,8 +195,8 @@ const registerDbTasks = function (on, config) {
       };
       await db.collection('Shipments').insertOne(shipment);
       await db.collection('Lanes').insertOne({
-        _id: 'busy-lane', name: 'Busy Sleep', slug: 'busy-sleep',
-        type: 'sleep', last_shipment: shipment,
+        _id: 'busy-lane', name: 'Busy Lane', slug: 'busy-lane',
+        type: 'test', last_shipment: shipment,
         shipment_count: 1, salvage_runs: 0,
       });
       await db.collection('LatestShipment').insertOne({

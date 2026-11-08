@@ -692,7 +692,7 @@ const end_shipment = async function (
         ...selector, active: true,
       }, { $set: {
         finished: new Date(), exit_code, manifest, active: false, completion,
-      }, $unset: { sleep_resume: '' } });
+      } });
       if (!completed && dispatch_token) return manifest;
       manifest.stdout = shipment.stdout;
       manifest.stderr = shipment.stderr;
