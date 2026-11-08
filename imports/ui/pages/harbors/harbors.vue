@@ -15,7 +15,7 @@
       <h2 class="text-3xl my-2">Add Harbor to Depot:</h2>
       <form class="add-new-harbor-form" v-on:submit.prevent="add_new_harbor">
         <input type="text" required name="harbor_url"
-          placeholder="Git repo url (e.g. git@github.com:StrictlySkyler/timestamp.git)" class="add-new-harbor-input">
+          placeholder="Git repository URL" class="add-new-harbor-input">
         <button class="add-new-harbor-button">✔️</button>
       </form>
       <h3 class="text-3xl my-2">Found in Depot:</h3>

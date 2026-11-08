@@ -27,6 +27,23 @@ describe('Lanes', () => {
     cy.get('#edit-lane-page').should('be.visible');
   });
 
+  it('warns before deleting an active lane and allows deletion after reset',
+    () => {
+      cy.task('db:activeLane');
+      cy.visitAndWaitForSubscriptions('/lanes');
+      const warning = cy.stub().as('deleteWarning');
+      cy.on('window:alert', warning);
+      cy.contains('tr', 'Busy Lane').find('.lane-options').click();
+      cy.contains('tr', 'Busy Lane').find('.delete-lane').click();
+      cy.get('@deleteWarning').should('have.been.calledOnceWithExactly',
+        'This lane has an active shipment. Reset it before deleting the lane.');
+      cy.contains('tr', 'Busy Lane').should('not.have.class', 'deleting');
+      cy.callMethod('Lanes#reset_shipment', 'busy-lane', 'active-test');
+      cy.contains('tr', 'Busy Lane').find('.delete-lane').click();
+      cy.contains('tr', 'Busy Lane').should('not.exist');
+      cy.get('@deleteWarning').should('have.been.calledOnce');
+    });
+
   it('allow users to edit Lanes using \"new\" or a given path', () => {
     const given = faker.lorem.word();
     cy.visit(`/lanes/new/edit`, { failOnStatusCode: false });

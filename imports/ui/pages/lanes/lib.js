@@ -196,9 +196,11 @@ const delete_lane = function (event, lane) {
   /* istanbul ignore else */
   if (H.confirm(confirm_message)) {
     $row.addClass('deleting');
-    /* istanbul ignore next reason: no meaningful logic */
     H.call('Lanes#delete', lane, (err, res) => {
-      if (err) throw err;
+      if (err) {
+        $row.removeClass('deleting');
+        return H.alert(err.reason || err.message);
+      }
       return H.Session.set('total_lanes', res);
     });
   }

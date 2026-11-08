@@ -1,13 +1,23 @@
 import H from '../../../startup/config/namespace';
 import { Lanes } from '..';
-import {
-  Shipments,
-  LatestShipment,
-} from '../../shipments';
+import { Shipments } from '../../shipments';
 import { Harbors } from '../../harbors';
 import { v4 as uuidv4 } from 'uuid';
 import _ from 'lodash';
 import YAML from 'yaml';
+import { retry, cancel_retry } from '../../../startup/server/retry';
+import { editable_lane_fields, save_lane_fields } from './lane-fields';
+import {
+  ShipmentReturns, shipment_result, checkpoint_return,
+} from '../../shipments/server/returns';
+import {
+  lane_revision,
+  claim_shipment,
+  prepare_shipment_totals,
+  update_shipment_totals,
+  update_shipment_history,
+  with_existing_lane,
+} from './shipment-state';
 
 const trim_manifest = (manifest) => {
   if (manifest.prior_manifest) delete manifest.prior_manifest;
@@ -27,19 +37,7 @@ const collect_latest_shipments = async function () {
 
     /* istanbul ignore else */
     if (!lane.last_shipment) {
-      let shipment = await Shipments.findOneAsync(
-        { lane: lane._id },
-        { sort: { actual: -1 } },
-      ) || { actual: 'Never', start: '' };
-      lane.last_shipment = shipment;
-      await Lanes.updateAsync(
-        { _id: lane._id },
-        { $set: { last_shipment: lane.last_shipment } },
-      );
-      await LatestShipment.upsertAsync(
-        { _id: lane._id },
-        { $set: { shipment } },
-      );
+      await update_shipment_history(lane._id);
     }
   }
 
@@ -237,11 +235,221 @@ const update_webhook_token = async function (lane_id, user_id, remove) {
   return await Lanes.updateAsync(lane_id, { $set: { tokens: lane.tokens } });
 };
 
-const start_shipment = async function (id, manifest, shipment_start_date) {
+const recovery_tasks = new Map();
+const recovery_key = (id, stage) => `shipment:${stage}:${id}`;
+const retry_shipment = (id, stage, at) => retry(
+  recovery_key(id, stage), () => recover_one(id, stage), at,
+);
+
+const recover_one = (id, stage) => {
+  const key = recovery_key(id, stage);
+  if (recovery_tasks.has(key)) return recovery_tasks.get(key);
+  const task = (async () => {
+    const shipment = await Shipments.findOneAsync(id, {
+      fields: { [stage]: 1 },
+    });
+    if (!shipment?.[stage]?.pending) return undefined;
+    if (shipment[stage].token && shipment[stage].until > new Date()) {
+      return shipment[stage].until;
+    }
+    const recover = stage == 'completion' ? finish_shipment : run_shipment;
+    const result = await recover(id);
+    if (result) return undefined;
+    const current = await Shipments.findOneAsync(id, {
+      fields: { [stage]: 1 },
+    });
+    if (!current?.[stage]?.pending) return undefined;
+    if (current[stage].token && current[stage].until > new Date()) {
+      return current[stage].until;
+    }
+    throw new H.Error('shipment-pending', 'Shipment recovery is pending');
+  })().finally(() => {
+    if (recovery_tasks.get(key) === task) recovery_tasks.delete(key);
+  });
+  recovery_tasks.set(key, task);
+  return task;
+};
+
+const recoverable_shipment = async (id, stage, work) => {
+  try { return await claim_shipment(id, stage, work); }
+  catch (error) {
+    retry_shipment(id, stage);
+    throw error;
+  }
+};
+
+const resume_dispatch = async (shipment, selector) => {
+  const lane = await Lanes.findOneAsync(shipment.lane);
+  const harbor = lane && H.harbors[lane.type];
+  if (typeof harbor?.resume_shipment != 'function') return;
+  const current = await Shipments.findOneAsync({ ...selector, active: true });
+  if (current) await harbor.resume_shipment(lane, current);
+};
+
+const finish_dispatch = async (shipment, selector, result) => {
+  const checkpoint = await checkpoint_return(shipment, selector, result);
+  if (!checkpoint) return undefined;
+  if (checkpoint.receipt.has_result) {
+    await Shipments.updateAsync({ ...selector, active: true }, {
+      $set: { manifest: checkpoint.result },
+    });
+  }
+  await with_existing_lane(shipment.lane,
+    () => update_shipment_history(shipment.lane));
+  await resume_dispatch(shipment, selector);
+  const saved = await Shipments.updateAsync(selector, {
+    $set: { dispatch: checkpoint.receipt },
+  });
+  if (!saved) return undefined;
+  cancel_retry(recovery_key(shipment._id, 'dispatch'));
+  return { result: checkpoint.result };
+};
+
+const missing_dispatch_lane = async (shipment, selector) => {
+  const error = `Lane not found: ${shipment.lane}`;
+  if (!shipment.dispatch.started) {
+    await Shipments.updateAsync({
+      ...selector, active: true,
+      'dispatch.started': { $exists: false },
+    }, { $set: {
+      active: false, exit_code: 1, finished: new Date(),
+      'dispatch.pending': false, 'dispatch.error': error,
+    } });
+  }
+  throw new H.Error('lane-not-found', error);
+};
+
+const run_shipment = async (shipment_id) => recoverable_shipment(
+  shipment_id, 'dispatch', async (shipment, selector) => {
+    if (shipment.dispatch.return_id) {
+      const saved = await ShipmentReturns.findOneAsync(
+        shipment.dispatch.return_id,
+      );
+      if (saved) {
+        return await finish_dispatch(shipment, selector, saved.value);
+      }
+    }
+    if (!shipment.active) {
+      if (shipment.dispatch.failed) {
+        const result = await H.call('Lanes#end_shipment',
+          { _id: shipment.lane }, shipment.exit_code, shipment.manifest,
+          selector['dispatch.token']);
+        return await finish_dispatch(shipment, selector, result);
+      }
+      if (shipment.dispatch.return_id &&
+        shipment.dispatch.has_result !== false) {
+        const error = 'Shipment return was not saved; ' +
+          'reconcile before retrying.';
+        await Shipments.updateAsync(selector, { $set: {
+          'dispatch.pending': false, 'dispatch.error': error,
+        } });
+        throw new Error(error);
+      }
+      return await finish_dispatch(shipment, selector,
+        await shipment_result(shipment));
+    }
+    if (shipment.dispatch.returned &&
+      shipment.dispatch.has_result === false) {
+      return await finish_dispatch(shipment, selector, undefined);
+    }
+    const lane = await Lanes.findOneAsync(shipment.lane);
+    if (!lane) return missing_dispatch_lane(shipment, selector);
+    const harbor = H.harbors[lane.type];
+    if (!harbor || typeof harbor.work != 'function') {
+      throw new Error(`Harbor is not ready: ${lane.type}`);
+    }
+    const counters = await with_existing_lane(lane._id,
+      () => update_shipment_totals(lane._id));
+    Object.assign(lane, counters);
+    const history = await with_existing_lane(lane._id,
+      () => update_shipment_history(lane._id));
+    // A shipment exists before this revision advances. Deletion checks for
+    // that shipment and removes only the revision it inspected.
+    if (!history) return missing_dispatch_lane(shipment, selector);
+    const manifest = _.cloneDeep(shipment.manifest);
+    let new_manifest = shipment.dispatch.has_result ?
+      _.cloneDeep(shipment.manifest) : undefined;
+    if (!shipment.dispatch.returned) {
+      if (shipment.dispatch.started && harbor.replay_safe !== true) {
+        const error = 'Work outcome is unknown; reconcile before retrying.';
+        const held = await Shipments.updateAsync({
+          ...selector, active: true,
+        }, { $set: {
+          'dispatch.pending': false, 'dispatch.error': error,
+          [`stderr.${new Date()}`]: error,
+        } });
+        if (held) {
+          console.error(`Shipment ${shipment_id}: ${error}`);
+          await update_shipment_history(lane._id);
+        }
+        return undefined;
+      }
+      const return_id = uuidv4();
+      const started = await Shipments.updateAsync({
+        ...selector, active: true,
+      }, { $set: {
+        'dispatch.started': new Date(), 'dispatch.return_id': return_id,
+      } });
+      if (!started) return undefined;
+      shipment.dispatch.return_id = return_id;
+      /* istanbul ignore next */
+      if (!H.isTest) console.log('Starting shipment for lane:', lane.name);
+      try {
+        const work_method = H.bindEnvironment(
+          harbor.work, err => { throw err; },
+        );
+        new_manifest = await work_method(lane, manifest, shipment);
+      }
+      catch (error) {
+        if (error.error == 'shipment-pending') throw error;
+        /* istanbul ignore next */
+        if (!H.isTest) console.error(
+          'Shipment failed with error:\n', error + '\n',
+          'for lane:\n', lane.name,
+        );
+        manifest.error = error.toString();
+        new_manifest = manifest;
+      }
+      if (!new_manifest || !new_manifest.error) {
+        return await finish_dispatch(shipment, selector, new_manifest);
+      }
+      new_manifest.error = new_manifest.error.toString();
+      const checkpoint = {
+        'dispatch.returned': true,
+        'dispatch.has_result': true,
+        'dispatch.failed': true,
+        manifest: new_manifest, exit_code: 1,
+      };
+      const updated = await Shipments.updateAsync({
+        ...selector, active: true,
+      }, { $set: checkpoint });
+      if (!updated) {
+        // A synchronous harbor may already have completed its shipment.
+        const owned = await Shipments.findOneAsync(selector);
+        if (!owned) return undefined;
+        return await finish_dispatch(shipment, selector, new_manifest);
+      }
+    }
+    if (new_manifest && new_manifest.error) {
+      const logged = await Shipments.updateAsync(selector, { $set: {
+        [`stderr.${new Date()}`]: new_manifest.error.toString(),
+      } });
+      if (!logged) return undefined;
+      // Keep the retryable dispatch until completion has been recorded.
+      new_manifest = await H.call('Lanes#end_shipment', lane, 1, new_manifest,
+        selector['dispatch.token']);
+    }
+    return await finish_dispatch(shipment, selector, new_manifest);
+  },
+);
+
+const prepare_shipment = async function (
+  id, manifest, shipment_start_date, shipment_id, pending = true,
+) {
   if (
     typeof id != 'string' ||
-    (manifest && typeof manifest != 'object') ||
-    !shipment_start_date
+    !manifest || typeof manifest != 'object' ||
+    !shipment_start_date || typeof shipment_id != 'string'
   ) {
     throw new TypeError(
       `Improper arguments for "Lanes#start_shipment" method!
@@ -252,98 +460,203 @@ const start_shipment = async function (id, manifest, shipment_start_date) {
       Received: ${id}, ${manifest}, ${shipment_start_date}`,
     );
   }
-
-  let lane = await Lanes.findOneAsync({ _id: id });
-  if (!lane) throw new Error(`Lane not found: ${id}`);
-  let new_manifest;
-  let shipment_id = await Shipments.insertAsync({
-    start: shipment_start_date,
-    actual: new Date(),
-    lane: lane._id,
-    stdin: [],
-    stdout: {},
-    stderr: {},
-    active: true,
-  });
-  await LatestShipment.upsertAsync(
-    { _id: lane._id },
-    { $set: { shipment: await Shipments.findOneAsync(shipment_id) } },
-  );
-  lane.shipment_count = lane.shipment_count >= 0 ? lane.shipment_count + 1 : 1;
   manifest.shipment_start_date = shipment_start_date;
   manifest.shipment_id = shipment_id;
-  await Lanes.updateAsync(
-    { _id: lane._id },
-    { $set: { shipment_count: lane.shipment_count } },
-  );
-
-  /* istanbul ignore next */
-  if (!H.isTest) console.log('Starting shipment for lane:', lane.name);
+  let saved;
   try {
-    const work_method = H.bindEnvironment(
-      H.harbors[lane.type].work,
-      (err) => { throw err; },
-    );
-    new_manifest = await work_method(lane, manifest);
-  }
-  catch (err) {
-    /* istanbul ignore next */
-    if (!H.isTest) console.error(
-      'Shipment failed with error:\n',
-      err + '\n',
-      'for lane:\n',
-      lane.name,
-    );
-    manifest.error = err;
-    new_manifest = manifest;
-  }
-  finally {
-
-    let shipment = await Shipments.findOneAsync(shipment_id);
-    if (new_manifest && new_manifest.error) {
-      let exit_code = 1;
-      let key = new Date();
-      let result = new_manifest.error.toString();
-
-      shipment.stderr[key] = result;
-
-      await Shipments.updateAsync({ _id: shipment_id }, { $set: shipment });
-      lane.last_shipment = shipment;
-      await Lanes.updateAsync(
-        { _id: lane._id },
-        { $set: { last_shipment: lane.last_shipment } },
-      );
-      await LatestShipment.upsertAsync(
-        { _id: shipment.lane },
-        { $set: { shipment } },
-      );
-
-      return await H.call(
-        'Lanes#end_shipment',
-        lane,
-        exit_code,
-        new_manifest,
-      );
+    saved = await Shipments.findOneAsync(shipment_id);
+    if (!saved) {
+      const lane = await Lanes.findOneAsync(id);
+      if (!lane) throw new Error(`Lane not found: ${id}`);
+      await prepare_shipment_totals(id);
+      await Shipments.upsertAsync({ _id: shipment_id }, { $setOnInsert: {
+        start: shipment_start_date,
+        actual: new Date(),
+        lane: id,
+        manifest: _.cloneDeep(manifest),
+        stdin: [], stdout: {}, stderr: {}, active: true,
+        dispatch: { pending },
+      } });
+      saved = await Shipments.findOneAsync(shipment_id);
     }
+  }
+  catch (error) {
+    retry_shipment(shipment_id, 'dispatch');
+    throw error;
+  }
+  if (saved.lane != id) throw new Error('Shipment belongs to another lane');
+  return saved;
+};
 
-    lane.last_shipment = shipment;
-    await Lanes.updateAsync(
-      { _id: lane._id },
-      { $set: { last_shipment: lane.last_shipment } },
-    );
-    await LatestShipment.upsertAsync(
-      { _id: shipment.lane }, { $set: { shipment } },
-    );
+const dispatch_result = (shipment) => {
+  if (shipment.dispatch?.pending === false && !shipment.dispatch.started &&
+    shipment.dispatch.error) {
+    throw new H.Error('lane-not-found', shipment.dispatch.error);
+  }
+  return shipment_result(shipment);
+};
 
-    return new_manifest;
+const start_shipment = async function (
+  id, manifest, shipment_start_date, shipment_id = uuidv4(),
+) {
+  const saved = await prepare_shipment(
+    id, manifest, shipment_start_date, shipment_id,
+  );
+  if (!saved.dispatch || !saved.dispatch.pending) return dispatch_result(saved);
+  const dispatched = await run_shipment(shipment_id);
+  if (dispatched) return dispatched.result;
+  const current = await Shipments.findOneAsync(shipment_id);
+  if (current.dispatch?.pending) {
+    retry_shipment(shipment_id, 'dispatch', current.dispatch.until);
+    throw new H.Error('shipment-pending',
+      'Shipment return is pending; retry after dispatch settles');
+  }
+  return await dispatch_result(current);
+};
+
+const next_shipment = (lane, exit_code) => {
+  const failed = exit_code != 0;
+  const kind = failed ? 'salvage_plan' : 'followup';
+  const reference = lane[kind];
+  if (!reference) return undefined;
+  return {
+    reference: typeof reference == 'object' ?
+      _.pick(reference, ['_id', 'slug']) : reference,
+    shipment_id: uuidv4(), start: H.start_date(),
+  };
+};
+
+const resolve_next_shipment = async (next, failed) => {
+  const reference = next.reference;
+  const kind = failed ? 'salvage_plan' : 'followup';
+  if (typeof reference != 'object' || (!reference._id && !reference.slug)) {
+    throw new Error(`Invalid ${kind} reference: ${JSON.stringify(reference)}`);
+  }
+  const query = reference._id ?
+    { _id: reference._id } : { slug: reference.slug };
+  const target = await Lanes.findOneAsync(query);
+  if (!target) {
+    const label = failed ? 'Salvage plan' : 'Followup';
+    throw new Error(`${label} lane not found: ${JSON.stringify(reference)}`);
+  }
+  const harbor = await Harbors.findOneAsync(target.type);
+  if (!harbor || !harbor.lanes || !harbor.lanes[target._id] ||
+    !harbor.lanes[target._id].manifest) {
+    throw new Error('Harbor or lane manifest not found');
+  }
+  const next_manifest = _.cloneDeep(harbor.lanes[target._id].manifest);
+  trim_manifest(next_manifest);
+  return {
+    lane: target._id,
+    shipment_id: next.shipment_id,
+    start: next.start,
+    manifest: next_manifest,
+  };
+};
+
+const prepare_next_shipment = async (next, parent_manifest, failed) => {
+  if (typeof next.shipment_id != 'string' || !next.shipment_id) {
+    throw new Error('Invalid next shipment id');
+  }
+  const saved = await Shipments.findOneAsync(next.shipment_id);
+  if (saved) {
+    const lane = next.lane || next.reference?._id;
+    if (lane && saved.lane != lane) {
+      throw new Error('Shipment belongs to another lane');
+    }
+    return saved;
+  }
+  const resolved = next.manifest ? next :
+    await resolve_next_shipment(next, failed);
+  const manifest = _.cloneDeep(resolved.manifest);
+  manifest.prior_manifest = trim_manifest(parent_manifest);
+  return await prepare_shipment(
+    resolved.lane, manifest, resolved.start, resolved.shipment_id, false,
+  );
+};
+
+const finish_shipment = async (shipment_id) => recoverable_shipment(
+  shipment_id, 'completion', async (shipment, selector) => {
+    await with_existing_lane(shipment.lane, async () => {
+      await update_shipment_totals(shipment.lane, shipment.completion.failed);
+      await update_shipment_history(shipment.lane);
+    });
+    const next = shipment.completion.next;
+    const parent_manifest = {
+      ..._.cloneDeep(shipment.manifest),
+      stdout: shipment.stdout, stderr: shipment.stderr,
+    };
+    let result = parent_manifest;
+    try {
+      const recorded = shipment.completion.return_id &&
+        await ShipmentReturns.findOneAsync(shipment.completion.return_id);
+      if (recorded) result = recorded.value;
+      else if (shipment.completion.has_result === false) result = undefined;
+      else if (next) {
+        const child = await prepare_next_shipment(
+          next, parent_manifest, shipment.completion.failed,
+        );
+        const saved = await Shipments.updateAsync(selector, { $set: {
+          'completion.next': {
+            lane: child.lane, shipment_id: child._id, start: child.start,
+          },
+        }, $unset: { 'completion.error': '' } });
+        if (!saved) return undefined;
+        await Shipments.updateAsync({
+          _id: child._id, active: true,
+          'dispatch.pending': false,
+          'dispatch.started': { $exists: false },
+        }, { $set: { 'dispatch.pending': true } });
+        /* istanbul ignore next */
+        if (!H.isTest) console.log(
+          'Starting shipment for', child.lane, 'as',
+          shipment.completion.failed ? 'salvage run of' : 'followup of',
+          shipment.manifest.lane_name,
+        );
+        const manifest = child.manifest && typeof child.manifest == 'object' ?
+          child.manifest : {};
+        result = await H.call('Lanes#start_shipment', child.lane,
+          manifest, child.start, child._id);
+      }
+      const checkpoint = await checkpoint_return(
+        shipment, selector, result, 'completion',
+      );
+      if (!checkpoint) return undefined;
+      const completion = {
+        failed: shipment.completion.failed, ...checkpoint.receipt,
+      };
+      const saved = await Shipments.updateAsync(selector, {
+        $set: { completion },
+      });
+      if (!saved) return undefined;
+      cancel_retry(recovery_key(shipment_id, 'completion'));
+      return { result: checkpoint.result };
+    }
+    catch (error) {
+      await Shipments.updateAsync({
+        ...selector, 'completion.pending': true,
+      }, { $set: { 'completion.error': error.toString() } });
+      throw error;
+    }
+  },
+);
+
+const completion_step = async (shipment_id, work) => {
+  try { return await work(); }
+  catch (error) {
+    retry_shipment(shipment_id, 'completion');
+    if (error.error == 'shipment-pending') throw error;
+    throw new H.Error('shipment-pending', error.message);
   }
 };
 
-const end_shipment = async function (lane, exit_code, manifest) {
+const end_shipment = async function (
+  lane, exit_code, manifest, dispatch_token,
+) {
   if (
-    lane && typeof lane._id != 'string' ||
+    !lane || typeof lane._id != 'string' ||
     (typeof exit_code != 'string' && typeof exit_code != 'number') ||
-    (manifest && typeof manifest != 'object')
+    !manifest || typeof manifest != 'object'
   ) {
     throw new TypeError(
       'Invalid arguments for "Lanes#end_shipment" method!\n' +
@@ -354,147 +667,72 @@ const end_shipment = async function (lane, exit_code, manifest) {
       'The (modified) manifest object originally passed to the Harbor.',
     );
   }
-
-  if (exit_code && exit_code != '0') {
-    lane.salvage_runs = lane.salvage_runs >= 0 ? lane.salvage_runs + 1 : 1;
-  }
-
-  let shipment;
-  let shipment_id = manifest.shipment_id;
-  let finished = new Date();
-  let next_shipment_start_date = H.start_date();
-
-  manifest.lane_id = lane._id;
-  manifest.lane_name = lane.name;
-  manifest.lane_slug = lane.slug;
-
-  await Shipments.updateAsync({ _id: shipment_id }, {
-    $set: {
-      finished: finished,
-      exit_code: exit_code,
-      manifest: manifest,
-      active: false,
-    },
-  });
-  shipment = await Shipments.findOneAsync({ _id: shipment_id });
-  lane.last_shipment = shipment;
-  lane.last_shipment.finished = finished;
-  lane.last_shipment.exit_code = exit_code;
-  lane.last_shipment.manifest = manifest;
-  lane.last_shipment.active = false;
-  await Lanes.updateAsync({ _id: lane._id }, {
-    $set: {
-      last_shipment: lane.last_shipment,
-      salvage_runs: lane.salvage_runs,
-    },
-  });
-
-  await LatestShipment.upsertAsync(
-    { _id: shipment.lane }, { $set: { shipment } },
+  const shipment_id = manifest.shipment_id;
+  const selector = { _id: shipment_id };
+  if (dispatch_token) selector['dispatch.token'] = dispatch_token;
+  const shipment = await completion_step(
+    shipment_id, () => Shipments.findOneAsync(selector),
   );
-  manifest.stdout = shipment.stdout;
-  manifest.stderr = shipment.stderr;
-
-  /* istanbul ignore next */
-  if (!H.isTest) console.log(
-    'Shipping completed for lane:',
-    lane.name,
-    'with shipment:',
-    shipment_id,
-    'and exit code:',
-    exit_code,
-  );
-
-  if (exit_code != 0 && lane.salvage_plan) {
-    if (
-      typeof lane.salvage_plan !== 'object' ||
-      (!lane.salvage_plan?._id && !lane.salvage_plan?.slug)
-    ) {
-      throw new Error(
-        `Invalid salvage_plan reference: ${JSON.stringify(lane.salvage_plan)}`,
-      );
-    }
-
-    const salvageQuery = lane.salvage_plan._id ?
-      { _id: lane.salvage_plan._id } :
-      { slug: lane.salvage_plan.slug };
-
-    let salvage_lane = await Lanes.findOneAsync(salvageQuery);
-    if (!salvage_lane) {
-      throw new Error(
-        `Salvage plan lane not found: ${JSON.stringify(lane.salvage_plan)}`,
-      );
-    }
-    const salvage_harbor = await Harbors.findOneAsync(salvage_lane.type);
-    if (
-      !salvage_harbor ||
-      !salvage_harbor.lanes ||
-      !salvage_harbor.lanes[salvage_lane._id] ||
-      !salvage_harbor.lanes[salvage_lane._id].manifest
-    ) {
-      throw new Error('Harbor or lane manifest not found');
-    }
-    let salvage_manifest = salvage_harbor.lanes[salvage_lane._id].manifest;
-    salvage_manifest.prior_manifest = trim_manifest(manifest);
-
-    /* istanbul ignore next */
-    if (!H.isTest) console.log(
-      `Starting shipment for "${salvage_lane.name || lane.salvage_plan.name ||
-        lane.salvage_plan.slug || lane.salvage_plan._id}" as salvage run of "${
-        lane.name}"`,
-    );
-    return await H.call(
-      'Lanes#start_shipment',
-      salvage_lane._id,
-      salvage_manifest,
-      next_shipment_start_date,
-    );
+  if (!shipment) return manifest;
+  if (shipment.lane != lane._id) {
+    throw new Error('Shipment belongs to another lane');
   }
-  if (exit_code == 0 && lane.followup) {
-    if (
-      typeof lane.followup !== 'object' ||
-      (!lane.followup?._id && !lane.followup?.slug)
-    ) {
-      throw new Error(
-        `Invalid followup reference: ${JSON.stringify(lane.followup)}`,
-      );
+  return await completion_step(shipment_id, async () => {
+    if (shipment.active) {
+      const current_lane = await Lanes.findOneAsync(lane._id) || lane;
+      await with_existing_lane(lane._id,
+        () => prepare_shipment_totals(lane._id));
+      manifest.lane_id = current_lane._id;
+      manifest.lane_name = current_lane.name;
+      manifest.lane_slug = current_lane.slug;
+      const next = next_shipment(current_lane, exit_code);
+      const completion = { pending: true, failed: exit_code != 0 };
+      if (next) completion.next = next;
+      const completed = await Shipments.updateAsync({
+        ...selector, active: true,
+      }, { $set: {
+        finished: new Date(), exit_code, manifest, active: false, completion,
+      } });
+      if (!completed && dispatch_token) return manifest;
+      manifest.stdout = shipment.stdout;
+      manifest.stderr = shipment.stderr;
+      /* istanbul ignore next */
+      if (!H.isTest) console.log('Shipping completed for lane:', lane.name,
+        'with shipment:', shipment_id, 'and exit code:', exit_code);
     }
+    const finished = await finish_shipment(shipment_id);
+    if (finished) return finished.result;
+    const current = await Shipments.findOneAsync(shipment_id);
+    if (current.completion?.pending) {
+      retry_shipment(shipment_id, 'completion', current.completion.until);
+      throw new H.Error('shipment-pending',
+        'Shipment completion is pending; retry after it settles');
+    }
+    if (current.completion?.has_result !== undefined) {
+      return await shipment_result(current, 'completion');
+    }
+    return manifest;
+  });
+};
 
-    const followupQuery = lane.followup._id ?
-      { _id: lane.followup._id } :
-      { slug: lane.followup.slug };
-    let followup_lane = await Lanes.findOneAsync(followupQuery);
-    if (!followup_lane) {
-      throw new Error(
-        `Followup lane not found: ${JSON.stringify(lane.followup)}`,
-      );
+const recover_shipments = async () => {
+  const tasks = [];
+  for (const stage of ['completion', 'dispatch']) {
+    const shipments = await Shipments.find({
+      [`${stage}.pending`]: true,
+    }, { fields: { _id: 1 } }).fetchAsync();
+    for (const shipment of shipments) {
+      const task = recover_one(shipment._id, stage);
+      task.then(at => {
+        if (at) retry_shipment(shipment._id, stage, at);
+      }).catch(error => {
+        console.error(`Unable to recover shipment ${shipment._id}:`, error);
+        retry_shipment(shipment._id, stage);
+      });
+      tasks.push(task.catch(() => undefined));
     }
-    const followup_harbor = await Harbors.findOneAsync(followup_lane.type);
-    if (
-      !followup_harbor ||
-      !followup_harbor.lanes ||
-      !followup_harbor.lanes[followup_lane._id] ||
-      !followup_harbor.lanes[followup_lane._id].manifest
-    ) {
-      throw new Error('Harbor or lane manifest not found');
-    }
-    let followup_manifest = followup_harbor.lanes[followup_lane._id].manifest;
-    followup_manifest.prior_manifest = trim_manifest(manifest);
-
-    /* istanbul ignore next */
-    if (!H.isTest) console.log(
-      `Starting shipment for "${followup_lane.name || lane.followup.name ||
-      lane.followup.slug || lane.followup._id}" as followup of "${lane.name}"`,
-    );
-    return await H.call(
-      'Lanes#start_shipment',
-      followup_lane._id,
-      followup_manifest,
-      next_shipment_start_date,
-    );
   }
-
-  return manifest;
+  return tasks;
 };
 
 const reset_shipment = async function (slug, date) {
@@ -513,16 +751,7 @@ const reset_shipment = async function (slug, date) {
     },
   });
 
-  await LatestShipment.upsertAsync(
-    { _id: lane._id },
-    { $set: { shipment: await Shipments.findOneAsync({ _id: shipment._id }) } },
-  );
-
-  lane.last_shipment = await Shipments.findOneAsync({ _id: shipment._id });
-  await Lanes.updateAsync(
-    { _id: lane._id },
-    { $set: { last_shipment: lane.last_shipment } },
-  );
+  lane.last_shipment = await update_shipment_history(lane._id);
 
   return lane;
 };
@@ -542,18 +771,7 @@ const reset_all_active_shipments = async function (name) {
     { multi: true },
   );
 
-  lane.last_shipment = await Shipments.findOneAsync(
-    { lane: lane._id },
-    { sort: { actual: -1 } },
-  );
-  await LatestShipment.upsertAsync(
-    { _id: lane._id },
-    { $set: { shipment: lane.last_shipment } },
-  );
-  await Lanes.updateAsync(
-    { _id: lane._id },
-    { $set: { last_shipment: lane.last_shipment } },
-  );
+  lane.last_shipment = await update_shipment_history(lane._id);
 
   return lane;
 };
@@ -564,9 +782,35 @@ const update_slug = async (lane) => {
   return true;
 };
 
+const require_idle_lane = async (lane_id) => {
+  if (await Shipments.findOneAsync({ lane: lane_id, active: true }, {
+    fields: { _id: 1 },
+  })) {
+    throw new H.Error('lane-active',
+      'This lane has an active shipment. Reset it before deleting the lane.');
+  }
+  if (await Shipments.findOneAsync({ lane: lane_id, $or: [
+    { 'dispatch.pending': true }, { 'completion.pending': true },
+  ] }, { fields: { _id: 1 } })) {
+    throw new H.Error('lane-pending',
+      'This lane has pending shipment work. Wait for it to finish ' +
+      'before deleting the lane.');
+  }
+};
+
 const delete_lane = async function (lane) {
   if (!lane || !lane._id) throw new Error('Invalid lane');
-  await Lanes.removeAsync({ _id: lane._id });
+  const current = await Lanes.findOneAsync(lane._id);
+  if (current) {
+    await require_idle_lane(current._id);
+    const removed = await Lanes.removeAsync(lane_revision(current));
+    if (!removed) {
+      await require_idle_lane(current._id);
+      throw new H.Error('lane-changed',
+        'This lane changed while it was being deleted. Try again.');
+    }
+    lane = current;
+  }
   /* istanbul ignore else */
   if (lane.type) {
     const harbor = await Harbors.findOneAsync(lane.type);
@@ -582,7 +826,13 @@ const delete_lane = async function (lane) {
 };
 
 const upsert = async function (lane = {}) {
+  if (!lane || typeof lane != 'object' || Array.isArray(lane)) {
+    throw new TypeError('Invalid lane');
+  }
   const { _id, slug, name } = lane;
+  const fields = editable_lane_fields(lane);
+  if (lane.type !== undefined) fields.type = lane.type;
+  const initial = { shipment_count: 0, salvage_runs: 0 };
 
   // IMPORTANT:
   // Never query with undefined/empty values (e.g. { slug: undefined } matches
@@ -594,24 +844,22 @@ const upsert = async function (lane = {}) {
 
   // If we have no identity fields, this must be a brand new lane. Insert it.
   if (!$or.length) {
-    const insertedId = await Lanes.insertAsync(lane);
+    const insertedId = await Lanes.insertAsync({ ...fields, ...initial });
     return await Lanes.findOneAsync(insertedId);
   }
 
   const query = { $or };
-  // Use a modifier update to avoid replacing the whole document and dropping
-  // fields not present in `lane`.
-  const $set = Object.fromEntries(
-    Object.entries(lane)
-      .filter(([key, value]) => key !== '_id' && value !== undefined),
-  );
-  const modifier = { $set };
-  if (_id) {
-    modifier.$setOnInsert = { _id };
+  let current = await Lanes.findOneAsync(query);
+  if (!current) {
+    if (_id && await Shipments.findOneAsync({ lane: _id }, {
+      fields: { _id: 1 },
+    })) throw new Error('Cannot reuse a lane ID with shipment history');
+    if (_id) initial._id = _id;
+    await Lanes.upsertAsync(query, { $setOnInsert: { ...fields, ...initial } });
+    current = await Lanes.findOneAsync(query);
   }
-
-  await Lanes.upsertAsync(query, modifier);
-  return await Lanes.findOneAsync(query);
+  await save_lane_fields(current, fields);
+  return await Lanes.findOneAsync(current._id);
 };
 
 const duplicate = async (lane) => {
@@ -629,6 +877,8 @@ const duplicate = async (lane) => {
   delete lane.last_shipment;
   delete lane._id;
   delete lane.tokens;
+  delete lane.shipment_totals;
+  delete lane.shipment_history;
   lane.shipment_count = 0;
   lane.salvage_runs = 0;
   lane.name = `${lane.name.replace(replacement_regex, '')}${increment}`;
@@ -770,6 +1020,7 @@ export {
   update_webhook_token,
   start_shipment,
   end_shipment,
+  recover_shipments,
   reset_shipment,
   reset_all_active_shipments,
   update_slug,

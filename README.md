@@ -33,12 +33,6 @@ Harbors can be as simple or complex as required, using whichever libraries and p
 
 In this way, Harbormaster provides a common interface for integrating as many programming paradigms and use cases as it can.
 
-Some examples of harbors include:
-
-- [sleep](https://github.com/strictlyskyler/harbormaster-sleep)
-- [ssh](https://github.com/strictlyskyler/harbormaster-ssh)
-- [other_lanes](https://github.com/strictlyskyler/harbormaster-other-lanes)
-
 Harbors are meant to be modular, small, and tracked as projects separate from Harbormaster core itself (presented here).
 
 ## Design

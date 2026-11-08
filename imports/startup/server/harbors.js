@@ -5,6 +5,7 @@ import mkdirp from "mkdirp";
 import { checkSync } from "diskusage";
 import child_process from "child_process";
 import Module from 'module';
+import { start_recovery } from './recovery';
 import is_git_url from 'is-git-url';
 import { Lanes } from "../../api/lanes";
 import { Users } from "../../api/users";
@@ -620,4 +621,7 @@ export const register_harbors = async () => {
   process.chdir(ROOT_DIR);
 };
 /* istanbul ignore next */
-if (!H.isTest) register_harbors();
+if (!H.isTest) H.startup(async () => {
+  await register_harbors();
+  start_recovery();
+});

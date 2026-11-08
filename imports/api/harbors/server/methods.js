@@ -6,9 +6,11 @@ import cp from 'child_process';
 import { promisify } from 'util';
 import { Harbors } from '..';
 import { Lanes } from '../../lanes';
+import { Shipments } from '../../shipments';
+import { update_shipment_history } from '../../lanes/server/shipment-state';
 import {
-  LatestShipment, Shipments,
-} from '../../shipments';
+  editable_lane_fields, save_lane_fields,
+} from '../../lanes/server/lane-fields';
 
 H.copySync = fse.copySync;
 
@@ -22,6 +24,12 @@ H.exec = promisify(cp.exec);
 
 const update_harbor = async function (lane, values) {
   try {
+    const current = await Lanes.findOneAsync(lane._id);
+    if (!current) throw new Error(`Lane not found: ${lane._id}`);
+    if (lane.type !== undefined && lane.type !== current.type) {
+      await save_lane_fields(current, { type: lane.type });
+      current.type = lane.type;
+    }
     let harbor = await Harbors.findOneAsync(lane.type);
     let success = await H.harbors[lane.type].update(lane, values);
     if (success) {
@@ -36,20 +44,13 @@ const update_harbor = async function (lane, values) {
     }
 
     if (success && lane.rendered_work_preview && !lane.last_shipment) {
-      lane.last_shipment = {
-        actual: 'Never',
-        start: '',
-        shipment_count: 0,
-        salvage_runs: 0,
-      };
-
-      await LatestShipment.upsertAsync(
-        { _id: lane._id },
-        { $set: { shipment: lane.last_shipment } },
-      );
+      lane.last_shipment = await update_shipment_history(lane._id);
     }
 
-    if (success) await Lanes.updateAsync(lane._id, lane);
+    if (success) {
+      const fields = editable_lane_fields(lane);
+      await save_lane_fields(current, fields);
+    }
 
     return { lane, success };
 

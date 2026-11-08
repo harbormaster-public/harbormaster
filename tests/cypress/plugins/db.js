@@ -187,6 +187,23 @@ const registerDbTasks = function (on, config) {
 
   on('task', {
     'db:reset': () => resetDb(mongoUrl),
+    'db:activeLane': () => withDb(mongoUrl, async (db) => {
+      const shipment = {
+        _id: 'busy-shipment', lane: 'busy-lane', active: true,
+        actual: new Date(), start: 'active-test',
+        manifest: { shipment_id: 'busy-shipment' },
+      };
+      await db.collection('Shipments').insertOne(shipment);
+      await db.collection('Lanes').insertOne({
+        _id: 'busy-lane', name: 'Busy Lane', slug: 'busy-lane',
+        type: 'test', last_shipment: shipment,
+        shipment_count: 1, salvage_runs: 0,
+      });
+      await db.collection('LatestShipment').insertOne({
+        _id: 'busy-lane', shipment,
+      });
+      return true;
+    }),
     // Optional manual controls (useful for debugging locally).
     'db:snapshot': () => snapshotIfEnabled(),
     'db:restore': () => restoreIfEnabled(),

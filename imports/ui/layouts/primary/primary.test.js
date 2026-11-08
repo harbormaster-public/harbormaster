@@ -4,6 +4,8 @@ import {
   no_harbormasters,
   no_users,
   logged_in,
+  email,
+  role,
   set_constraints,
   Constraints,
   is_valid_constraint,
@@ -13,6 +15,7 @@ import {
 import { Harbors } from '../../../api/harbors';
 import { resetDatabase } from '../../../test-helpers/reset-database';
 import { Users } from '../../../api/users';
+import { Lanes } from '../../../api/lanes';
 import {
   setupInMemoryCollection,
 } from '../../../test-helpers/setup-collection-stubs';
@@ -58,6 +61,54 @@ describe('Primary Layout', () => {
   describe('#logged_in', () => {
     it('returns the user data object', () => {
       expect(typeof logged_in()).to.eq('object');
+    });
+  });
+
+  describe('account status while authentication changes', () => {
+    let account;
+    let original_user;
+    let lanesStub;
+    beforeEach(() => {
+      original_user = H.user;
+      H.user = () => account;
+      lanesStub = setupInMemoryCollection(Lanes);
+    });
+    afterEach(() => {
+      H.user = original_user;
+      lanesStub.restore();
+    });
+    it('renders safely while logout clears the account', () => {
+      H.user = () => account;
+      for (account of [null, {}, { emails: [] }, { emails: [{}] }]) {
+        expect(email()).to.eq('');
+        expect(role()).to.eq('');
+      }
+    });
+    it('renders a subscribed account and its permissions', () => {
+      H.user = () => account;
+      account = { emails: [{ address: 'person@example.com' }] };
+      expect(email()).to.eq('person@example.com');
+      expect(role()).to.eq('a User');
+      usersStub.insert({ _id: 'person@example.com', harbormaster: true });
+      expect(role()).to.eq('a Harbormaster');
+    });
+    it("counts only the current account's lane access", () => {
+      H.user = () => account;
+      account = { emails: [{ address: 'person@example.com' }] };
+      lanesStub.insert({ _id: 'captained',
+        captains: ['person@example.com'] });
+      lanesStub.insert({ _id: 'tokened',
+        tokens: { token: 'person@example.com' } });
+      lanesStub.insert({ _id: 'other',
+        tokens: { token: 'other@example.com' } });
+      lanesStub.insert({ _id: 'empty', tokens: null });
+      const find = Lanes.find;
+      try {
+        // The collection stub supports $exists inside $or.
+        Lanes.find = (query) => find.call(Lanes, { $or: [query] });
+        expect(role()).to.eq('Captain of 2 lanes');
+      }
+      finally { Lanes.find = find; }
     });
   });
 
